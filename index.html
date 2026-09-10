@@ -1,31 +1,40 @@
+<!DOCTYPE html>
+<html lang="zh-TW" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>安得烈食物銀行 - 即時互動問答大亂鬥</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- PeerJS (實現手機與大螢幕跨裝置 P2P 連線) & QRCode.js -->
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <!-- Canvas Confetti CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <!-- FontAwesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-        function showFinalResult() {
-            document.getElementById('view-game').classList.add('hidden');
-            document.getElementById('view-result').classList.remove('hidden');
-
-            const sorted = [...players].sort((a, b) => b.score - a.score);
-            const container = document.getElementById('leaderboard-container');
-            container.innerHTML = '';
-
-            const medals = ['🥇 金牌', '🥈 銀牌', '🥉 銅牌'];
-            sorted.forEach((p, idx) => {
-                container.innerHTML += `
-                    <div class="p-4 rounded-xl border-2 border-slate-700 bg-slate-800/50 flex justify-between items-center text-xl font-bold">
-                        <span>${medals[idx] || `第 ${idx + 1} 名`} - ${p.name}</span>
-                        <span class="text-neon-yellow font-black">${p.score} 分</span>
-                    </div>
-                `;
-            });
-
-            confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        neon: {
+                            blue: '#00f3ff',
+                            purple: '#b000ff',
+                            pink: '#ff007f',
+                            green: '#00ff66',
+                            yellow: '#ffcc00'
+                        }
+                    }
+                }
+            }
         }
-
-        document.getElementById('btn-restart-game').addEventListener('click', () => {
-            location.reload();
-        });
     </script>
-</body>
-</html>        body {
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap');
+        body {
             font-family: 'Noto Sans TC', sans-serif;
             background-color: #0b0f19;
             color: #f3f4f6;
@@ -187,66 +196,46 @@
 
     <!-- 遊戲全域 JavaScript 邏輯 -->
     <script>
-        // 50 題完整題庫資料（相容手機 A/B/C/D 控制器選單）
-        const masterQuizBank = [
-            { question: "1. 安得烈慈善協會的「膳糧食物箱」主要提供給幾歲至幾歲的弱勢兒少？", options: ["0～3歲", "3～15歲", "15～18歲", "18歲以上"], answer: 1 },
-            { question: "2. [是非題] 安得烈食物箱基於營養與健康考量，一律不放入泡麵以及高鹽、高糖、醃漬食品。", options: ["○ 正確", "╳ 錯誤", "視情況而定", "無特別限制"], answer: 0 },
-            { question: "3. [填空題] 安得烈「培鷹計畫」每學年提供哪種資助，幫助清寒或才藝優秀學子順利完成學業？", options: ["獎（助）學金", "房屋津貼", "交通票券", "醫療補助"], answer: 0 },
-            { question: "4. 安得烈針對 65 至 80 歲弱勢長者所設計的專屬食物箱名稱為何？", options: ["松柏食物箱", "長青食物箱", "安心食物箱", "膳糧食物箱"], answer: 2 },
-            { question: "5. [是非題] 泡麵本身通常含有大量的防腐劑，因此不適合放入食物箱。", options: ["○ 正確", "╳ 錯誤（係透過油炸或乾燥防腐）", "不一定", "僅部分有防腐劑"], answer: 1 },
-            { question: "6. 安得烈舉辦的生命成長營與飛颺營，其四大活動目標不包含下列哪一項？", options: ["品格成長", "知識成長", "財富成長", "視野成長"], answer: 2 },
-            { question: "7. [填空題] 志工在協助安得烈食品效期檢查時，規定物資效期須在幾個月以上？", options: ["3 個月", "6 個月", "9 個月", "12 個月"], answer: 1 },
-            { question: "8. 針對初生至 3 歲的幼兒，安得烈「嬰兒物資箱」主要提供的核心物資為？", options: ["餅乾與麥片", "奶粉與尿布", "白米與食用油", "調理包與罐頭"], answer: 1 },
-            { question: "9. [是非題] 糙米和白米是兩種完全不同品種的稻米作物。", options: ["○ 正確", "╳ 錯誤（同品種，精緻度不同）", "部分不同", "視產地而定"], answer: 1 },
-            { question: "10. 協助食物箱進行食品效期檢查時，單件物資重量通常限制在多少公斤以下（白米除外）？", options: ["0.5 公斤", "1 公斤", "2 公斤", "3 公斤"], answer: 1 },
-            { question: "11. [填空題] 安得烈配合學校生命教育課程推動的「__________計畫」，鼓勵學子知福、惜福與分享？", options: ["善果計畫", "希望計畫", "飛鷹計畫", "萌芽計畫"], answer: 0 },
-            { question: "12. 80 歲以上的弱勢長者，安得烈會提供哪一種專屬食物箱？", options: ["安心食物箱", "松柏食物箱", "長青食物箱", "專案物資箱"], answer: 1 },
-            { question: "13. [是非題] 反式脂肪只會出現在人工植物油中，絕不可能存在於天然乳製品裡。", options: ["○ 正確", "╳ 錯誤（天然乳品亦含微量天然反式脂肪）", "只有牛奶有", "完全不確定"], answer: 1 },
-            { question: "14. 下列何者「非」安得烈學藝競賽所規劃的徵件項目？", options: ["作文", "繪畫", "書法", "攝影"], answer: 3 },
-            { question: "15. [填空題] 為幫助弱勢家庭歡度農曆新年，安得烈特別規劃發放哪種主題食物箱？", options: ["年菜食物箱", "端午食物箱", "中秋食物箱", "野餐食物箱"], answer: 0 },
-            { question: "16. 依據飲食營養小知識，日常生活中常見的「玉米」在營養學分類上屬於？", options: ["蔬菜類", "水果類", "主食（全穀雜糧）類", "蛋白質類"], answer: 2 },
-            { question: "17. [是非題] 志工進行安得烈食安檢查時，若發現包裝破損、發霉或長蟲，皆不可入箱。", options: ["○ 正確", "╳ 錯誤", "清洗後可入箱", "視破損程度決定"], answer: 0 },
-            { question: "18. 安得烈「培鷹計畫」中的高年級/大專營隊名稱為何？", options: ["生命成長營", "飛颺營", "善果營", "培鷹營"], answer: 1 },
-            { question: "19. [填空題] 對於遭逢重大疾病或突發事故之弱勢家庭，安得烈藉由何種計畫提供急難救助？", options: ["安心計畫", "培鷹計畫", "善果計畫", "希望計畫"], answer: 0 },
-            { question: "20. 在茶葉的兒茶素含量比較中，下列何者兒茶素含量最高？", options: ["紅茶", "綠茶", "烏龍茶", "普洱茶"], answer: 1 },
-            { question: "21. [是非題] 安得烈慈善協會的個案來源包含國中小學、社福機構、教會、警察機關及公部門等。", options: ["○ 正確", "╳ 錯誤", "僅限學校轉介", "僅限個人申請"], answer: 0 },
-            { question: "22. 台灣話所說的「ㄟ仔菜」，國語是指哪一種蔬菜？", options: ["空心菜", "菠菜", "萵苣", "高麗菜"], answer: 2 },
-            { question: "23. [填空題] 安得烈食物箱完成後，主要透過郵局以及幾家合作物流公司寄送到受助家庭？", options: ["1 家", "2 家", "3 家", "4 家"], answer: 1 },
-            { question: "24. 下列哪一項「不屬於」大眾可以為安得烈弱勢家庭提供的直接協助方式？", options: ["捐贈發票與食物", "參與志工服務", "通報需要的個案", "強制代為申請借貸"], answer: 3 },
-            { question: "25. [是非題] 熬煮大骨湯時，長時間加熱容易將骨頭中的鉛成分溶出至湯頭中。", options: ["○ 正確", "╳ 錯誤", "只會溶出鈣質", "視鍋具而定"], answer: 0 },
-            { question: "26. 下列哪一種食物名稱開頭注音為「ㄉ」，常出現在膳糧食物箱中？", options: ["豆乾", "冬粉", "豆腐", "蛋捲"], answer: 1 },
-            { question: "27. [填空題] 安得烈食物箱物資特色之一，是必須能在什麼溫度的環境下妥善保存？", options: ["低溫", "冷凍", "常溫", "高溫"], answer: 2 },
-            { question: "28. 下列哪一項物資開頭注音為「ㄕ」，會包含在膳糧食物箱中？", options: ["柿子", "蔬菜罐頭", "食用油", "柿餅"], answer: 2 },
-            { question: "29. [是非題] 味精（谷氨酸鈉）適量使用對風味提升有幫助，且適當鈉替代對飲食控制有效益。", options: ["○ 正確", "╳ 錯誤", "味精有劇毒", "味精會致癌"], answer: 0 },
-            { question: "30. 針對重病或罕見疾病患者，安得烈食物箱特別提供了哪種專屬客製化食物箱？", options: ["素食食物箱", "重、罕病者/素食食物箱", "長青食物箱", "嬰兒食物箱"], answer: 1 },
-            { question: "31. [填空題] 台語所說的「ㄛ啊」是指芋頭，而「ㄜ啊」則是指哪種海鮮食材？", options: ["蚵（牡蠣）", "蝦子", "蛤蜊", "螃蟹"], answer: 0 },
-            { question: "32. 膳糧食物箱中開頭注音為「ㄖ」的常見美味乾糧物資是？", options: ["肉乾", "肉鬆", "肉圓", "肉角"], answer: 1 },
-            { question: "33. [是非題] 可樂的主要成分與咳嗽糖漿完全相同。", options: ["○ 正確", "╳ 錯誤", "完全相同", "成分 90% 重疊"], answer: 1 },
-            { question: "34. 安得烈培鷹計畫為協助技職學生提升競爭力，推動了何種方案？", options: ["飛翔方案", "希望工程方案", "築夢方案", "展翅方案"], answer: 1 },
-            { question: "35. [填空題] 膳糧食物箱中，開頭注音為「ㄊ」且方便受助家庭加熱即食的食物是？", options: ["調理包", "甜甜圈", "吐司", "太白粉"], answer: 0 },
-            { question: "36. 知名沖泡飲料「阿華田」的主要核心成分是什麼？", options: ["燕麥", "麥芽", "大豆", "小麥蛋白"], answer: 1 },
-            { question: "37. [是非題] 組合肉如果沒有完全加熱至熟透，比整塊原肉更容易引發食物中毒。", options: ["○ 正確", "╳ 錯誤", "兩者機率相同", "組合肉較安全"], answer: 0 },
-            { question: "38. 下列哪一項屬於膳糧食物箱中「ㄇ」開頭常見的物資組合？", options: ["麵條、麥片、米粉", "饅頭、麻糬、麵包", "麥芽糖、蜜餞、麻油", "米酒、抹醬、木耳"], answer: 0 },
-            { question: "39. [填空題] 安得烈精神標語提到：「施比受更有福！無私奉獻能帶來更多的_____與快樂。」", options: ["幸福", "財富", "名利", "地位"], answer: 0 },
-            { question: "40. 膳糧食物箱中「ㄍ」開頭、保存期限長且種類多樣的食物是？", options: ["餅乾", "罐頭", "糕餅", "蒟蒻"], answer: 1 },
-            { question: "41. [是非題] 加工肉品添加適量亞硝酸鹽主要用於抑制肉毒桿菌，合規使用並非絕對危害健康。", options: ["○ 正確", "╳ 錯誤", "亞硝酸鹽絕對禁用的", "對細菌無效"], answer: 0 },
-            { question: "42. 常用於製作傳統珍珠奶茶中「奶」風味的原料，普遍主要使用的是？", options: ["鮮乳", "煉乳", "奶精", "奶粉"], answer: 2 },
-            { question: "43. [填空題] 安得烈食物箱除了食物之外，有時也會放入協助學子學習的何種用品？", options: ["文具用品", "運動器材", "電子遊戲", "樂器"], answer: 0 },
-            { question: "44. 製作起司（Cheese）的主要基礎原料是什麼？", options: ["豆漿", "乳製品", "植物油", "澱粉"], answer: 1 },
-            { question: "45. [是非題] 反覆加熱隔夜菜會直接大幅增加罹患胃癌與大腸直腸癌的風險。", options: ["○ 正確", "╳ 錯誤（主因在保存不當細菌滋生）", "確定致癌", "高溫加熱會產生劇毒"], answer: 1 },
-            { question: "46. 下列何者「不能」放入安得烈嬰兒食物箱中？", options: ["嬰兒奶粉", "尿布", "OREO餅乾", "嬰兒米精"], answer: 2 },
-            { question: "47. [填空題] 安得烈慈善協會每月約發放幾千餘箱客製化食物箱給需要的家庭？", options: ["3 千箱", "5 千箱", "8 千箱", "1 萬箱"], answer: 1 },
-            { question: "48. 膳糧食物箱中開頭注音為「ㄅ」的常溫食物組合，下列何者正確？", options: ["包子、扁食", "白米、保久乳、八寶粥", "芭樂、百香果", "檳榔、爆米花"], answer: 1 },
-            { question: "49. [是非題] 飲用過熱的熱茶或熱湯（超過 65°C）已被世衛組織列為增加食道癌風險因素。", options: ["○ 正確", "╳ 錯誤", "完全無關", "養生無害"], answer: 0 },
-            { question: "50. 安得烈慈善協會的核心工作不包含下列哪一項？", options: ["急難救助", "弱勢扶助", "災害援助與教育推廣", "投資理財顧問"], answer: 3 }
+        // 參照簡介簡報更新之 30 題完整題庫
+        const masterQuizDatabase = [
+            { question: "安得烈慈善協會成立於哪一年哪一個月份？", options: ["2010年8月", "2011年8月", "2012年8月", "2013年8月"], answer: 1 },
+            { question: "安得烈食物銀行主要提供何種性質的食物箱來幫助弱勢？", options: ["全冷凍冷藏物資", "生鮮蔬菜與水果", "客製化、常溫保存食物箱", "隨機剩食配給箱"], answer: 2 },
+            { question: "針對初生至 3 歲的弱勢嬰幼兒，安得烈提供哪種專屬物資箱？", options: ["膳糧食物箱", "嬰兒物資箱", "松柏食物箱", "安心食物箱"], answer: 1 },
+            { question: "適用於 3 歲至 15 歲弱勢兒少的主要食物箱類型為何？", options: ["長青食物箱", "年菜食物箱", "膳糧食物箱", "專案物資箱"], answer: 2 },
+            { question: "安得烈針對 65 至 80 歲的弱勢長者，提供哪一種食物箱？", options: ["安心食物箱", "松柏食物箱", "長青食物箱", "嬰兒物資箱"], answer: 0 },
+            { question: "針對 80 歲以上的弱勢長者，安得烈主要發放哪一種食物箱？", options: ["安心食物箱", "松柏食物箱", "膳糧食物箱", "專案物資箱"], answer: 1 },
+            { question: "安得烈為重病、罕病或特殊飲食需求者提供的客製化箱別是？", options: ["長青食物箱", "素食/專案物資箱", "年菜食物箱", "幼兒專案箱"], answer: 1 },
+            { question: "安得烈在春節前夕特別準備給弱勢家庭的物資箱為何？", options: ["年菜食物箱", "安心食物箱", "松柏食物箱", "培鷹食物箱"], answer: 0 },
+            { question: "安得烈「培鷹計畫」的主要目標是什麼？", options: ["僅給予生活津貼補助", "引導弱勢兒少適性發展、培育品格與技能", "籌辦商業體育競賽", "提供短期的餐點外送"], answer: 1 },
+            { question: "安得烈舉辦的學藝競賽活動包含哪些項目？", options: ["作文、繪畫、書法", "朗讀、演講、歌唱", "賽跑、游泳、籃球", "心算、棋藝、舞蹈"], answer: 0 },
+            { question: "每年暑假針對國小及國中學生舉辦的品格成長活動名稱為何？", options: ["飛颺營", "生命成長營", "善果營", "培鷹夏令營"], answer: 1 },
+            { question: "每年暑假針對高中及大學生舉辦的培育營隊名稱為何？", options: ["生命成長營", "飛颺營", "安心營", "希望營"], answer: 1 },
+            { question: "生命成長營與飛颺營四大活動目標包含品格成長、知識成長、視野成長與？", options: ["財力成長", "實力成長", "體能成長", "職位成長"], answer: 1 },
+            { question: "安得烈每學年提供獎(助)學金，並鼓勵獲獎學生參與什麼活動以回饋社會？", options: ["服務學習", "企業實習", "海外留學", "商業推廣"], answer: 0 },
+            { question: "安得烈推動「希望工程方案」協助清寒弱勢學生鑽研專業技術，屬於哪項計畫？", options: ["急難救助", "技職培訓", "善果計畫", "災害援助"], answer: 1 },
+            { question: "安得烈在技職培訓中提出「職業引介」的口號是什麼？", options: ["為企業找人才、為弱勢找出路", "愛合格不浪費", "讓愛安心，無餓發生", "知福惜福，感恩助人"], answer: 0 },
+            { question: "當弱勢家庭遭遇重大疾病、災難或突發事故時，協會執行哪項專案提供急難救助金或安心食物箱？", options: ["善果專案", "安心專案", "培鷹專案", "飛颺專案"], answer: 1 },
+            { question: "配合學校生命教育課程或飢餓工作坊推動的教育推廣計畫名稱為何？", options: ["善果計畫", "希望計畫", "感恩計畫", "築夢計畫"], answer: 0 },
+            { question: "「善果計畫」鼓勵學子具備的六大觀念不包含下列何者？", options: ["知福、惜福", "感恩、助人", "分享、惜食", "追求名利"], answer: 3 },
+            { question: "依據2026年7月資料，安得烈單月份援助個案總人數高達多少人？", options: ["3500人", "4200人", "5784人", "6800人"], answer: 2 },
+            { question: "安得烈個案的通報來源不包含以下何者？", options: ["國中與國小、社福機構", "教會、警察機關", "公部門或個人", "營利連鎖超商直接指定"], answer: 3 },
+            { question: "安得烈志工協助檢查食品效期時，規定食品效期需在多久以上？", options: ["1個月以上", "3個月以上", "6個月以上", "1年以上"], answer: 2 },
+            { question: "志工檢查食品重量時，單件物資原則上需在多少公斤以下（白米除外）？", options: ["1公斤以下", "2公斤以下", "3公斤以下", "5公斤以下"], answer: 0 },
+            { question: "食品安全檢查時，若發現物資有何種狀況必須剔除？", options: ["破損", "發霉", "長蟲", "以上皆是"], answer: 3 },
+            { question: "基於受助者營養與健康考量，以下哪種食品絕對「不會」放入安得烈食物箱？", options: ["真空包裝白米", "泡麵及高鹽高糖醃漬品", "常溫保存保鮮牛奶", "燕麥片與黑穀粉"], answer: 1 },
+            { question: "安得烈每月提供約多少箱客製化食物箱？", options: ["1000餘箱", "3000餘箱", "5000餘箱", "10000餘箱"], answer: 2 },
+            { question: "安得烈食物箱完成打包後，主要透過哪些管道寄送至個案家中？", options: ["交付郵局及兩家物流公司或社工專員親送", "全部由志工親自外送", "請受助者自行至總部領取", "無人機載運"], answer: 0 },
+            { question: "一般大眾若想為弱勢家庭盡一份心力，可以透過以下哪些方式？", options: ["捐贈發票與食物", "志工服務與小額捐款", "通報需要幫助的個案", "以上皆可"], answer: 3 },
+            { question: "安得烈服務理念表達對關懷行動的承諾，口號為：「那裡有需要，___」？", options: ["就往哪裡去", "我們就在哪裡送餐", "希望就在哪裡", "愛心就到哪裡"], answer: 0 },
+            { question: "「施比受更有福！」安得烈強調助人也是助己，能帶來更多什麼？", options: ["財富與名聲", "幸福與快樂", "工作與機會", "讚美與榮譽"], answer: 1 }
         ];
 
-        let quizDatabase = [];
         let peer = null;
         let hostConn = null;
         let players = [];
         let myPlayerId = null;
         let currentQuestionIndex = 0;
+        let gameQuestions = []; // 隨機抽取的 10 題
         let stage = 1;
         let timerInterval = null;
         let aiTimeouts = [];
@@ -255,6 +244,16 @@
         let maxTime = 10;
         let lobbyTimer = 60;
         let lobbyTimerInterval = null;
+
+        // 隨機洗牌函式 (Fisher-Yates Shuffle)
+        function shuffleArray(array) {
+            const arr = [...array];
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
 
         // 初始化：判斷是「大螢幕」還是「手機控制器」
         window.onload = () => {
@@ -456,17 +455,17 @@
         }
 
         /* -----------------------------------------------------------------
-           4. 遊戲主流程與計分
+           4. 遊戲主流程與計分 (隨機從30題庫抽10題出題)
            ----------------------------------------------------------------- */
         function startGame() {
-            // 從 50 題庫中隨機抽出 10 題
-            const shuffled = [...masterQuizBank].sort(() => 0.5 - Math.random());
-            quizDatabase = shuffled.slice(0, 10);
-
             document.getElementById('view-lobby').classList.add('hidden');
             document.getElementById('view-game').classList.remove('hidden');
             document.getElementById('view-game').classList.add('flex');
             document.getElementById('game-stage-badge').classList.remove('hidden');
+
+            // 隨機選取 10 個題目
+            const shuffledDB = shuffleArray(masterQuizDatabase);
+            gameQuestions = shuffledDB.slice(0, 10);
 
             players.forEach(p => {
                 if (p.conn) p.conn.send({ type: 'GAME_START' });
@@ -487,7 +486,7 @@
             clearAllTimers();
             isTransitioning = false;
 
-            const qData = quizDatabase[index];
+            const qData = gameQuestions[index];
 
             if (index < 7) {
                 stage = 1;
@@ -507,8 +506,8 @@
                 if (p.conn) p.conn.send({ type: 'NEXT_QUESTION' });
             });
 
-            document.getElementById('question-number').innerText = `QUESTION 0${index + 1}/10`;
-            document.getElementById('question-text').innerText = qData.question;
+            document.getElementById('question-number').innerText = `QUESTION ${index + 1 < 10 ? '0' + (index + 1) : (index + 1)}/10`;
+            document.getElementById('question-text').innerText = `${index + 1}. ${qData.question}`;
             document.getElementById('timer-text').innerText = `⏱️ ${timeLeft}s`;
             document.getElementById('timer-bar').style.width = '100%';
 
@@ -571,7 +570,7 @@
                 let delay = stage === 1 ? (1000 + Math.random() * 3000) : (500 + Math.random() * 1500);
                 const timerId = setTimeout(() => {
                     if (isTransitioning || ai.answered) return;
-                    ai.choice = (Math.random() < 0.7) ? qData.answer : Math.floor(Math.random() * 4);
+                    ai.choice = (Math.random() < 0.75) ? qData.answer : Math.floor(Math.random() * 4);
                     ai.answered = true;
                     renderPlayersDashboard();
                     checkAllAnswered();
@@ -610,7 +609,7 @@
             if (isTransitioning) return;
             isTransitioning = true;
 
-            const qData = quizDatabase[currentQuestionIndex];
+            const qData = gameQuestions[currentQuestionIndex];
             const correctAns = qData.answer;
 
             document.querySelectorAll('.option-btn').forEach((btn, idx) => {
@@ -632,7 +631,7 @@
                 currentQuestionIndex++;
                 if (currentQuestionIndex === 7) {
                     showIntermission();
-                } else if (currentQuestionIndex >= quizDatabase.length) {
+                } else if (currentQuestionIndex >= gameQuestions.length) {
                     showFinalResult();
                 } else {
                     loadQuestion(currentQuestionIndex);
@@ -689,502 +688,6 @@
         document.getElementById('btn-restart-game').addEventListener('click', () => {
             location.reload();
         });
-    </script>
-</body>
-</html>            border-radius: 20px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-            width: 100%;
-            max-width: 650px;
-            padding: 30px;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .header {
-            text-align: center;
-            margin-bottom: 25px;
-        }
-
-        .title {
-            color: var(--primary);
-            font-size: 1.8rem;
-            margin-bottom: 5px;
-        }
-
-        .subtitle {
-            color: #78909c;
-            font-size: 0.95rem;
-        }
-
-        .stats-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: #fff3e0;
-            padding: 12px 20px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            font-weight: bold;
-        }
-
-        .progress-bar-container {
-            width: 100%;
-            height: 8px;
-            background: #ffe0b2;
-            border-radius: 4px;
-            margin-bottom: 25px;
-            overflow: hidden;
-        }
-
-        .progress-bar {
-            height: 100%;
-            background: var(--primary);
-            width: 0%;
-            transition: width 0.3s ease;
-        }
-
-        .question-card {
-            margin-bottom: 25px;
-        }
-
-        .tag {
-            display: inline-block;
-            background: #e8f5e9;
-            color: var(--accent);
-            padding: 4px 10px;
-            border-radius: 6px;
-            font-size: 0.85rem;
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
-
-        .question-text {
-            font-size: 1.25rem;
-            line-height: 1.5;
-            color: #263238;
-            margin-bottom: 15px;
-        }
-
-        .options-grid {
-            display: grid;
-            gap: 12px;
-        }
-
-        .btn {
-            background: #fff;
-            border: 2px solid #ffe0b2;
-            border-radius: 12px;
-            padding: 14px 20px;
-            font-size: 1rem;
-            text-align: left;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            color: var(--text);
-            outline: none;
-        }
-
-        .btn:hover:not(:disabled) {
-            background: #fff3e0;
-            border-color: var(--primary-light);
-            transform: translateY(-2px);
-        }
-
-        .btn:disabled {
-            cursor: not-allowed;
-        }
-
-        .btn.correct {
-            background: #c8e6c9 !important;
-            border-color: #2e7d32 !important;
-            color: #1b5e20 !important;
-            font-weight: bold;
-        }
-
-        .btn.wrong {
-            background: #ffcdd2 !important;
-            border-color: #c62828 !important;
-            color: #b71c1c !important;
-        }
-
-        .input-group {
-            display: flex;
-            gap: 10px;
-        }
-
-        .text-input {
-            flex: 1;
-            padding: 14px;
-            border: 2px solid #ffe0b2;
-            border-radius: 12px;
-            font-size: 1rem;
-            outline: none;
-        }
-
-        .text-input:focus {
-            border-color: var(--primary);
-        }
-
-        .submit-btn {
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 0 25px;
-            border-radius: 12px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-
-        .submit-btn:hover {
-            background: var(--primary-dark);
-        }
-
-        .explanation {
-            margin-top: 20px;
-            padding: 15px;
-            border-radius: 12px;
-            background: #f1f8e9;
-            border-left: 5px solid var(--accent);
-            display: none;
-        }
-
-        .explanation-title {
-            font-weight: bold;
-            color: var(--accent);
-            margin-bottom: 5px;
-        }
-
-        .next-btn {
-            display: block;
-            width: 100%;
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 15px;
-            border-radius: 12px;
-            font-size: 1.1rem;
-            font-weight: bold;
-            cursor: pointer;
-            margin-top: 20px;
-            text-align: center;
-            box-shadow: 0 4px 10px rgba(230, 81, 0, 0.3);
-        }
-
-        .next-btn:hover {
-            background: var(--primary-dark);
-        }
-
-        .screen {
-            display: none;
-        }
-
-        .screen.active {
-            display: block;
-        }
-
-        .start-screen, .end-screen {
-            text-align: center;
-            padding: 20px 0;
-        }
-
-        .start-btn, .restart-btn {
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 15px 40px;
-            font-size: 1.2rem;
-            border-radius: 30px;
-            font-weight: bold;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(230, 81, 0, 0.4);
-            margin-top: 20px;
-        }
-
-        .score-display {
-            font-size: 3rem;
-            color: var(--primary);
-            font-weight: bold;
-            margin: 20px 0;
-        }
-    </style>
-</head>
-<body>
-
-    <div class="game-container">
-        <!-- 開始畫面 -->
-        <div id="start-screen" class="screen active start-screen">
-            <h1 class="title">安得烈食物銀行</h1>
-            <p class="subtitle" style="margin-bottom: 30px;">即時互動問答大亂鬥</p>
-            <p>挑戰 10 道隨機抽取的題庫題目<br>測試你對協會服務與營養知識的了解！</p>
-            <button class="start-btn" onclick="startGame()">開始挑戰</button>
-        </div>
-
-        <!-- 遊戲主畫面 -->
-        <div id="game-screen" class="screen">
-            <div class="stats-bar">
-                <span>題目 <span id="current-q">1</span> / 10</span>
-                <span>得分：<span id="score">0</span></span>
-            </div>
-            <div class="progress-bar-container">
-                <div id="progress-bar" class="progress-bar"></div>
-            </div>
-
-            <div class="question-card">
-                <span id="question-type" class="tag">選擇題</span>
-                <div id="question-text" class="question-text">題目載入中...</div>
-                
-                <div id="options-container" class="options-grid">
-                    <!-- 動態渲染選項/輸入框 -->
-                </div>
-
-                <div id="explanation" class="explanation">
-                    <div class="explanation-title">解析說明</div>
-                    <div id="explanation-text"></div>
-                </div>
-            </div>
-
-            <button id="next-btn" class="next-btn" style="display: none;" onclick="nextQuestion()">下一題</button>
-        </div>
-
-        <!-- 結算畫面 -->
-        <div id="end-screen" class="screen end-screen">
-            <h1 class="title">挑戰完成！</h1>
-            <div class="score-display"><span id="final-score">0</span> 分</div>
-            <p id="result-comment">做得好！感謝你關注安得烈慈善協會。</p>
-            <button class="restart-btn" onclick="startGame()">再次挑戰</button>
-        </div>
-    </div>
-
-    <script>
-        const rawQuestionBank = [
-            { type: "choice", q: "安得烈慈善協會的「膳糧食物箱」主要提供給幾歲至幾歲的弱勢兒少？", options: ["0～3歲", "3～15歲", "15～18歲", "18歲以上"], a: 1, exp: "膳糧食物箱主要針對 3～15 歲關懷兒少設計。" },
-            { type: "tf", q: "安得烈食物箱基於營養與健康考量，一律不放入泡麵以及高鹽、高糖、醃漬食品（如醬瓜、豆腐乳）。", a: true, exp: "正確，安得烈注重受助家庭的營養均衡與健康。" },
-            { type: "fill", q: "安得烈「培鷹計畫」每學年提供__________金，幫助家境清寒、學業優秀或才藝技能卓越的弱勢兒少順利完成學業。", keywords: ["獎學金", "助學金", "獎助學金"], exp: "提供獎（助）學金扶助學子。" },
-            { type: "choice", q: "安得烈針對 65 至 80 歲弱勢長者所設計的專屬食物箱名稱為何？", options: ["松柏食物箱", "長青食物箱", "安心食物箱", "膳糧食物箱"], a: 2, exp: "65-80 歲為安心食物箱；80 歲以上為松柏食物箱。" },
-            { type: "tf", q: "泡麵本身通常含有大量的防腐劑，因此不適合放入食物箱。", a: false, exp: "錯誤，泡麵係透過油炸或乾燥加工達到防腐效果，非添加防腐劑；食物箱不放泡麵主要是考量營養價值。" },
-            { type: "choice", q: "安得烈舉辦的生命成長營與飛颺營，其四大活動目標不包含下列哪一項？", options: ["品格成長", "知識成長", "財富成長", "視野成長"], a: 2, exp: "四大目標為：品格成長、知識成長、視野成長、實力成長。" },
-            { type: "fill", q: "志工在協助安得烈食品效期檢查時，規定物資效期須在__________個月以上。", keywords: ["6", "六"], exp: "入箱物資需確保有 6 個月以上的保存期限。" },
-            { type: "choice", q: "針對初生至 3 歲的幼兒，安得烈「嬰兒物資箱」主要提供的核心物資為？", options: ["餅乾與麥片", "奶粉與尿布", "白米與食用油", "調理包與罐頭"], a: 1, exp: "嬰兒箱主要提供奶粉與尿布等幼兒必需品。" },
-            { type: "tf", q: "糙米和白米是兩種完全不同品種的稻米作物。", a: false, exp: "錯誤，糙米與白米是同一種米，僅碾米精緻加工程度不同。" },
-            { type: "choice", q: "協助安得烈食物箱進行食品效期檢查時，除了效期規定外，單件物資重量通常限制在多少公斤以下（白米除外）？", options: ["0.5公斤", "1公斤", "2公斤", "3公斤"], a: 1, exp: "單件物資重量通常限制在 1 公斤以下。" },
-            { type: "fill", q: "安得烈推動配合學校生命教育課程的「__________計畫」，旨在鼓勵學子具備知福、惜福、感恩、助人、分享與惜食的觀念。", keywords: ["善果", "善果計畫"], exp: "推動善果計畫深化校園生命教育。" },
-            { type: "choice", q: "80 歲以上的弱勢長者，安得烈會提供哪一種專屬食物箱？", options: ["安心食物箱", "松柏食物箱", "長青食物箱", "專案物資箱"], a: 1, exp: "80 歲以上專屬食物箱為「松柏食物箱」。" },
-            { type: "tf", q: "反式脂肪只會出現在人工植物油中，絕不可能存在於天然乳製品裡。", a: false, exp: "錯誤，天然乳製品與反芻動物肉類中亦含有微量天然反式脂肪。" },
-            { type: "choice", q: "下列何者「非」安得烈學藝競賽所規劃的徵件項目？", options: ["作文", "繪畫", "書法", "攝影"], a: 3, exp: "學藝競賽主要包含作文、繪畫、書法。" },
-            { type: "fill", q: "為幫助弱勢家庭歡度農曆新年，安得烈特別規劃發放「__________食物箱」。", keywords: ["年菜", "年菜食物箱"], exp: "特別發放「年菜食物箱」分享佳節溫暖。" },
-            { type: "choice", q: "依據飲食營養小知識，日常生活中常見的「玉米」在營養學分類上屬於？", options: ["蔬菜類", "水果類", "主食（全穀雜糧）類", "蛋白質類"], a: 2, exp: "玉米主要成分為澱粉，歸類於全穀雜糧（主食）類。" },
-            { type: "tf", q: "志工在進行安得烈食品安全檢查時，若發現包裝有破損、發霉或長蟲，該物資皆不可入箱。", a: true, exp: "正確，確保食品安全為第一優先。" },
-            { type: "choice", q: "安得烈「培鷹計畫」中的高年級/大專營隊名稱為何？", options: ["生命成長營", "飛颺營", "善果營", "培鷹營"], a: 1, exp: "針對較高年級與大專生舉辦的是「飛颺營」。" },
-            { type: "fill", q: "對於遭逢重大疾病、災難或突發事故之弱勢家庭，安得烈藉由「__________計畫」提供急難救助金或安心食物箱。", keywords: ["安心", "安心計畫"], exp: "安心計畫旨在提供緊急急難救助。" },
-            { type: "choice", q: "在茶葉的兒茶素含量比較中，下列何者兒茶素含量最高？", options: ["紅茶", "綠茶", "烏龍茶", "普洱茶"], a: 1, exp: "未發酵的綠茶保留最多的兒茶素。" },
-            { type: "tf", q: "安得烈慈善協會的個案來源包含國中小學、社福機構、教會、警察機關及公部門等。", a: true, exp: "正確，結合社會各界網絡進行轉介通報。" },
-            { type: "choice", q: "台灣話所說的「ㄟ仔菜」，國語是指哪一種蔬菜？", options: ["空心菜", "菠菜", "萵苣", "高麗菜"], a: 2, exp: "「ㄟ仔菜」即為萵苣（A菜）。" },
-            { type: "fill", q: "安得烈食物箱在包裝完成後，主要透過郵局以及__________家物流公司寄送到個案家庭或轉送單位。", keywords: ["2", "兩"], exp: "主要透過郵局及 2 家配合的物流公司配送。" },
-            { type: "choice", q: "下列哪一項「不屬於」大眾可以為安得烈弱勢家庭提供的直接協助方式？", options: ["捐贈發票與食物", "參與志工服務", "通報需要的個案", "強制代為申請借貸"], a: 3, exp: "協助方式包含捐款物、志工參與及通報等，非強制借貸。" },
-            { type: "tf", q: "熬煮大骨湯時，長時間加熱容易將骨頭中的鉛成分溶出至湯頭中。", a: true, exp: "正確，大骨長時間熬煮易釋出微量重金屬，建議多留意。" },
-            { type: "choice", q: "下列哪一種食物的名稱開頭注音為「ㄉ」，常出現在膳糧食物箱中？", options: ["豆乾", "冬粉", "豆腐", "蛋捲"], a: 1, exp: "「ㄉ」開頭且保存期限長的主食如冬粉（ㄉㄨㄥ ㄈㄣˇ）。" },
-            { type: "fill", q: "安得烈食物箱的食物特色之一，是必須能夠在__________溫下保存，以利配送與貯存。", keywords: ["常", "常溫"], exp: "必須為常溫可妥善保存的乾糧與物資。" },
-            { type: "choice", q: "下列哪一項物資開頭注音為「ㄕ」，會包含在膳糧食物箱中？", options: ["柿子", "蔬菜罐頭", "食用油", "柿餅"], a: 2, exp: "「ㄕ」開頭必備料理物資：食用油（ㄕˊ ㄩㄥˋ ㄧㄡˊ）。" },
-            { type: "tf", q: "味精（谷氨酸鈉）適量使用對人體口感風味提升有幫助，且適當鈉替代對飲食控制有一定效益。", a: true, exp: "正確，味精適量使用並無毒害，其含鈉量低於食鹽。" },
-            { type: "choice", q: "針對重病或罕見疾病患者，安得烈食物箱特別提供了哪種專屬客製化食物箱？", options: ["素食食物箱", "重、罕病者/素食食物箱", "長青食物箱", "嬰兒食物箱"], a: 1, exp: "特別規劃「重、罕病者/素食食物箱」以符合特殊營養需求。" },
-            { type: "fill", q: "台語所說的「ㄛ啊」是指芋頭，而「ㄜ啊」則是指__________。", keywords: ["蚵", "蚵仔", "牡蠣"], exp: "「ㄜ啊」台語發音指牡蠣（蚵仔）。" },
-            { type: "choice", q: "膳糧食物箱中開頭注音為「ㄖ」的常見美味乾糧物資是？", options: ["肉乾", "肉鬆", "肉圓", "肉角"], a: 1, exp: "肉鬆（ㄖㄡˋ ㄙㄨㄥ）易保存且適合配飯。" },
-            { type: "tf", q: "可樂的主要成分與咳嗽糖漿完全相同。", a: false, exp: "錯誤，雖然早期可樂源於藥劑師配方，但現今成分完全不同。" },
-            { type: "choice", q: "安得烈培鷹計畫為協助技職學生提升競爭力，推動了何種方案？", options: ["飛翔方案", "希望工程方案", "築夢方案", "展翅方案"], a: 1, exp: "協助技職學子的專案為「希望工程方案」。" },
-            { type: "fill", q: "膳糧食物箱中，開頭注音為「ㄊ」且方便受助家庭加熱即食的食物是__________。", keywords: ["調理包"], exp: "調理包（ㄊㄧㄠˊ ㄌㄧˇ ㄅㄠ）加熱即食非常方便。" },
-            { type: "choice", q: "知名沖泡飲料「阿華甜（阿華田）」的主要核心成分是什麼？", options: ["燕麥", "麥芽", "大豆", "小麥蛋白"], a: 1, exp: "阿華田的核心成分為麥芽精華。" },
-            { type: "tf", q: "組合肉如果沒有完全加熱至熟透，比整塊原肉更容易引發食物中毒。", a: true, exp: "正確，組合肉加工時表面細菌可能被帶入內部，必須全熟食用。" },
-            { type: "choice", q: "下列哪一項屬於膳糧食物箱中「ㄇ」開頭常見的物資組合？", options: ["麵條、麥片、米粉", "饅頭、麻糬、麵包", "麥芽糖、蜜餞、麻油", "米酒、抹醬、木耳"], a: 0, exp: "麵條、麥片、米粉皆為「ㄇ」開頭且保存期長的優質主食。" },
-            { type: "fill", q: "安得烈的精神標語提到：「施比受更有福！助人也是助己，無私奉獻，能為我們帶來更多的__________與快樂。」", keywords: ["幸福"], exp: "無私奉獻能帶來更多幸福與快樂。" },
-            { type: "choice", q: "膳糧食物箱中「ㄍ」開頭、保存期限長且種類多樣的食物是？", options: ["餅乾", "罐頭", "糕餅", "蒟蒻"], a: 1, exp: "罐頭（ㄍㄨㄢˋ ˙ㄊㄡ）耐保存且種類豐富。" },
-            { type: "tf", q: "加工肉品中添加適量的硝酸鹽與亞硝酸鹽主要用於抑制肉毒桿菌，只要符合國家標準劑量，並非絕對會危害健康。", a: true, exp: "正確，合規添加能防止致命肉毒桿菌滋生。" },
-            { type: "choice", q: "常用於製作珍珠奶茶中「奶」風味的原料，普遍主要使用的是？", options: ["鮮乳", "煉乳", "奶精", "奶粉"], a: 2, exp: "市售傳統珍奶大多使用奶精調製口感。" },
-            { type: "fill", q: "安得烈食物箱除了食物之外，有時也會放入協助學子學習的__________。", keywords: ["文具", "文具用品"], exp: "關懷學子的學習，箱內常附帶文具。" },
-            { type: "choice", q: "製作起司（Cheese）的主要基礎原料是什麼？", options: ["豆漿", "乳製品", "植物油", "澱粉"], a: 1, exp: "起司主要由牛奶等乳製品濃縮發酵製成。" },
-            { type: "tf", q: "反覆加熱隔夜菜會直接大幅增加罹患胃癌與大腸直腸癌的風險。", a: false, exp: "錯誤，危害主要源於保存不當細菌滋生，非加熱動作本身直接致癌。" },
-            { type: "choice", q: "下列何者「不能」放入安得烈嬰兒食物箱中？", options: ["嬰兒奶粉", "尿布", "OREO餅乾", "嬰兒米精"], a: 2, exp: "OREO餅乾不適合嬰幼兒食用。" },
-            { type: "fill", q: "安得烈慈善協會每月約發放__________千餘箱客製化食物箱給需要的家庭。", keywords: ["5", "五"], exp: "每月發放約五千餘箱食物箱。" },
-            { type: "choice", q: "膳糧食物箱中開頭注音為「ㄅ」的食物組合，下列何者正確？", options: ["包子、扁食、白菜", "白米、保久乳、八寶粥、餅乾", "芭樂、百香果、香蕉", "檳榔、爆米花、布丁"], a: 1, exp: "白米、保久乳、八寶粥、餅乾皆屬「ㄅ」開頭常溫物資。" },
-            { type: "tf", q: "飲用過熱的熱茶或熱湯（超過 65°C）已被世界衛生組織列為增加食道癌風險的因素之一。", a: true, exp: "正確，高溫易反覆燙傷食道黏膜，增加病變風險。" },
-            { type: "choice", q: "安得烈慈善協會的核心工作不包含下列哪一項？", options: ["急難救助", "弱勢扶助", "災害援助與教育推廣", "投資理財顧問"], a: 3, exp: "協會致力於弱勢扶助與急難救助，不包含商業投資顧問。" }
-        ];
-
-        let currentGameQuestions = [];
-        let currentQIndex = 0;
-        let score = 0;
-        const totalQuestionsPerGame = 10;
-
-        function startGame() {
-            // 洗牌並選取 10 題
-            const shuffled = [...rawQuestionBank].sort(() => 0.5 - Math.random());
-            currentGameQuestions = shuffled.slice(0, totalQuestionsPerGame);
-            
-            currentQIndex = 0;
-            score = 0;
-
-            document.getElementById("start-screen").classList.remove("active");
-            document.getElementById("end-screen").classList.remove("active");
-            document.getElementById("game-screen").classList.add("active");
-
-            showQuestion();
-        }
-
-        function showQuestion() {
-            const qData = currentGameQuestions[currentQIndex];
-            
-            // 更新 UI 狀態
-            document.getElementById("current-q").innerText = currentQIndex + 1;
-            document.getElementById("score").innerText = score;
-            document.getElementById("progress-bar").style.width = `${((currentQIndex) / totalQuestionsPerGame) * 100}%`;
-            document.getElementById("explanation").style.display = "none";
-            document.getElementById("next-btn").style.display = "none";
-
-            const typeTag = document.getElementById("question-type");
-            const qText = document.getElementById("question-text");
-            const container = document.getElementById("options-container");
-            container.innerHTML = "";
-
-            qText.innerText = qData.q;
-
-            if (qData.type === "choice") {
-                typeTag.innerText = "選擇題";
-                qData.options.forEach((opt, idx) => {
-                    const btn = document.createElement("button");
-                    btn.className = "btn";
-                    btn.innerText = `${String.fromCharCode(65 + idx)}. ${opt}`;
-                    btn.onclick = () => checkChoiceAnswer(idx);
-                    container.appendChild(btn);
-                });
-            } else if (qData.type === "tf") {
-                typeTag.innerText = "是非題";
-                const btnTrue = document.createElement("button");
-                btnTrue.className = "btn";
-                btnTrue.innerText = "○ 正確";
-                btnTrue.onclick = () => checkTFAnswer(true);
-
-                const btnFalse = document.createElement("button");
-                btnFalse.className = "btn";
-                btnFalse.innerText = "╳ 錯誤";
-                btnFalse.onclick = () => checkTFAnswer(false);
-
-                container.appendChild(btnTrue);
-                container.appendChild(btnFalse);
-            } else if (qData.type === "fill") {
-                typeTag.innerText = "填空題";
-                const group = document.createElement("div");
-                group.className = "input-group";
-
-                const input = document.createElement("input");
-                input.type = "text";
-                input.id = "fill-input";
-                input.className = "text-input";
-                input.placeholder = "請在此輸入答案...";
-
-                const submitBtn = document.createElement("button");
-                submitBtn.className = "submit-btn";
-                submitBtn.innerText = "送出";
-                submitBtn.onclick = () => checkFillAnswer();
-
-                group.appendChild(input);
-                group.appendChild(submitBtn);
-                container.appendChild(group);
-            }
-        }
-
-        function handleResult(isCorrect) {
-            const qData = currentGameQuestions[currentQIndex];
-            if (isCorrect) {
-                score += 10;
-                document.getElementById("score").innerText = score;
-            }
-
-            // 顯示解析
-            const expBox = document.getElementById("explanation");
-            const expText = document.getElementById("explanation-text");
-            expText.innerText = (isCorrect ? "答對了！" : "答錯了！") + " " + qData.exp;
-            expBox.style.display = "block";
-
-            document.getElementById("next-btn").style.display = "block";
-        }
-
-        function checkChoiceAnswer(selectedIndex) {
-            const qData = currentGameQuestions[currentQIndex];
-            const buttons = document.querySelectorAll("#options-container .btn");
-            
-            buttons.forEach((btn, idx) => {
-                btn.disabled = true;
-                if (idx === qData.a) {
-                    btn.classList.add("correct");
-                } else if (idx === selectedIndex) {
-                    btn.classList.add("wrong");
-                }
-            });
-
-            handleResult(selectedIndex === qData.a);
-        }
-
-        function checkTFAnswer(selectedVal) {
-            const qData = currentGameQuestions[currentQIndex];
-            const buttons = document.querySelectorAll("#options-container .btn");
-
-            buttons.forEach((btn) => {
-                btn.disabled = true;
-                const isTrueBtn = btn.innerText.includes("正確");
-                if ((isTrueBtn && qData.a) || (!isTrueBtn && !qData.a)) {
-                    btn.classList.add("correct");
-                } else if ((isTrueBtn && selectedVal) || (!isTrueBtn && !selectedVal)) {
-                    btn.classList.add("wrong");
-                }
-            });
-
-            handleResult(selectedVal === qData.a);
-        }
-
-        function checkFillAnswer() {
-            const input = document.getElementById("fill-input");
-            const val = input.value.trim();
-            if (!val) return;
-
-            const qData = currentGameQuestions[currentQIndex];
-            input.disabled = true;
-            document.querySelector(".submit-btn").disabled = true;
-
-            const isCorrect = qData.keywords.some(kw => val.includes(kw));
-            if (isCorrect) {
-                input.style.borderColor = "#2e7d32";
-                input.style.backgroundColor = "#c8e6c9";
-            } else {
-                input.style.borderColor = "#c62828";
-                input.style.backgroundColor = "#ffcdd2";
-            }
-
-            handleResult(isCorrect);
-        }
-
-        function nextQuestion() {
-            currentQIndex++;
-            if (currentQIndex < totalQuestionsPerGame) {
-                showQuestion();
-            } else {
-                endGame();
-            }
-        }
-
-        function endGame() {
-            document.getElementById("progress-bar").style.width = "100%";
-            document.getElementById("game-screen").classList.remove("active");
-            document.getElementById("end-screen").classList.add("active");
-
-            document.getElementById("final-score").innerText = score;
-            const comment = document.getElementById("result-comment");
-            if (score === 100) {
-                comment.innerText = "太厲害了！你是安得烈知識大師！";
-            } else if (score >= 70) {
-                comment.innerText = "表現優異！對協會與食物知識非常了解！";
-            } else {
-                comment.innerText = "繼續加油！歡迎多多關注安得烈慈善協會。";
-            }
-        }
     </script>
 </body>
 </html>
