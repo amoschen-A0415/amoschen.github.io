@@ -1,658 +1,533 @@
 <!DOCTYPE html>
-<html lang="zh-TW" class="dark">
+<html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>安得烈食物銀行 - 即時互動問答大亂鬥</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- PeerJS (實現手機與大螢幕跨裝置 P2P 連線) & QRCode.js -->
-    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <!-- Canvas Confetti CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-    <!-- FontAwesome CDN -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        neon: {
-                            blue: '#00f3ff',
-                            purple: '#b000ff',
-                            pink: '#ff007f',
-                            green: '#00ff66',
-                            yellow: '#ffcc00'
-                        }
-                    }
-                }
-            }
-        }
-    </script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap');
+        :root {
+            --primary: #e65100;
+            --primary-light: #ff833a;
+            --primary-dark: #ac1900;
+            --accent: #2e7d32;
+            --bg: #fff8e1;
+            --card-bg: #ffffff;
+            --text: #37474f;
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: "PingFang TC", "Microsoft JhengHei", sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
         body {
-            font-family: 'Noto Sans TC', sans-serif;
-            background-color: #0b0f19;
-            color: #f3f4f6;
-            user-select: none;
+            background-color: var(--bg);
+            color: var(--text);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .game-container {
+            background: var(--card-bg);
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 650px;
+            padding: 30px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .title {
+            color: var(--primary);
+            font-size: 1.8rem;
+            margin-bottom: 5px;
+        }
+
+        .subtitle {
+            color: #78909c;
+            font-size: 0.95rem;
+        }
+
+        .stats-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #fff3e0;
+            padding: 12px 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 8px;
+            background: #ffe0b2;
+            border-radius: 4px;
+            margin-bottom: 25px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: var(--primary);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .question-card {
+            margin-bottom: 25px;
+        }
+
+        .tag {
+            display: inline-block;
+            background: #e8f5e9;
+            color: var(--accent);
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .question-text {
+            font-size: 1.25rem;
+            line-height: 1.5;
+            color: #263238;
+            margin-bottom: 15px;
+        }
+
+        .options-grid {
+            display: grid;
+            gap: 12px;
+        }
+
+        .btn {
+            background: #fff;
+            border: 2px solid #ffe0b2;
+            border-radius: 12px;
+            padding: 14px 20px;
+            font-size: 1rem;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--text);
+            outline: none;
+        }
+
+        .btn:hover:not(:disabled) {
+            background: #fff3e0;
+            border-color: var(--primary-light);
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            cursor: not-allowed;
+        }
+
+        .btn.correct {
+            background: #c8e6c9 !important;
+            border-color: #2e7d32 !important;
+            color: #1b5e20 !important;
+            font-weight: bold;
+        }
+
+        .btn.wrong {
+            background: #ffcdd2 !important;
+            border-color: #c62828 !important;
+            color: #b71c1c !important;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .text-input {
+            flex: 1;
+            padding: 14px;
+            border: 2px solid #ffe0b2;
+            border-radius: 12px;
+            font-size: 1rem;
+            outline: none;
+        }
+
+        .text-input:focus {
+            border-color: var(--primary);
+        }
+
+        .submit-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0 25px;
+            border-radius: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .submit-btn:hover {
+            background: var(--primary-dark);
+        }
+
+        .explanation {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 12px;
+            background: #f1f8e9;
+            border-left: 5px solid var(--accent);
+            display: none;
+        }
+
+        .explanation-title {
+            font-weight: bold;
+            color: var(--accent);
+            margin-bottom: 5px;
+        }
+
+        .next-btn {
+            display: block;
+            width: 100%;
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 20px;
+            text-align: center;
+            box-shadow: 0 4px 10px rgba(230, 81, 0, 0.3);
+        }
+
+        .next-btn:hover {
+            background: var(--primary-dark);
+        }
+
+        .screen {
+            display: none;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        .start-screen, .end-screen {
+            text-align: center;
+            padding: 20px 0;
+        }
+
+        .start-btn, .restart-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            border-radius: 30px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(230, 81, 0, 0.4);
+            margin-top: 20px;
+        }
+
+        .score-display {
+            font-size: 3rem;
+            color: var(--primary);
+            font-weight: bold;
+            margin: 20px 0;
         }
     </style>
 </head>
-<body class="min-h-screen flex flex-col justify-between overflow-x-hidden bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-purple-950 to-slate-950">
+<body>
 
-    <!-- 頂部 Header -->
-    <header class="w-full p-4 border-b border-slate-800 bg-slate-900/60 backdrop-blur-md flex justify-between items-center z-10">
-        <div class="flex items-center space-x-3">
-            <span class="text-3xl">🍞</span>
-            <h1 class="text-2xl md:text-3xl font-black tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-neon-blue via-neon-purple to-neon-pink">
-                安得烈食物銀行知識大亂鬥
-            </h1>
+    <div class="game-container">
+        <!-- 開始畫面 -->
+        <div id="start-screen" class="screen active start-screen">
+            <h1 class="title">安得烈食物銀行</h1>
+            <p class="subtitle" style="margin-bottom: 30px;">即時互動問答大亂鬥</p>
+            <p>挑戰 10 道隨機抽取的題庫題目<br>測試你對協會服務與營養知識的了解！</p>
+            <button class="start-btn" onclick="startGame()">開始挑戰</button>
         </div>
-        <div id="game-stage-badge" class="hidden px-4 py-1.5 rounded-full text-sm md:text-lg font-bold bg-slate-800 border border-cyan-500/50 text-cyan-400">
-            準備中
-        </div>
-    </header>
 
-    <!-- 主要內容區域 -->
-    <main class="flex-grow flex items-center justify-center p-4 md:p-6 relative">
+        <!-- 遊戲主畫面 -->
+        <div id="game-screen" class="screen">
+            <div class="stats-bar">
+                <span>題目 <span id="current-q">1</span> / 10</span>
+                <span>得分：<span id="score">0</span></span>
+            </div>
+            <div class="progress-bar-container">
+                <div id="progress-bar" class="progress-bar"></div>
+            </div>
 
-        <!-- ==================== 1. 大螢幕 - 遊戲大廳 / 掃碼進入 ==================== -->
-        <div id="view-lobby" class="w-full max-w-5xl bg-slate-900/80 border-2 border-slate-700/80 rounded-2xl p-6 md:p-10 shadow-2xl backdrop-blur-xl">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div class="question-card">
+                <span id="question-type" class="tag">選擇題</span>
+                <div id="question-text" class="question-text">題目載入中...</div>
                 
-                <!-- 掃碼區域 -->
-                <div class="flex flex-col items-center justify-center border-b md:border-b-0 md:border-r border-slate-700/80 pr-0 md:pr-8 pb-6 md:pb-0 text-center">
-                    <h2 class="text-2xl md:text-3xl font-bold text-neon-blue mb-2 flex items-center gap-2">
-                        <i class="fa-solid fa-qrcode"></i> 掃碼參賽 (滿4人開賽)
-                    </h2>
-                    <p class="text-slate-400 text-sm mb-4">請使用手機相機掃描 QR Code 進入遊戲</p>
-
-                    <div id="qrcode" class="bg-white p-3 rounded-2xl border-4 border-cyan-400 mb-4"></div>
-
-                    <!-- 60 秒倒數計時提示 -->
-                    <div id="lobby-timer-box" class="w-full bg-slate-800/90 border border-slate-700 p-4 rounded-xl">
-                        <span class="text-slate-400 text-sm block mb-1">等候時間 (60秒滿額/超時自動補機器人開賽)：</span>
-                        <span id="lobby-timer-text" class="text-xl font-black text-neon-yellow">等待玩家連線...</span>
-                    </div>
+                <div id="options-container" class="options-grid">
+                    <!-- 動態渲染選項/輸入框 -->
                 </div>
 
-                <!-- 參賽者清單 -->
-                <div class="flex flex-col justify-between space-y-6">
-                    <div>
-                        <h2 class="text-2xl md:text-3xl font-bold text-neon-purple mb-4 flex items-center gap-2">
-                            <i class="fa-solid fa-users"></i> 已連線參賽者 (1~4人)
-                        </h2>
-
-                        <!-- 玩家清單 -->
-                        <div id="player-list-lobby" class="grid grid-cols-1 gap-3 max-h-60 overflow-y-auto pr-1">
-                            <div class="text-slate-500 text-center py-8 font-bold border border-dashed border-slate-800 rounded-xl">
-                                尚無玩家連線，請掃描 QR Code 加入...
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700/50 text-center text-slate-400 text-sm">
-                        ⚡ 提示：首位玩家掃碼連線後自動啟動 60 秒計時，滿 4 人或時間結束自動開賽。
-                    </div>
+                <div id="explanation" class="explanation">
+                    <div class="explanation-title">解析說明</div>
+                    <div id="explanation-text"></div>
                 </div>
             </div>
+
+            <button id="next-btn" class="next-btn" style="display: none;" onclick="nextQuestion()">下一題</button>
         </div>
 
-        <!-- ==================== 2. 手機端 - 玩家控制器畫面 ==================== -->
-        <div id="view-player-mobile" class="hidden fixed inset-0 z-50 bg-slate-950 p-6 flex-col justify-between">
-            <div class="text-center space-y-2">
-                <span class="text-4xl">🍞</span>
-                <h2 class="text-2xl font-black text-neon-blue">安得烈答題控制器</h2>
-                <p id="player-mobile-name" class="text-neon-yellow font-bold text-lg">正在連線大螢幕...</p>
-            </div>
-
-            <!-- 登錄名稱區 -->
-            <div id="mobile-join-form" class="space-y-4 bg-slate-900 p-6 rounded-2xl border border-slate-800">
-                <input type="text" id="mobile-name-input" maxlength="8" placeholder="請輸入您的暱稱..." 
-                    class="w-full bg-slate-800 border-2 border-slate-700 p-4 rounded-xl text-center text-white text-xl font-bold focus:border-neon-purple outline-none">
-                <button id="btn-mobile-join" class="w-full py-4 bg-gradient-to-r from-neon-blue to-neon-purple text-black font-black text-xl rounded-xl shadow-lg">
-                    確認參賽
-                </button>
-            </div>
-
-            <!-- 答題按鈕區 -->
-            <div id="mobile-answers-grid" class="hidden grid-cols-2 gap-4 my-auto">
-                <button onclick="mobileSubmitAnswer(0)" class="h-28 bg-blue-600 active:bg-blue-700 rounded-2xl text-4xl font-black text-white shadow-lg">A</button>
-                <button onclick="mobileSubmitAnswer(1)" class="h-28 bg-emerald-600 active:bg-emerald-700 rounded-2xl text-4xl font-black text-white shadow-lg">B</button>
-                <button onclick="mobileSubmitAnswer(2)" class="h-28 bg-amber-600 active:bg-amber-700 rounded-2xl text-4xl font-black text-white shadow-lg">C</button>
-                <button onclick="mobileSubmitAnswer(3)" class="h-28 bg-rose-600 active:bg-rose-700 rounded-2xl text-4xl font-black text-white shadow-lg">D</button>
-            </div>
-
-            <!-- 作答狀態 -->
-            <div id="mobile-status-text" class="text-center text-slate-400 font-bold py-2">
-                連線成功！請輸入暱稱完成登錄
-            </div>
+        <!-- 結算畫面 -->
+        <div id="end-screen" class="screen end-screen">
+            <h1 class="title">挑戰完成！</h1>
+            <div class="score-display"><span id="final-score">0</span> 分</div>
+            <p id="result-comment">做得好！感謝你關注安得烈慈善協會。</p>
+            <button class="restart-btn" onclick="startGame()">再次挑戰</button>
         </div>
+    </div>
 
-        <!-- ==================== 3. 大螢幕 - 遊戲主畫面 ==================== -->
-        <div id="view-game" class="hidden w-full max-w-6xl flex-col gap-6">
-            <div class="bg-slate-900/90 border-2 border-cyan-500/30 rounded-2xl p-6 md:p-8 shadow-2xl backdrop-blur-xl relative overflow-hidden">
-                <div class="w-full bg-slate-800 h-3 rounded-full mb-6 overflow-hidden border border-slate-700">
-                    <div id="timer-bar" class="h-full bg-gradient-to-r from-neon-blue to-neon-pink w-full transition-all duration-100 ease-linear"></div>
-                </div>
-
-                <div class="flex justify-between items-center mb-4">
-                    <span id="question-number" class="text-neon-blue font-black text-xl md:text-2xl tracking-wider">QUESTION 01/10</span>
-                    <span id="timer-text" class="text-2xl md:text-3xl font-black text-neon-yellow">⏱️ 10s</span>
-                </div>
-
-                <h2 id="question-text" class="text-2xl md:text-4xl font-extrabold text-white leading-relaxed mb-8 min-h-[80px]">
-                    題目載入中...
-                </h2>
-
-                <div id="options-container" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
-            </div>
-
-            <!-- 參賽者面板 -->
-            <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 md:p-6 backdrop-blur-xl">
-                <h3 class="text-slate-400 text-sm font-bold mb-3 flex items-center justify-between">
-                    <span>🎮 參賽者即時狀態</span>
-                    <span id="round-status-hint" class="text-neon-green font-normal">等待作答中...</span>
-                </h3>
-                <div id="players-dashboard" class="grid grid-cols-2 sm:grid-cols-4 gap-3"></div>
-            </div>
-        </div>
-
-        <!-- ==================== 4. 中場晉級公告 modal ==================== -->
-        <div id="view-intermission" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
-            <div class="bg-slate-900 border-2 border-neon-purple rounded-2xl p-8 max-w-2xl w-full text-center">
-                <h2 class="text-3xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-neon-blue via-neon-yellow to-neon-pink mb-4">
-                    🔥 STAGE 1 預賽結束！
-                </h2>
-                <p class="text-slate-300 text-xl mb-6">總積分前 2 名成功晉級 STAGE 2 雙人 PK 決賽！</p>
-                <div id="qualified-players-list" class="flex justify-center gap-6 mb-8"></div>
-                <button id="btn-start-stage2" class="w-full py-4 text-2xl font-bold text-black bg-neon-yellow rounded-xl shadow-lg hover:brightness-110 transition">
-                    ⚔️ 進入 STAGE 2 雙人 PK 賽
-                </button>
-            </div>
-        </div>
-
-        <!-- ==================== 5. 最終頒獎典禮畫面 ==================== -->
-        <div id="view-result" class="hidden w-full max-w-4xl bg-slate-900/90 border-2 border-neon-yellow/50 rounded-2xl p-6 md:p-10 shadow-2xl backdrop-blur-xl text-center">
-            <h2 class="text-4xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-neon-yellow via-amber-300 to-yellow-500 mb-2">
-                🏆 頒獎典禮 🏆
-            </h2>
-            <p class="text-slate-400 text-lg md:text-xl mb-8">感謝大家參與「安得烈食物銀行」愛心知識大亂鬥！</p>
-            <div id="leaderboard-container" class="space-y-3 mb-8"></div>
-            <button id="btn-restart-game" class="px-10 py-4 text-xl font-bold text-white bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl transition">
-                🔄 重新開啟新局
-            </button>
-        </div>
-
-    </main>
-
-    <footer class="w-full p-4 border-t border-slate-800 bg-slate-950/80 text-center text-slate-500 text-sm">
-        安得烈食物銀行 關懷弱勢・愛合格不浪費 | 互動問答大亂鬥
-    </footer>
-
-    <!-- 遊戲全域 JavaScript 邏輯 -->
     <script>
-        // 題庫資料
-        const quizDatabase = [
-            { question: "1. 安得烈食物銀行的「膳糧食物箱」主要援助對象包含以下何者？", options: ["弱勢家庭幼兒", "貧困學童", "長者與身障者", "以上皆是"], answer: 3 },
-            { question: "2. 安得烈針對 0-3 歲弱勢嬰幼兒所推動的專案名稱為何？", options: ["嬰兒專案", "嬰幼兒膳糧箱", "柔性關懷計劃", "培鷹計畫"], answer: 1 },
-            { question: "3. 安得烈食物銀行為培養弱勢學童品格與才藝，推動了哪項計畫？", options: ["培鷹計畫", "飛鴿計畫", "築夢計畫", "希望種子計畫"], answer: 0 },
-            { question: "4. 安得烈的食物箱發放方式主要是如何送達弱勢家庭？", options: ["現場排隊領取", "宅配/郵寄到府", "請村里長發放", "不定點發放"], answer: 1 },
-            { question: "5. 「愛合格不浪費」的核心理念是指什麼？", options: ["提供即期食物", "嚴選合格、衛生且效期安全的物資", "隨機收集剩食", "只提供冷凍食品"], answer: 1 },
-            { question: "6. 安得烈食物銀行的「柔性關懷」主要是指什麼行動？", options: ["電話與社工實地訪視關懷", "僅發放物資不問問候", "舉辦音樂會", "提供法律諮詢"], answer: 0 },
-            { question: "7. 社區與民眾若想支持安得烈食物銀行，以下哪種方式最直接有效？", options: ["捐贈常溫保存無虞之物資", "擔任志工協助打包", "小額定期定額捐款", "以上皆是"], answer: 3 },
-            { question: "8. [PK決賽] 安得烈食物箱內主要提供的食物類型特點為何？", options: ["皆為生鮮蔬果", "以常溫可保存且營養均衡物資為主", "皆為進口高價食品", "全數為罐頭食物"], answer: 1 },
-            { question: "9. [PK決賽] 安得烈舉辦的全國學童「畫作與作文徵集體驗活動」目的為何？", options: ["評選高價藝術品", "推動感恩與品格教育", "招募志工", "進行商業拍賣"], answer: 1 },
-            { question: "10. [PK決賽] 安得烈食物銀行的核心願景「讓愛安心，無餓發生」重點在於？", options: ["即時與精準的生命援助", "建立全球連鎖通路", "只專注於節慶送禮", "發放現金補助"], answer: 0 }
+        const rawQuestionBank = [
+            { type: "choice", q: "安得烈慈善協會的「膳糧食物箱」主要提供給幾歲至幾歲的弱勢兒少？", options: ["0～3歲", "3～15歲", "15～18歲", "18歲以上"], a: 1, exp: "膳糧食物箱主要針對 3～15 歲關懷兒少設計。" },
+            { type: "tf", q: "安得烈食物箱基於營養與健康考量，一律不放入泡麵以及高鹽、高糖、醃漬食品（如醬瓜、豆腐乳）。", a: true, exp: "正確，安得烈注重受助家庭的營養均衡與健康。" },
+            { type: "fill", q: "安得烈「培鷹計畫」每學年提供__________金，幫助家境清寒、學業優秀或才藝技能卓越的弱勢兒少順利完成學業。", keywords: ["獎學金", "助學金", "獎助學金"], exp: "提供獎（助）學金扶助學子。" },
+            { type: "choice", q: "安得烈針對 65 至 80 歲弱勢長者所設計的專屬食物箱名稱為何？", options: ["松柏食物箱", "長青食物箱", "安心食物箱", "膳糧食物箱"], a: 2, exp: "65-80 歲為安心食物箱；80 歲以上為松柏食物箱。" },
+            { type: "tf", q: "泡麵本身通常含有大量的防腐劑，因此不適合放入食物箱。", a: false, exp: "錯誤，泡麵係透過油炸或乾燥加工達到防腐效果，非添加防腐劑；食物箱不放泡麵主要是考量營養價值。" },
+            { type: "choice", q: "安得烈舉辦的生命成長營與飛颺營，其四大活動目標不包含下列哪一項？", options: ["品格成長", "知識成長", "財富成長", "視野成長"], a: 2, exp: "四大目標為：品格成長、知識成長、視野成長、實力成長。" },
+            { type: "fill", q: "志工在協助安得烈食品效期檢查時，規定物資效期須在__________個月以上。", keywords: ["6", "六"], exp: "入箱物資需確保有 6 個月以上的保存期限。" },
+            { type: "choice", q: "針對初生至 3 歲的幼兒，安得烈「嬰兒物資箱」主要提供的核心物資為？", options: ["餅乾與麥片", "奶粉與尿布", "白米與食用油", "調理包與罐頭"], a: 1, exp: "嬰兒箱主要提供奶粉與尿布等幼兒必需品。" },
+            { type: "tf", q: "糙米和白米是兩種完全不同品種的稻米作物。", a: false, exp: "錯誤，糙米與白米是同一種米，僅碾米精緻加工程度不同。" },
+            { type: "choice", q: "協助安得烈食物箱進行食品效期檢查時，除了效期規定外，單件物資重量通常限制在多少公斤以下（白米除外）？", options: ["0.5公斤", "1公斤", "2公斤", "3公斤"], a: 1, exp: "單件物資重量通常限制在 1 公斤以下。" },
+            { type: "fill", q: "安得烈推動配合學校生命教育課程的「__________計畫」，旨在鼓勵學子具備知福、惜福、感恩、助人、分享與惜食的觀念。", keywords: ["善果", "善果計畫"], exp: "推動善果計畫深化校園生命教育。" },
+            { type: "choice", q: "80 歲以上的弱勢長者，安得烈會提供哪一種專屬食物箱？", options: ["安心食物箱", "松柏食物箱", "長青食物箱", "專案物資箱"], a: 1, exp: "80 歲以上專屬食物箱為「松柏食物箱」。" },
+            { type: "tf", q: "反式脂肪只會出現在人工植物油中，絕不可能存在於天然乳製品裡。", a: false, exp: "錯誤，天然乳製品與反芻動物肉類中亦含有微量天然反式脂肪。" },
+            { type: "choice", q: "下列何者「非」安得烈學藝競賽所規劃的徵件項目？", options: ["作文", "繪畫", "書法", "攝影"], a: 3, exp: "學藝競賽主要包含作文、繪畫、書法。" },
+            { type: "fill", q: "為幫助弱勢家庭歡度農曆新年，安得烈特別規劃發放「__________食物箱」。", keywords: ["年菜", "年菜食物箱"], exp: "特別發放「年菜食物箱」分享佳節溫暖。" },
+            { type: "choice", q: "依據飲食營養小知識，日常生活中常見的「玉米」在營養學分類上屬於？", options: ["蔬菜類", "水果類", "主食（全穀雜糧）類", "蛋白質類"], a: 2, exp: "玉米主要成分為澱粉，歸類於全穀雜糧（主食）類。" },
+            { type: "tf", q: "志工在進行安得烈食品安全檢查時，若發現包裝有破損、發霉或長蟲，該物資皆不可入箱。", a: true, exp: "正確，確保食品安全為第一優先。" },
+            { type: "choice", q: "安得烈「培鷹計畫」中的高年級/大專營隊名稱為何？", options: ["生命成長營", "飛颺營", "善果營", "培鷹營"], a: 1, exp: "針對較高年級與大專生舉辦的是「飛颺營」。" },
+            { type: "fill", q: "對於遭逢重大疾病、災難或突發事故之弱勢家庭，安得烈藉由「__________計畫」提供急難救助金或安心食物箱。", keywords: ["安心", "安心計畫"], exp: "安心計畫旨在提供緊急急難救助。" },
+            { type: "choice", q: "在茶葉的兒茶素含量比較中，下列何者兒茶素含量最高？", options: ["紅茶", "綠茶", "烏龍茶", "普洱茶"], a: 1, exp: "未發酵的綠茶保留最多的兒茶素。" },
+            { type: "tf", q: "安得烈慈善協會的個案來源包含國中小學、社福機構、教會、警察機關及公部門等。", a: true, exp: "正確，結合社會各界網絡進行轉介通報。" },
+            { type: "choice", q: "台灣話所說的「ㄟ仔菜」，國語是指哪一種蔬菜？", options: ["空心菜", "菠菜", "萵苣", "高麗菜"], a: 2, exp: "「ㄟ仔菜」即為萵苣（A菜）。" },
+            { type: "fill", q: "安得烈食物箱在包裝完成後，主要透過郵局以及__________家物流公司寄送到個案家庭或轉送單位。", keywords: ["2", "兩"], exp: "主要透過郵局及 2 家配合的物流公司配送。" },
+            { type: "choice", q: "下列哪一項「不屬於」大眾可以為安得烈弱勢家庭提供的直接協助方式？", options: ["捐贈發票與食物", "參與志工服務", "通報需要的個案", "強制代為申請借貸"], a: 3, exp: "協助方式包含捐款物、志工參與及通報等，非強制借貸。" },
+            { type: "tf", q: "熬煮大骨湯時，長時間加熱容易將骨頭中的鉛成分溶出至湯頭中。", a: true, exp: "正確，大骨長時間熬煮易釋出微量重金屬，建議多留意。" },
+            { type: "choice", q: "下列哪一種食物的名稱開頭注音為「ㄉ」，常出現在膳糧食物箱中？", options: ["豆乾", "冬粉", "豆腐", "蛋捲"], a: 1, exp: "「ㄉ」開頭且保存期限長的主食如冬粉（ㄉㄨㄥ ㄈㄣˇ）。" },
+            { type: "fill", q: "安得烈食物箱的食物特色之一，是必須能夠在__________溫下保存，以利配送與貯存。", keywords: ["常", "常溫"], exp: "必須為常溫可妥善保存的乾糧與物資。" },
+            { type: "choice", q: "下列哪一項物資開頭注音為「ㄕ」，會包含在膳糧食物箱中？", options: ["柿子", "蔬菜罐頭", "食用油", "柿餅"], a: 2, exp: "「ㄕ」開頭必備料理物資：食用油（ㄕˊ ㄩㄥˋ ㄧㄡˊ）。" },
+            { type: "tf", q: "味精（谷氨酸鈉）適量使用對人體口感風味提升有幫助，且適當鈉替代對飲食控制有一定效益。", a: true, exp: "正確，味精適量使用並無毒害，其含鈉量低於食鹽。" },
+            { type: "choice", q: "針對重病或罕見疾病患者，安得烈食物箱特別提供了哪種專屬客製化食物箱？", options: ["素食食物箱", "重、罕病者/素食食物箱", "長青食物箱", "嬰兒食物箱"], a: 1, exp: "特別規劃「重、罕病者/素食食物箱」以符合特殊營養需求。" },
+            { type: "fill", q: "台語所說的「ㄛ啊」是指芋頭，而「ㄜ啊」則是指__________。", keywords: ["蚵", "蚵仔", "牡蠣"], exp: "「ㄜ啊」台語發音指牡蠣（蚵仔）。" },
+            { type: "choice", q: "膳糧食物箱中開頭注音為「ㄖ」的常見美味乾糧物資是？", options: ["肉乾", "肉鬆", "肉圓", "肉角"], a: 1, exp: "肉鬆（ㄖㄡˋ ㄙㄨㄥ）易保存且適合配飯。" },
+            { type: "tf", q: "可樂的主要成分與咳嗽糖漿完全相同。", a: false, exp: "錯誤，雖然早期可樂源於藥劑師配方，但現今成分完全不同。" },
+            { type: "choice", q: "安得烈培鷹計畫為協助技職學生提升競爭力，推動了何種方案？", options: ["飛翔方案", "希望工程方案", "築夢方案", "展翅方案"], a: 1, exp: "協助技職學子的專案為「希望工程方案」。" },
+            { type: "fill", q: "膳糧食物箱中，開頭注音為「ㄊ」且方便受助家庭加熱即食的食物是__________。", keywords: ["調理包"], exp: "調理包（ㄊㄧㄠˊ ㄌㄧˇ ㄅㄠ）加熱即食非常方便。" },
+            { type: "choice", q: "知名沖泡飲料「阿華甜（阿華田）」的主要核心成分是什麼？", options: ["燕麥", "麥芽", "大豆", "小麥蛋白"], a: 1, exp: "阿華田的核心成分為麥芽精華。" },
+            { type: "tf", q: "組合肉如果沒有完全加熱至熟透，比整塊原肉更容易引發食物中毒。", a: true, exp: "正確，組合肉加工時表面細菌可能被帶入內部，必須全熟食用。" },
+            { type: "choice", q: "下列哪一項屬於膳糧食物箱中「ㄇ」開頭常見的物資組合？", options: ["麵條、麥片、米粉", "饅頭、麻糬、麵包", "麥芽糖、蜜餞、麻油", "米酒、抹醬、木耳"], a: 0, exp: "麵條、麥片、米粉皆為「ㄇ」開頭且保存期長的優質主食。" },
+            { type: "fill", q: "安得烈的精神標語提到：「施比受更有福！助人也是助己，無私奉獻，能為我們帶來更多的__________與快樂。」", keywords: ["幸福"], exp: "無私奉獻能帶來更多幸福與快樂。" },
+            { type: "choice", q: "膳糧食物箱中「ㄍ」開頭、保存期限長且種類多樣的食物是？", options: ["餅乾", "罐頭", "糕餅", "蒟蒻"], a: 1, exp: "罐頭（ㄍㄨㄢˋ ˙ㄊㄡ）耐保存且種類豐富。" },
+            { type: "tf", q: "加工肉品中添加適量的硝酸鹽與亞硝酸鹽主要用於抑制肉毒桿菌，只要符合國家標準劑量，並非絕對會危害健康。", a: true, exp: "正確，合規添加能防止致命肉毒桿菌滋生。" },
+            { type: "choice", q: "常用於製作珍珠奶茶中「奶」風味的原料，普遍主要使用的是？", options: ["鮮乳", "煉乳", "奶精", "奶粉"], a: 2, exp: "市售傳統珍奶大多使用奶精調製口感。" },
+            { type: "fill", q: "安得烈食物箱除了食物之外，有時也會放入協助學子學習的__________。", keywords: ["文具", "文具用品"], exp: "關懷學子的學習，箱內常附帶文具。" },
+            { type: "choice", q: "製作起司（Cheese）的主要基礎原料是什麼？", options: ["豆漿", "乳製品", "植物油", "澱粉"], a: 1, exp: "起司主要由牛奶等乳製品濃縮發酵製成。" },
+            { type: "tf", q: "反覆加熱隔夜菜會直接大幅增加罹患胃癌與大腸直腸癌的風險。", a: false, exp: "錯誤，危害主要源於保存不當細菌滋生，非加熱動作本身直接致癌。" },
+            { type: "choice", q: "下列何者「不能」放入安得烈嬰兒食物箱中？", options: ["嬰兒奶粉", "尿布", "OREO餅乾", "嬰兒米精"], a: 2, exp: "OREO餅乾不適合嬰幼兒食用。" },
+            { type: "fill", q: "安得烈慈善協會每月約發放__________千餘箱客製化食物箱給需要的家庭。", keywords: ["5", "五"], exp: "每月發放約五千餘箱食物箱。" },
+            { type: "choice", q: "膳糧食物箱中開頭注音為「ㄅ」的食物組合，下列何者正確？", options: ["包子、扁食、白菜", "白米、保久乳、八寶粥、餅乾", "芭樂、百香果、香蕉", "檳榔、爆米花、布丁"], a: 1, exp: "白米、保久乳、八寶粥、餅乾皆屬「ㄅ」開頭常溫物資。" },
+            { type: "tf", q: "飲用過熱的熱茶或熱湯（超過 65°C）已被世界衛生組織列為增加食道癌風險的因素之一。", a: true, exp: "正確，高溫易反覆燙傷食道黏膜，增加病變風險。" },
+            { type: "choice", q: "安得烈慈善協會的核心工作不包含下列哪一項？", options: ["急難救助", "弱勢扶助", "災害援助與教育推廣", "投資理財顧問"], a: 3, exp: "協會致力於弱勢扶助與急難救助，不包含商業投資顧問。" }
         ];
 
-        let peer = null;
-        let hostConn = null;
-        let players = [];
-        let myPlayerId = null;
-        let currentQuestionIndex = 0;
-        let stage = 1;
-        let timerInterval = null;
-        let aiTimeouts = [];
-        let isTransitioning = false;
-        let timeLeft = 10;
-        let maxTime = 10;
-        let lobbyTimer = 60;
-        let lobbyTimerInterval = null;
+        let currentGameQuestions = [];
+        let currentQIndex = 0;
+        let score = 0;
+        const totalQuestionsPerGame = 10;
 
-        // 初始化：判斷是「大螢幕」還是「手機控制器」
-        window.onload = () => {
-            const urlParams = new URLSearchParams(window.location.search);
-            const hostId = urlParams.get('host');
-
-            if (hostId) {
-                // 手機連線模式
-                document.getElementById('view-lobby').style.display = 'none';
-                document.getElementById('view-player-mobile').classList.remove('hidden');
-                document.getElementById('view-player-mobile').classList.add('flex');
-                initMobileController(hostId);
-            } else {
-                // 大螢幕主機模式
-                initHostPeer();
-            }
-        };
-
-        /* -----------------------------------------------------------------
-           1. 大螢幕端 PeerJS 監聽與 QR Code 生成
-           ----------------------------------------------------------------- */
-        function initHostPeer() {
-            peer = new Peer();
-            
-            peer.on('open', (id) => {
-                // 生成含有 host ID 的手機連線網址
-                const joinUrl = `${window.location.href.split('?')[0]}?host=${id}`;
-                
-                // 動態產生 QR Code
-                document.getElementById("qrcode").innerHTML = "";
-                new QRCode(document.getElementById("qrcode"), {
-                    text: joinUrl,
-                    width: 160,
-                    height: 160
-                });
-            });
-
-            peer.on('connection', (conn) => {
-                conn.on('open', () => {
-                    conn.on('data', (data) => {
-                        if (data.type === 'JOIN') {
-                            if (players.length < 4) {
-                                addPlayer(data.name, conn, data.playerId);
-                            }
-                        } else if (data.type === 'SUBMIT_ANSWER') {
-                            const target = players.find(p => p.id === data.playerId);
-                            if (target && !target.answered && target.isQualified) {
-                                target.answered = true;
-                                target.choice = data.choice;
-                                renderPlayersDashboard();
-                                checkAllAnswered();
-                            }
-                        }
-                    });
-
-                    conn.on('close', () => {
-                        players = players.filter(p => p.conn !== conn);
-                        renderLobbyPlayers();
-                    });
-                });
-            });
-        }
-
-        /* -----------------------------------------------------------------
-           2. 手機端 PeerJS 連線與控制
-           ----------------------------------------------------------------- */
-        function initMobileController(hostId) {
-            peer = new Peer();
-            peer.on('open', (id) => {
-                myPlayerId = 'p_' + id;
-                hostConn = peer.connect(hostId);
-
-                hostConn.on('open', () => {
-                    document.getElementById('player-mobile-name').innerText = "已連線至大螢幕";
-                });
-
-                hostConn.on('data', (data) => {
-                    if (data.type === 'GAME_START') {
-                        document.getElementById('mobile-status-text').innerText = '🎮 遊戲開始，請看大螢幕準備作答！';
-                    } else if (data.type === 'NEXT_QUESTION') {
-                        document.getElementById('mobile-status-text').innerText = '請點選答案 (A/B/C/D)';
-                    }
-                });
-            });
-        }
-
-        document.getElementById('btn-mobile-join').addEventListener('click', () => {
-            const name = document.getElementById('mobile-name-input').value.trim();
-            if (!name) return alert('請輸入暱稱！');
-
-            if (hostConn && hostConn.open) {
-                hostConn.send({ type: 'JOIN', name: name, playerId: myPlayerId });
-                document.getElementById('player-mobile-name').innerText = `玩家：${name}`;
-                document.getElementById('mobile-join-form').classList.add('hidden');
-                document.getElementById('mobile-answers-grid').classList.remove('hidden');
-                document.getElementById('mobile-answers-grid').classList.add('grid');
-                document.getElementById('mobile-status-text').innerText = '已成功進入大廳，等待開賽...';
-            } else {
-                alert('連線建立中，請稍候再試...');
-            }
-        });
-
-        function mobileSubmitAnswer(choiceIdx) {
-            if (hostConn && hostConn.open) {
-                hostConn.send({ type: 'SUBMIT_ANSWER', playerId: myPlayerId, choice: choiceIdx });
-                document.getElementById('mobile-status-text').innerText = '✓ 答案已送出！等待結算';
-            }
-        }
-
-        /* -----------------------------------------------------------------
-           3. 大螢幕大廳與玩家管理
-           ----------------------------------------------------------------- */
-        function addPlayer(name, conn, playerId) {
-            if (players.some(p => p.id === playerId) || players.length >= 4) return;
-
-            const p = {
-                id: playerId,
-                name: name,
-                conn: conn,
-                isAI: false,
-                score: 0,
-                answered: false,
-                choice: null,
-                isQualified: true
-            };
-            players.push(p);
-            renderLobbyPlayers();
-
-            if (players.filter(p => !p.isAI).length === 1) {
-                startLobbyTimer();
-            }
-
-            if (players.length === 4) {
-                if (lobbyTimerInterval) clearInterval(lobbyTimerInterval);
-                startGame();
-            }
-        }
-
-        function startLobbyTimer() {
-            if (lobbyTimerInterval) return;
-            lobbyTimer = 60;
-            updateLobbyTimerUI();
-
-            lobbyTimerInterval = setInterval(() => {
-                lobbyTimer--;
-                updateLobbyTimerUI();
-
-                if (lobbyTimer <= 0) {
-                    clearInterval(lobbyTimerInterval);
-                    lobbyTimerInterval = null;
-                    fillRobotsAndStart();
-                }
-            }, 1000);
-        }
-
-        function updateLobbyTimerUI() {
-            document.getElementById('lobby-timer-text').innerText = `倒數 ${lobbyTimer} 秒 (滿 4 人自動開賽)`;
-        }
-
-        function fillRobotsAndStart() {
-            const humanCount = players.filter(p => !p.isAI).length;
-            const neededRobots = 4 - humanCount;
-            const robotNames = ['🤖 AI 智庫', '⚡ AI 閃電手', '🎲 AI 運氣王', '🧠 AI 學霸'];
-
-            for (let i = 0; i < neededRobots; i++) {
-                players.push({
-                    id: 'ai_' + Date.now() + '_' + i,
-                    name: robotNames[i],
-                    conn: null,
-                    isAI: true,
-                    score: 0,
-                    answered: false,
-                    choice: null,
-                    isQualified: true
-                });
-            }
-            renderLobbyPlayers();
-            startGame();
-        }
-
-        function renderLobbyPlayers() {
-            const container = document.getElementById('player-list-lobby');
-            container.innerHTML = '';
-
-            players.forEach(p => {
-                const item = document.createElement('div');
-                item.className = 'flex justify-between items-center bg-slate-800 p-3 rounded-xl border border-slate-700';
-                item.innerHTML = `
-                    <div class="flex items-center gap-2">
-                        <span class="text-xl">${p.isAI ? '🤖' : '📱'}</span>
-                        <span class="font-bold text-white">${p.name}</span>
-                    </div>
-                    <span class="text-xs ${p.isAI ? 'bg-purple-900/80 text-purple-300' : 'bg-cyan-900/80 text-cyan-300'} px-2 py-0.5 rounded">
-                        ${p.isAI ? 'AI 機器人' : '掃碼連線'}
-                    </span>
-                `;
-                container.appendChild(item);
-            });
-        }
-
-        /* -----------------------------------------------------------------
-           4. 遊戲主流程與計分
-           ----------------------------------------------------------------- */
         function startGame() {
-            document.getElementById('view-lobby').classList.add('hidden');
-            document.getElementById('view-game').classList.remove('hidden');
-            document.getElementById('view-game').classList.add('flex');
-            document.getElementById('game-stage-badge').classList.remove('hidden');
-
-            players.forEach(p => {
-                if (p.conn) p.conn.send({ type: 'GAME_START' });
-            });
-
-            currentQuestionIndex = 0;
-            stage = 1;
-            loadQuestion(currentQuestionIndex);
-        }
-
-        function clearAllTimers() {
-            if (timerInterval) clearInterval(timerInterval);
-            aiTimeouts.forEach(t => clearTimeout(t));
-            aiTimeouts = [];
-        }
-
-        function loadQuestion(index) {
-            clearAllTimers();
-            isTransitioning = false;
-
-            const qData = quizDatabase[index];
-
-            if (index < 7) {
-                stage = 1;
-                maxTime = 10;
-                document.getElementById('game-stage-badge').innerText = 'STAGE 1 - 預賽大亂鬥';
-            } else {
-                stage = 2;
-                maxTime = 5;
-                document.getElementById('game-stage-badge').innerText = 'STAGE 2 - 雙人 PK 決賽';
-            }
-
-            timeLeft = maxTime;
-
-            players.forEach(p => {
-                p.choice = null;
-                p.answered = (stage === 2 && !p.isQualified);
-                if (p.conn) p.conn.send({ type: 'NEXT_QUESTION' });
-            });
-
-            document.getElementById('question-number').innerText = `QUESTION 0${index + 1}/10`;
-            document.getElementById('question-text').innerText = qData.question;
-            document.getElementById('timer-text').innerText = `⏱️ ${timeLeft}s`;
-            document.getElementById('timer-bar').style.width = '100%';
-
-            renderOptions(qData.options);
-            renderPlayersDashboard();
-
-            startTimer();
-            triggerAIAnswers(qData);
-        }
-
-        function renderOptions(options) {
-            const container = document.getElementById('options-container');
-            container.innerHTML = '';
-            const labels = ['A', 'B', 'C', 'D'];
+            // 洗牌並選取 10 題
+            const shuffled = [...rawQuestionBank].sort(() => 0.5 - Math.random());
+            currentGameQuestions = shuffled.slice(0, totalQuestionsPerGame);
             
-            options.forEach((optText, i) => {
-                const btn = document.createElement('button');
-                btn.className = `option-btn w-full p-4 text-left rounded-xl border-2 border-slate-700 bg-slate-800/90 flex items-center space-x-4 text-lg font-bold pointer-events-none`;
-                btn.innerHTML = `
-                    <span class="w-10 h-10 flex items-center justify-center rounded-lg bg-slate-900 text-neon-blue font-black">${labels[i]}</span>
-                    <span class="text-white">${optText}</span>
-                `;
-                container.appendChild(btn);
-            });
+            currentQIndex = 0;
+            score = 0;
+
+            document.getElementById("start-screen").classList.remove("active");
+            document.getElementById("end-screen").classList.remove("active");
+            document.getElementById("game-screen").classList.add("active");
+
+            showQuestion();
         }
 
-        function renderPlayersDashboard() {
-            const dashboard = document.getElementById('players-dashboard');
-            dashboard.innerHTML = '';
-            players.forEach(p => {
-                const card = document.createElement('div');
-                let borderClass = 'border-slate-800 bg-slate-900/60';
-                let statusBadge = '<span class="text-xs text-slate-500">思考中...</span>';
+        function showQuestion() {
+            const qData = currentGameQuestions[currentQIndex];
+            
+            // 更新 UI 狀態
+            document.getElementById("current-q").innerText = currentQIndex + 1;
+            document.getElementById("score").innerText = score;
+            document.getElementById("progress-bar").style.width = `${((currentQIndex) / totalQuestionsPerGame) * 100}%`;
+            document.getElementById("explanation").style.display = "none";
+            document.getElementById("next-btn").style.display = "none";
 
-                if (!p.isQualified && stage === 2) {
-                    borderClass = 'border-slate-800/40 opacity-40';
-                    statusBadge = '<span class="text-xs text-red-500 font-bold">已淘汰</span>';
-                } else if (p.answered) {
-                    borderClass = 'border-neon-green/50 bg-slate-800';
-                    statusBadge = '<span class="text-xs text-neon-green font-bold">✓ 已答題</span>';
-                }
+            const typeTag = document.getElementById("question-type");
+            const qText = document.getElementById("question-text");
+            const container = document.getElementById("options-container");
+            container.innerHTML = "";
 
-                card.className = `p-3 rounded-xl border ${borderClass} flex flex-col justify-between`;
-                card.innerHTML = `
-                    <div class="flex items-center justify-between">
-                        <span class="font-bold text-sm text-slate-200 truncate">${p.name}</span>
-                        ${p.isAI ? '<i class="fa-solid fa-robot text-purple-400 text-xs"></i>' : '<i class="fa-solid fa-mobile-screen text-cyan-400 text-xs"></i>'}
-                    </div>
-                    <div class="mt-2 flex items-end justify-between">
-                        <span class="text-neon-yellow font-black text-lg">${p.score} <span class="text-xs text-slate-400">分</span></span>
-                        ${statusBadge}
-                    </div>
-                `;
-                dashboard.appendChild(card);
-            });
-        }
+            qText.innerText = qData.q;
 
-        function triggerAIAnswers(qData) {
-            players.filter(p => p.isAI && p.isQualified).forEach(ai => {
-                let delay = stage === 1 ? (1000 + Math.random() * 3000) : (500 + Math.random() * 1500);
-                const timerId = setTimeout(() => {
-                    if (isTransitioning || ai.answered) return;
-                    ai.choice = (Math.random() < 0.7) ? qData.answer : Math.floor(Math.random() * 4);
-                    ai.answered = true;
-                    renderPlayersDashboard();
-                    checkAllAnswered();
-                }, delay);
-                aiTimeouts.push(timerId);
-            });
-        }
+            if (qData.type === "choice") {
+                typeTag.innerText = "選擇題";
+                qData.options.forEach((opt, idx) => {
+                    const btn = document.createElement("button");
+                    btn.className = "btn";
+                    btn.innerText = `${String.fromCharCode(65 + idx)}. ${opt}`;
+                    btn.onclick = () => checkChoiceAnswer(idx);
+                    container.appendChild(btn);
+                });
+            } else if (qData.type === "tf") {
+                typeTag.innerText = "是非題";
+                const btnTrue = document.createElement("button");
+                btnTrue.className = "btn";
+                btnTrue.innerText = "○ 正確";
+                btnTrue.onclick = () => checkTFAnswer(true);
 
-        function startTimer() {
-            const startTime = Date.now();
-            const duration = maxTime * 1000;
+                const btnFalse = document.createElement("button");
+                btnFalse.className = "btn";
+                btnFalse.innerText = "╳ 錯誤";
+                btnFalse.onclick = () => checkTFAnswer(false);
 
-            timerInterval = setInterval(() => {
-                const elapsed = Date.now() - startTime;
-                const remainingMs = Math.max(0, duration - elapsed);
-                timeLeft = Math.ceil(remainingMs / 1000);
+                container.appendChild(btnTrue);
+                container.appendChild(btnFalse);
+            } else if (qData.type === "fill") {
+                typeTag.innerText = "填空題";
+                const group = document.createElement("div");
+                group.className = "input-group";
 
-                document.getElementById('timer-text').innerText = `⏱️ ${timeLeft}s`;
-                document.getElementById('timer-bar').style.width = `${(remainingMs / duration) * 100}%`;
+                const input = document.createElement("input");
+                input.type = "text";
+                input.id = "fill-input";
+                input.className = "text-input";
+                input.placeholder = "請在此輸入答案...";
 
-                if (remainingMs <= 0) {
-                    clearAllTimers();
-                    evaluateQuestionAndProceed();
-                }
-            }, 100);
-        }
+                const submitBtn = document.createElement("button");
+                submitBtn.className = "submit-btn";
+                submitBtn.innerText = "送出";
+                submitBtn.onclick = () => checkFillAnswer();
 
-        function checkAllAnswered() {
-            if (players.every(p => p.answered) && !isTransitioning) {
-                clearAllTimers();
-                evaluateQuestionAndProceed();
+                group.appendChild(input);
+                group.appendChild(submitBtn);
+                container.appendChild(group);
             }
         }
 
-        function evaluateQuestionAndProceed() {
-            if (isTransitioning) return;
-            isTransitioning = true;
+        function handleResult(isCorrect) {
+            const qData = currentGameQuestions[currentQIndex];
+            if (isCorrect) {
+                score += 10;
+                document.getElementById("score").innerText = score;
+            }
 
-            const qData = quizDatabase[currentQuestionIndex];
-            const correctAns = qData.answer;
+            // 顯示解析
+            const expBox = document.getElementById("explanation");
+            const expText = document.getElementById("explanation-text");
+            expText.innerText = (isCorrect ? "答對了！" : "答錯了！") + " " + qData.exp;
+            expBox.style.display = "block";
 
-            document.querySelectorAll('.option-btn').forEach((btn, idx) => {
-                if (idx === correctAns) {
-                    btn.classList.add('bg-emerald-950', 'border-neon-green');
+            document.getElementById("next-btn").style.display = "block";
+        }
+
+        function checkChoiceAnswer(selectedIndex) {
+            const qData = currentGameQuestions[currentQIndex];
+            const buttons = document.querySelectorAll("#options-container .btn");
+            
+            buttons.forEach((btn, idx) => {
+                btn.disabled = true;
+                if (idx === qData.a) {
+                    btn.classList.add("correct");
+                } else if (idx === selectedIndex) {
+                    btn.classList.add("wrong");
                 }
             });
 
-            players.forEach(p => {
-                if (p.isQualified && p.choice === correctAns) {
-                    const points = (stage === 1 ? 100 : 200) + Math.round((timeLeft / maxTime) * 50);
-                    p.score += points;
+            handleResult(selectedIndex === qData.a);
+        }
+
+        function checkTFAnswer(selectedVal) {
+            const qData = currentGameQuestions[currentQIndex];
+            const buttons = document.querySelectorAll("#options-container .btn");
+
+            buttons.forEach((btn) => {
+                btn.disabled = true;
+                const isTrueBtn = btn.innerText.includes("正確");
+                if ((isTrueBtn && qData.a) || (!isTrueBtn && !qData.a)) {
+                    btn.classList.add("correct");
+                } else if ((isTrueBtn && selectedVal) || (!isTrueBtn && !selectedVal)) {
+                    btn.classList.add("wrong");
                 }
             });
 
-            renderPlayersDashboard();
-
-            setTimeout(() => {
-                currentQuestionIndex++;
-                if (currentQuestionIndex === 7) {
-                    showIntermission();
-                } else if (currentQuestionIndex >= quizDatabase.length) {
-                    showFinalResult();
-                } else {
-                    loadQuestion(currentQuestionIndex);
-                }
-            }, 2500);
+            handleResult(selectedVal === qData.a);
         }
 
-        function showIntermission() {
-            const sorted = [...players].sort((a, b) => b.score - a.score);
-            const qualifiedIds = sorted.slice(0, 2).map(p => p.id);
-            players.forEach(p => p.isQualified = qualifiedIds.includes(p.id));
+        function checkFillAnswer() {
+            const input = document.getElementById("fill-input");
+            const val = input.value.trim();
+            if (!val) return;
 
-            const list = document.getElementById('qualified-players-list');
-            list.innerHTML = '';
-            players.filter(p => p.isQualified).forEach(p => {
-                list.innerHTML += `
-                    <div class="bg-slate-800 border-2 border-neon-yellow p-4 rounded-xl text-center min-w-[120px]">
-                        <div class="text-3xl mb-1">${p.isAI ? '🤖' : '👑'}</div>
-                        <div class="font-bold text-white text-lg">${p.name}</div>
-                        <div class="text-neon-yellow font-black text-xl">${p.score} 分</div>
-                    </div>
-                `;
-            });
+            const qData = currentGameQuestions[currentQIndex];
+            input.disabled = true;
+            document.querySelector(".submit-btn").disabled = true;
 
-            document.getElementById('view-intermission').classList.remove('hidden');
+            const isCorrect = qData.keywords.some(kw => val.includes(kw));
+            if (isCorrect) {
+                input.style.borderColor = "#2e7d32";
+                input.style.backgroundColor = "#c8e6c9";
+            } else {
+                input.style.borderColor = "#c62828";
+                input.style.backgroundColor = "#ffcdd2";
+            }
+
+            handleResult(isCorrect);
         }
 
-        document.getElementById('btn-start-stage2').addEventListener('click', () => {
-            document.getElementById('view-intermission').classList.add('hidden');
-            loadQuestion(currentQuestionIndex);
-        });
-
-        function showFinalResult() {
-            document.getElementById('view-game').classList.add('hidden');
-            document.getElementById('view-result').classList.remove('hidden');
-
-            const sorted = [...players].sort((a, b) => b.score - a.score);
-            const container = document.getElementById('leaderboard-container');
-            container.innerHTML = '';
-
-            const medals = ['🥇 金牌', '🥈 銀牌', '🥉 銅牌'];
-            sorted.forEach((p, idx) => {
-                container.innerHTML += `
-                    <div class="p-4 rounded-xl border-2 border-slate-700 bg-slate-800/50 flex justify-between items-center text-xl font-bold">
-                        <span>${medals[idx] || `第 ${idx + 1} 名`} - ${p.name}</span>
-                        <span class="text-neon-yellow font-black">${p.score} 分</span>
-                    </div>
-                `;
-            });
-
-            confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+        function nextQuestion() {
+            currentQIndex++;
+            if (currentQIndex < totalQuestionsPerGame) {
+                showQuestion();
+            } else {
+                endGame();
+            }
         }
 
-        document.getElementById('btn-restart-game').addEventListener('click', () => {
-            location.reload();
-        });
+        function endGame() {
+            document.getElementById("progress-bar").style.width = "100%";
+            document.getElementById("game-screen").classList.remove("active");
+            document.getElementById("end-screen").classList.add("active");
+
+            document.getElementById("final-score").innerText = score;
+            const comment = document.getElementById("result-comment");
+            if (score === 100) {
+                comment.innerText = "太厲害了！你是安得烈知識大師！";
+            } else if (score >= 70) {
+                comment.innerText = "表現優異！對協會與食物知識非常了解！";
+            } else {
+                comment.innerText = "繼續加油！歡迎多多關注安得烈慈善協會。";
+            }
+        }
     </script>
 </body>
 </html>
