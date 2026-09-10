@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>惜食小勇士 - 隨插即用版</title>
+    <!-- 載入免伺服器的連線與 QRCode 庫 -->
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: '微軟正黑體', sans-serif; user-select: none; }
+        body { background: #f0f9ff; color: #1e293b; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 10px; }
+        
+        /* 大螢幕樣式 */
+        header { width: 100%; max-width: 1000px; background: white; padding: 15px; border-radius: 20px; border: 4px solid #38bdf8; text-align: center; }
+        .scoreboard { display: flex; justify-content: space-around; margin-top: 15px; }
+        .player-card { background: #f8fafc; border: 3px solid #cbd5e1; border-radius: 16px; padding: 10px; width: 22%; text-align: center; }
+        .player-card.active { border-color: #f59e0b; background: #fffbeb; transform: scale(1.05); }
+        .qr-box { margin-top: 8px; display: flex; justify-content: center; min-height: 90px; }
+        
+        .game-area { display: flex; gap: 30px; margin-top: 20px; align-items: center; }
+        .board { width: 480px; height: 480px; background: white; border: 6px solid #f59e0b; border-radius: 24px; display: grid; grid-template-columns: repeat(6, 1fr); grid-template-rows: repeat(6, 1fr); gap: 5px; padding: 8px; }
+        .cell { background: #f1f5f9; border: 2px solid #cbd5e1; border-radius: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: bold; position: relative; }
+        .center-box { grid-column: 2 / 6; grid-row: 2 / 6; background: #fef9c3; border-radius: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .token-box { position: absolute; bottom: 2px; display: flex; gap: 2px; }
+        .token { width: 16px; height: 16px; border-radius: 50%; color: white; font-size: 0.6rem; text-align: center; line-height: 16px; }
+        .p1 { background: #ef4444; } .p2 { background: #3b82f6; } .p3 { background: #22c55e; } .p4 { background: #a855f7; }
+
+        .btn-roll { background: #f59e0b; color: white; font-size: 1.5rem; font-weight: bold; padding: 15px 30px; border: none; border-radius: 30px; cursor: pointer; }
+
+        /* 手機遙控器樣式 */
+        .mobile-container { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 90vh; width: 100vw; }
+        .mobile-btn { width: 200px; height: 200px; border-radius: 50%; border: none; color: white; font-size: 2rem; font-weight: bold; box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
+    </style>
+</head>
+<body>
+
+    <!-- 1. 大螢幕主畫面 -->
+    <div id="host-view" style="width: 100%; display: flex; flex-direction: column; align-items: center;">
+        <header>
+            <h1>🍱 惜食小勇士大冒險</h1>
+            <div id="status" style="color: #64748b; font-size: 0.9rem; margin-top: 4px;">正在連線連線伺服器...</div>
+            <div class="scoreboard">
+                <div class="player-card active" id="card-1">🔴 隊伍 1<div id="score-1">0 分</div><div class="qr-box" id="qr-1"></div></div>
+                <div class="player-card" id="card-2">🔵 隊伍 2<div id="score-2">0 分</div><div class="qr-box" id="qr-2"></div></div>
+                <div class="player-card" id="card-3">🟢 隊伍 3<div id="score-3">0 分</div><div class="qr-box" id="qr-3"></div></div>
+                <div class="player-card" id="card-4">🟣 隊伍 4<div id="score-4">0 分</div><div class="qr-box" id="qr-4"></div></div>
+            </div>
+        </header>
+
+        <div class="game-area">
+            <div class="board" id="board">
+                <div class="center-box">
+                    <h2>惜食大冒險</h2>
+                    <div style="font-size:3rem;">🥦🍎🍚</div>
+                    <h3 id="turn-txt" style="color:#ef4444; margin-top:10px;">輪到：🔴 隊伍 1</h3>
+                </div>
+            </div>
+            <div>
+                <button class="btn-roll" onclick="rollDice()">🎲 擲骰子</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. 手機遙控器畫面 -->
+    <div id="mobile-view" class="mobile-container" style="display: none;">
+        <h1 id="m-title">隊伍控制器</h1>
+        <div id="m-status" style="margin: 10px 0; color: #0284c7;">連線中...</div>
+        <button id="m-btn" class="mobile-btn" onclick="sendRoll()" disabled>🎲 擲骰子！</button>
+    </div>
+
+    <script>
+        const players = [
+            { id: 1, name: "🔴 隊伍 1", color: "#ef4444", score: 0, pos: 0 },
+            { id: 2, name: "🔵 隊伍 2", color: "#3b82f6", score: 0, pos: 0 },
+            { id: 3, name: "🟢 隊伍 3", color: "#22c55e", score: 0, pos: 0 },
+            { id: 4, name: "🟣 隊伍 4", color: "#a855f7", score: 0, pos: 0 }
+        ];
+        let currentTurn = 0;
+        let peer, conn;
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const roomId = urlParams.get('room');
+        const teamId = urlParams.get('team');
+
+        window.onload = function() {
+            if (roomId && teamId) {
+                // 手機模式
+                document.getElementById('host-view').style.display = 'none';
+                document.getElementById('mobile-view').style.display = 'flex';
+                initMobile();
+            } else {
+                // 大螢幕模式
+                initBoard();
+                initHost();
+            }
+        };
+
+        // --- 大螢幕邏輯 ---
+        function initHost() {
+            // 隨機產生不重複房間 ID
+            const hostId = 'foodgame-' + Math.floor(1000 + Math.random() * 9000);
+            peer = new Peer(hostId);
+
+            peer.on('open', (id) => {
+                document.getElementById('status').innerText = '系統就緒，請手機掃碼連線！';
+                const baseUrl = window.location.href.split('?')[0];
+                
+                // 為 4 個隊伍分別繪製專屬 QR Code
+                for (let i = 1; i <= 4; i++) {
+                    const joinUrl = `${baseUrl}?room=${id}&team=${i}`;
+                    new QRCode(document.getElementById(`qr-${i}`), {
+                        text: joinUrl, width: 85, height: 85
+                    });
+                }
+            });
+
+            // 監聽手機連線與訊息
+            peer.on('connection', (connection) => {
+                connection.on('data', (data) => {
+                    if (data.action === 'ROLL' && data.team === players[currentTurn].id) {
+                        rollDice();
+                    }
+                });
+            });
+        }
+
+        // --- 手機端邏輯 ---
+        function initMobile() {
+            const p = players[teamId - 1];
+            document.getElementById('m-title').innerText = `${p.name} 控制器`;
+            document.getElementById('m-title').style.color = p.color;
+            document.getElementById('m-btn').style.background = p.color;
+
+            peer = new Peer();
+            peer.on('open', () => {
+                conn = peer.connect(roomId);
+                conn.on('open', () => {
+                    document.getElementById('m-status').innerText = '🟢 已成功連線至大螢幕！';
+                    document.getElementById('m-btn').disabled = false;
+                });
+            });
+        }
+
+        function sendRoll() {
+            if (conn && conn.open) {
+                conn.send({ action: 'ROLL', team: parseInt(teamId) });
+            }
+        }
+
+        // --- 遊戲地圖與擲骰邏輯 ---
+        function initBoard() {
+            const board = document.getElementById('board');
+            for (let i = 0; i < 20; i++) {
+                if (i < 6 || i > 14 || i % 5 === 0) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.id = `cell-${i}`;
+                    cell.innerHTML = `格${i}<div class="token-box" id="tokens-${i}"></div>`;
+                    board.appendChild(cell);
+                }
+            }
+            renderTokens();
+        }
+
+        function renderTokens() {
+            for (let i = 0; i < 20; i++) {
+                const el = document.getElementById(`tokens-${i}`);
+                if (el) el.innerHTML = '';
+            }
+            players.forEach(p => {
+                const el = document.getElementById(`tokens-${p.pos}`);
+                if (el) {
+                    const t = document.createElement('div');
+                    t.className = `token p${p.id}`;
+                    t.innerText = p.id;
+                    el.appendChild(t);
+                }
+            });
+        }
+
+        function rollDice() {
+            const step = Math.floor(Math.random() * 6) + 1;
+            const p = players[currentTurn];
+            p.pos = (p.pos + step) % 20;
+            p.score += 10;
+            document.getElementById(`score-${p.id}`).innerText = `${p.score} 分`;
+            
+            renderTokens();
+            
+            currentTurn = (currentTurn + 1) % 4;
+            const nextP = players[currentTurn];
+            const tTxt = document.getElementById('turn-txt');
+            tTxt.innerText = `輪到：${nextP.name}`;
+            tTxt.style.color = nextP.color;
+
+            players.forEach(item => {
+                document.getElementById(`card-${item.id}`).classList.toggle('active', item.id === nextP.id);
+            });
+        }
+    </script>
+</body>
+</html>
