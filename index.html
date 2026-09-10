@@ -1,40 +1,31 @@
-<!DOCTYPE html>
-<html lang="zh-TW" class="dark">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>安得烈食物銀行 - 即時互動問答大亂鬥</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- PeerJS (實現手機與大螢幕跨裝置 P2P 連線) & QRCode.js -->
-    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <!-- Canvas Confetti CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-    <!-- FontAwesome CDN -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        neon: {
-                            blue: '#00f3ff',
-                            purple: '#b000ff',
-                            pink: '#ff007f',
-                            green: '#00ff66',
-                            yellow: '#ffcc00'
-                        }
-                    }
-                }
-            }
+        function showFinalResult() {
+            document.getElementById('view-game').classList.add('hidden');
+            document.getElementById('view-result').classList.remove('hidden');
+
+            const sorted = [...players].sort((a, b) => b.score - a.score);
+            const container = document.getElementById('leaderboard-container');
+            container.innerHTML = '';
+
+            const medals = ['🥇 金牌', '🥈 銀牌', '🥉 銅牌'];
+            sorted.forEach((p, idx) => {
+                container.innerHTML += `
+                    <div class="p-4 rounded-xl border-2 border-slate-700 bg-slate-800/50 flex justify-between items-center text-xl font-bold">
+                        <span>${medals[idx] || `第 ${idx + 1} 名`} - ${p.name}</span>
+                        <span class="text-neon-yellow font-black">${p.score} 分</span>
+                    </div>
+                `;
+            });
+
+            confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
         }
+
+        document.getElementById('btn-restart-game').addEventListener('click', () => {
+            location.reload();
+        });
     </script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap');
-        body {
+</body>
+</html>        body {
             font-family: 'Noto Sans TC', sans-serif;
             background-color: #0b0f19;
             color: #f3f4f6;
