@@ -1,1 +1,137 @@
+// server.js
+const express = require('express');
+const http = require('http');
+const WebSocket = require('ws');
+const path = require('path');
 
+const app = express();
+const server = http.createServer(app);
+const wss = new WebSocket.Server({ server });
+
+app.use(express.static(path.join(__dirname, 'public')));
+
+// 狀態管理
+let gameState = 'lobby'; // lobby, stage1, intermission, stage2, result
+let players = []; // { id, name, isAI, score, ws, answered, choice, isQualified }
+let lobbyTimer = 60;
+let lobbyInterval = null;
+let currentQuestionIndex = 0;
+
+// 題庫 (節錄)
+const quizDatabase = [
+    { question: "1. 安得烈食物銀行的「膳糧食物箱」主要援助對象包含以下何者？", options: ["弱勢家庭幼兒", "貧困學童", "長者與身障者", "以上皆是"], answer: 3 },
+    { question: "2. 安得烈針對 0-3 歲弱勢嬰幼兒所推動的專案名稱為何？", options: ["嬰兒專案", "嬰幼兒膳糧箱", "柔性關懷計劃", "培鷹計畫"], answer: 1 },
+    { question: "3. 安得烈食物銀行為培養弱勢學童品格與才藝，推動了哪項計畫？", options: ["培鷹計畫", "飛鴿計畫", "築夢計畫", "希望種子計畫"], answer: 0 },
+    { question: "4. 安得烈的食物箱發放方式主要是如何送達弱勢家庭？", options: ["現場排隊領取", "宅配/郵寄到府", "請村里長發放", "不定點發放"], answer: 1 },
+    { question: "5. 「愛合格不浪費」的核心理念是指什麼？", options: ["提供即期食物", "嚴選合格、衛生且效期安全的物資", "隨機收集剩食", "只提供冷凍食品"], answer: 1 },
+    { question: "6. 安得烈食物銀行的「柔性關懷」主要是指什麼行動？", options: ["電話與社工實地訪視關懷", "僅發放物資不問問候", "舉辦音樂會", "提供法律諮詢"], answer: 0 },
+    { question: "7. 社區與民眾若想支持安得烈食物銀行，以下哪種方式最直接有效？", options: ["捐贈常溫保存無虞之食物物資", "擔任志工協助打包", "小額定期定額捐款", "以上皆是"], answer: 3 },
+    { question: "8. [PK決賽] 安得烈食物箱內主要提供的食物類型特點為何？", options: ["皆為生鮮蔬果", "以常溫可保存且營養均衡物資為主", "皆為進口高價食品", "全數為罐頭食物"], answer: 1 },
+    { question: "9. [PK決賽] 安得烈舉辦的全國學童「畫作與作文徵集體驗活動」目的為何？", options: ["評選高價藝術品", "推動感恩與品格教育", "招募志工", "進行商業拍賣"], answer: 1 },
+    { question: "10. [PK決賽] 安得烈食物銀行的核心願景「讓愛安心，無餓發生」重點在於？", options: ["即時與精準的生命援助", "建立全球連鎖通路", "只專注於節慶送禮", "發放現金補助"], answer: 0 }
+];
+
+// 大廳 60 秒倒數與補機器人機制
+function startLobbyTimer() {
+    if (lobbyInterval) clearInterval(lobbyInterval);
+    lobbyTimer = 60;
+    
+    lobbyInterval = setInterval(() => {
+        lobbyTimer--;
+        broadcast({ type: 'LOBBY_TIMER', timer: lobbyTimer });
+
+        // 時間到或人數滿 4 人，自動補齊 AI 並開賽
+        if (lobbyTimer <= 0 || players.filter(p => !p.isAI).length >= 4) {
+            clearInterval(lobbyInterval);
+            fillRobotsAndStart();
+        }
+    }, 1000);
+}
+
+function fillRobotsAndStart() {
+    const humanCount = players.filter(p => !p.isAI).length;
+    const neededRobots = 4 - humanCount;
+    
+    const robotNames = ['🤖 AI 智庫', '⚡ AI 閃電手', '🎲 AI 運氣王', '🧠 AI 學霸'];
+    for (let i = 0; i < neededRobots; i++) {
+        players.push({
+            id: 'robot_' + (i + 1),
+            name: robotNames[i],
+            isAI: true,
+            score: 0,
+            answered: false,
+            choice: null,
+            isQualified: true
+        });
+    }
+
+    broadcast({ type: 'GAME_START', players: sanitizePlayers() });
+    setTimeout(() => nextQuestion(), 2000);
+}
+
+// 廣播給所有連線用戶（大螢幕與手機）
+function broadcast(data) {
+    const msg = JSON.stringify(data);
+    wss.clients.forEach(client => {
+        if (client.readyState === WebSocket.OPEN) {
+            client.send(msg);
+        }
+    });
+}
+
+function sanitizePlayers() {
+    return players.map(p => ({
+        id: p.id,
+        name: p.name,
+        isAI: p.isAI,
+        score: p.score,
+        answered: p.answered,
+        isQualified: p.isQualified
+    }));
+}
+
+// WebSocket 監聽事件
+wss.on('connection', (ws) => {
+    ws.on('message', (message) => {
+        const data = JSON.parse(message);
+
+        // 玩家掃碼登錄暱稱
+        if (data.type === 'JOIN') {
+            if (players.filter(p => !p.isAI).length >= 4) {
+                ws.send(JSON.stringify({ type: 'ERROR', message: '房間已滿！' }));
+                return;
+            }
+            const newPlayer = {
+                id: 'player_' + Date.now(),
+                name: data.name || '玩家 ' + (players.length + 1),
+                isAI: false,
+                score: 0,
+                answered: false,
+                choice: null,
+                isQualified: true,
+                ws: ws
+            };
+            players.push(newPlayer);
+            ws.send(JSON.stringify({ type: 'JOIN_SUCCESS', player: { id: newPlayer.id, name: newPlayer.name } }));
+            
+            if (players.filter(p => !p.isAI).length === 1) {
+                startLobbyTimer(); // 第一個人加入開始倒數 60 秒
+            }
+
+            broadcast({ type: 'PLAYER_UPDATE', players: sanitizePlayers() });
+        }
+
+        // 玩家手機點擊選擇題答案
+        if (data.type === 'SUBMIT_ANSWER') {
+            const player = players.find(p => p.id === data.playerId);
+            if (player && !player.answered && player.isQualified) {
+                player.answered = true;
+                player.choice = data.choice;
+                broadcast({ type: 'PLAYER_UPDATE', players: sanitizePlayers() });
+            }
+        }
+    });
+});
+
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
