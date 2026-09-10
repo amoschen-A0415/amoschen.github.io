@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>惜食小勇士 - 限時掃碼對戰版</title>
+    <title>惜食小勇士 - 限時彈性對戰版</title>
     <!-- 引入 PeerJS (實現手機與大螢幕連線) 與 QRCode 庫 -->
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -450,7 +450,7 @@
     <div id="host-view" style="width:100%; display:flex; flex-direction:column; align-items:center;">
         <header>
             <h1>🍱 惜食小勇士大冒險</h1>
-            <div class="scoreboard">
+            <div class="scoreboard" id="scoreboard">
                 <div class="player-card p1 active" id="card-p1"><div class="status-dot"></div><div class="player-name">🔴 隊伍 1</div><div class="player-score" id="score-p1">0 分</div></div>
                 <div class="player-card p2" id="card-p2"><div class="status-dot"></div><div class="player-name">🔵 隊伍 2</div><div class="player-score" id="score-p2">0 分</div></div>
                 <div class="player-card p3" id="card-p3"><div class="status-dot"></div><div class="player-name">🟢 隊伍 3</div><div class="player-score" id="score-p3">0 分</div></div>
@@ -469,7 +469,7 @@
 
             <div class="controls-sidebar">
                 <div class="qr-card" id="qr-container">
-                    <div style="font-weight:bold; font-size:0.9rem; color:#0284c7;">📱 限時掃碼加入遊戲</div>
+                    <div style="font-weight:bold; font-size:0.9rem; color:#0284c7;">📱 限時 1 分鐘掃碼加入</div>
                     <div class="timer-box" id="join-timer">⏰ 剩餘: 60 秒</div>
                     <div id="qrcode"></div>
                 </div>
@@ -546,13 +546,15 @@
         ];
 
         const players = [
-            { id: 0, name: "🔴 隊伍 1", color: "#ef4444", score: 0, pos: 0, class: "p1", conn: null },
-            { id: 1, name: "🔵 隊伍 2", color: "#3b82f6", score: 0, pos: 0, class: "p2", conn: null },
-            { id: 2, name: "🟢 隊伍 3", color: "#22c55e", score: 0, pos: 0, class: "p3", conn: null },
-            { id: 3, name: "🟣 隊伍 4", color: "#a855f7", score: 0, pos: 0, class: "p4", conn: null }
+            { id: 0, name: "🔴 隊伍 1", color: "#ef4444", score: 0, pos: 0, class: "p1", conn: null, active: true },
+            { id: 1, name: "🔵 隊伍 2", color: "#3b82f6", score: 0, pos: 0, class: "p2", conn: null, active: true },
+            { id: 2, name: "🟢 隊伍 3", color: "#22c55e", score: 0, pos: 0, class: "p3", conn: null, active: true },
+            { id: 3, name: "🟣 隊伍 4", color: "#a855f7", score: 0, pos: 0, class: "p4", conn: null, active: true }
         ];
 
-        let currentPlayerIndex = 0;
+        let activePlayerIndices = [0, 1, 2, 3]; // 參與輪流的玩家索引列表
+        let currentTurnPointer = 0; // 當前輪到的陣列指標
+        let currentPlayerIndex = 0; // 當前玩家 index
         let isRolling = false;
         let peer = null;
         let myPlayerId = null;
@@ -562,7 +564,6 @@
         let joinTimerInterval = null;
         let isJoinAllowed = true;
 
-        // 初始化判斷：螢幕主機版 or 手機控制器版
         window.onload = () => {
             const urlParams = new URLSearchParams(window.location.search);
             const hostId = urlParams.get('host');
@@ -601,34 +602,28 @@
         function initHostPeer() {
             peer = new Peer();
             peer.on('open', (id) => {
-                // 生成手機加入的 QR Code URL
                 const joinUrl = `${window.location.href.split('?')[0]}?host=${id}`;
                 new QRCode(document.getElementById("qrcode"), {
                     text: joinUrl, width: 120, height: 120
                 });
 
-                // 開始倒數 1 分鐘
                 startJoinCountdown();
             });
 
             peer.on('connection', (conn) => {
-                // 如果已超過 1 分鐘，拒絕新玩家加入
                 if (!isJoinAllowed) {
-                    conn.send({ type: 'REJECT', reason: '時間已過，無法加入遊戲！' });
+                    conn.send({ type: 'REJECT', reason: '報名時間已截止！' });
                     setTimeout(() => conn.close(), 500);
                     return;
                 }
 
                 conn.on('open', () => {
-                    // 分配未滿的玩家位置 (最多4位)
                     let assignedIndex = players.findIndex(p => p.conn === null);
                     if (assignedIndex !== -1) {
                         players[assignedIndex].conn = conn;
                         document.getElementById(`card-p${assignedIndex + 1}`).classList.add('connected');
                         
-                        // 傳送玩家資訊給手機
                         conn.send({ type: 'INIT', playerId: assignedIndex, name: players[assignedIndex].name });
-                        
                         syncMobileStates();
 
                         conn.on('data', (data) => {
@@ -642,8 +637,7 @@
                             document.getElementById(`card-p${assignedIndex + 1}`).classList.remove('connected');
                         });
                     } else {
-                        // 人數已滿
-                        conn.send({ type: 'REJECT', reason: '玩家人數已滿！' });
+                        conn.send({ type: 'REJECT', reason: '遊戲人數已滿 4 人！' });
                         setTimeout(() => conn.close(), 500);
                     }
                 });
@@ -663,27 +657,59 @@
 
                 if (joinTimeLeft <= 0) {
                     clearInterval(joinTimerInterval);
-                    isJoinAllowed = false;
-                    
-                    // 1分鐘時間到，更新 UI
-                    const qrContainer = document.getElementById('qr-container');
-                    const connectedCount = players.filter(p => p.conn !== null).length;
-                    
-                    if (qrContainer) {
-                        qrContainer.innerHTML = `
-                            <div style="font-weight:bold; font-size:1rem; color:#d97706;">🔒 加入時間已截止</div>
-                            <div style="font-size:0.9rem; color:#64748b; margin-top:5px;">共 ${connectedCount} 隊線上加入</div>
-                            ${connectedCount === 0 ? '<div style="font-size:0.85rem; color:#ef4444; margin-top:5px;">(點擊🎲骰子可在本機遊玩)</div>' : ''}
-                        `;
-                    }
+                    finalizePlayers();
                 }
             }, 1000);
         }
 
-        // 大螢幕直接點擊骰子（若當前玩家沒用手機，或沒有手機加入時可備用）
+        // 倒數結束：結算連線人數並重構玩家名單
+        function finalizePlayers() {
+            isJoinAllowed = false;
+            
+            const connectedPlayers = players.filter(p => p.conn !== null);
+            const qrContainer = document.getElementById('qr-container');
+
+            if (connectedPlayers.length > 0) {
+                // 有玩家掃碼：僅保留連線成功的玩家
+                activePlayerIndices = [];
+                players.forEach((p, idx) => {
+                    if (p.conn !== null) {
+                        p.active = true;
+                        activePlayerIndices.push(idx);
+                    } else {
+                        p.active = false;
+                        document.getElementById(`card-p${idx + 1}`).style.display = 'none'; // 隱藏未加入卡片
+                    }
+                });
+
+                if (qrContainer) {
+                    qrContainer.innerHTML = `
+                        <div style="font-weight:bold; font-size:1rem; color:#16a34a;">✅ 遊戲開始！</div>
+                        <div style="font-size:0.9rem; color:#64748b; margin-top:5px;">共 ${connectedPlayers.length} 位勇士加入對戰</div>
+                    `;
+                }
+            } else {
+                // 0 人掃碼：預設 4 隊全開，改為大螢幕點擊備用模式
+                activePlayerIndices = [0, 1, 2, 3];
+                players.forEach(p => p.active = true);
+
+                if (qrContainer) {
+                    qrContainer.innerHTML = `
+                        <div style="font-weight:bold; font-size:0.95rem; color:#d97706;">🔒 報名截止 (無手機加入)</div>
+                        <div style="font-size:0.85rem; color:#64748b; margin-top:5px;">點擊下方 🎲 骰子直接在螢幕遊玩</div>
+                    `;
+                }
+            }
+
+            currentTurnPointer = 0;
+            currentPlayerIndex = activePlayerIndices[0];
+            renderTokens();
+            updateUI();
+            syncMobileStates();
+        }
+
         function hostRollDice() {
-            // 如果當前玩家沒有連線手機，或是未開啟手機連線，允許在大螢幕點擊
-            if (!isRolling && !players[currentPlayerIndex].conn) {
+            if (!isRolling && (!players[currentPlayerIndex].conn || activePlayerIndices.length === 0)) {
                 handleRollAction();
             }
         }
@@ -766,7 +792,10 @@
                 return;
             }
 
-            currentPlayerIndex = (currentPlayerIndex + 1) % players.length;
+            // 切換至下一個已啟用的玩家
+            currentTurnPointer = (currentTurnPointer + 1) % activePlayerIndices.length;
+            currentPlayerIndex = activePlayerIndices[currentTurnPointer];
+            
             isRolling = false;
             updateUI();
             syncMobileStates();
@@ -778,33 +807,39 @@
                 if(container) container.innerHTML = '';
             }
             players.forEach(p => {
-                const container = document.getElementById(`tokens-${p.pos}`);
-                if(container) {
-                    const token = document.createElement('div');
-                    token.className = `token ${p.class}`;
-                    token.innerText = p.id + 1;
-                    container.appendChild(token);
+                if(p.active) {
+                    const container = document.getElementById(`tokens-${p.pos}`);
+                    if(container) {
+                        const token = document.createElement('div');
+                        token.className = `token ${p.class}`;
+                        token.innerText = p.id + 1;
+                        container.appendChild(token);
+                    }
                 }
             });
         }
 
         function updateUI() {
             players.forEach((p, idx) => {
-                document.getElementById(`score-p${idx+1}`).innerText = `${p.score} 分`;
-                const card = document.getElementById(`card-p${idx+1}`);
-                if (idx === currentPlayerIndex) card.classList.add('active');
-                else card.classList.remove('active');
+                if (p.active) {
+                    document.getElementById(`score-p${idx+1}`).innerText = `${p.score} 分`;
+                    const card = document.getElementById(`card-p${idx+1}`);
+                    if (idx === currentPlayerIndex) card.classList.add('active');
+                    else card.classList.remove('active');
+                }
             });
 
             const currP = players[currentPlayerIndex];
             const turnDisplay = document.getElementById('current-player-text');
-            turnDisplay.innerText = currP.name;
-            turnDisplay.style.color = currP.color;
+            if (currP) {
+                turnDisplay.innerText = currP.name;
+                turnDisplay.style.color = currP.color;
+            }
         }
 
         function syncMobileStates() {
             players.forEach((p, idx) => {
-                if (p.conn) {
+                if (p.conn && p.active) {
                     p.conn.send({
                         type: 'STATE_UPDATE',
                         isMyTurn: idx === currentPlayerIndex && !isRolling,
@@ -815,14 +850,7 @@
         }
 
         function resetGame() {
-            players.forEach(p => { p.score = 0; p.pos = 0; });
-            currentPlayerIndex = 0;
-            isRolling = false;
-            document.getElementById('victory-modal').classList.remove('active');
-            document.getElementById('event-modal').classList.remove('active');
-            renderTokens();
-            updateUI();
-            syncMobileStates();
+            window.location.reload(); // 重新整理網頁最乾淨，可重新進行 1 分鐘報名
         }
 
         // ==================== 手機端邏輯 ====================
