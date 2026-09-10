@@ -67,14 +67,14 @@
     <!-- 主要內容區域 -->
     <main class="flex-grow flex items-center justify-center p-4 md:p-6 relative">
 
-        <!-- 1. 遊戲大廳 / 報名與掃碼畫面 -->
+        <!-- 1. 遊戲大廳 / 純掃碼參賽畫面 -->
         <div id="view-lobby" class="w-full max-w-5xl bg-slate-900/80 border-2 border-slate-700/80 rounded-2xl p-6 md:p-10 shadow-2xl backdrop-blur-xl">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                 
-                <!-- 掃碼區 / 人數狀態 -->
+                <!-- 掃碼區域 -->
                 <div class="flex flex-col items-center justify-center border-b md:border-b-0 md:border-r border-slate-700/80 pr-0 md:pr-8 pb-6 md:pb-0 text-center">
                     <h2 class="text-2xl md:text-3xl font-bold text-neon-blue mb-2 flex items-center gap-2">
-                        <i class="fa-solid fa-qrcode"></i> 掃碼參賽 (1~4人)
+                        <i class="fa-solid fa-qrcode"></i> 掃碼參賽 (滿4人開賽)
                     </h2>
                     <p class="text-slate-400 text-sm mb-4">請使用手機相機掃描 QR Code 進入遊戲</p>
 
@@ -82,40 +82,33 @@
                         <canvas id="qrcode-canvas"></canvas>
                     </div>
 
-                    <!-- 倒數計時提示 -->
-                    <div id="lobby-timer-box" class="w-full bg-slate-800/90 border border-slate-700 p-3 rounded-xl">
-                        <span class="text-slate-400 text-sm block">1 分鐘等候計時：</span>
-                        <span id="lobby-timer-text" class="text-2xl font-black text-neon-yellow">等待玩家加入...</span>
+                    <!-- 60 秒倒數計時提示 -->
+                    <div id="lobby-timer-box" class="w-full bg-slate-800/90 border border-slate-700 p-4 rounded-xl">
+                        <span class="text-slate-400 text-sm block mb-1">等候時間 (60秒滿額/超時開賽)：</span>
+                        <span id="lobby-timer-text" class="text-2xl font-black text-neon-yellow">等待第一位玩家掃碼...</span>
                     </div>
                 </div>
 
-                <!-- 參賽者清單與手動加入 -->
+                <!-- 參賽者清單 (純顯示，無手動輸入) -->
                 <div class="flex flex-col justify-between space-y-6">
                     <div>
                         <h2 class="text-2xl md:text-3xl font-bold text-neon-purple mb-4 flex items-center gap-2">
-                            <i class="fa-solid fa-users"></i> 目前參賽者名單
+                            <i class="fa-solid fa-users"></i> 已連線參賽者 (1~4人)
                         </h2>
-                        
-                        <!-- 手動備用加入區 -->
-                        <div class="flex gap-2 mb-4">
-                            <input type="text" id="player-name-input" maxlength="8" placeholder="或現場輸入暱稱..." 
-                                class="flex-grow bg-slate-800 border-2 border-slate-600 focus:border-neon-purple focus:outline-none rounded-xl px-4 py-2 text-white font-bold placeholder-slate-500">
-                            <button id="btn-add-player" class="bg-purple-600 hover:bg-purple-500 text-white font-bold px-4 py-2 rounded-xl transition">
-                                加入
-                            </button>
-                        </div>
 
                         <!-- 玩家清單 -->
                         <div class="space-y-2">
-                            <div id="player-list-lobby" class="grid grid-cols-1 gap-2 max-h-48 overflow-y-auto pr-1">
-                                <!-- 動態帶入加入的玩家 -->
+                            <div id="player-list-lobby" class="grid grid-cols-1 gap-3 max-h-60 overflow-y-auto pr-1">
+                                <div class="text-slate-500 text-center py-8 font-bold border border-dashed border-slate-800 rounded-xl">
+                                    尚無玩家連線，請掃描 QR Code 加入...
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <button id="btn-start-game" class="w-full py-4 text-2xl font-black text-slate-900 bg-gradient-to-r from-neon-green via-emerald-400 to-teal-300 rounded-xl shadow-neon-green hover:brightness-110 active:scale-98 transition">
-                        🚀 立即開始比賽
-                    </button>
+                    <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700/50 text-center text-slate-400 text-sm">
+                        ⚡ 提示：首位玩家掃碼後自動啟動 60 秒計時，集滿 4 人或時間結束將自動補充機器人開賽。
+                    </div>
                 </div>
             </div>
         </div>
@@ -147,7 +140,7 @@
 
             <!-- 作答狀態 -->
             <div id="mobile-status-text" class="text-center text-slate-400 font-bold py-2">
-                請登錄暱稱準備作答
+                請輸入暱稱完成登錄
             </div>
         </div>
 
@@ -321,7 +314,7 @@
         }
 
         /* -----------------------------------------------------------------
-           5. 大廳與 1 分鐘補機器人邏輯
+           5. 大廳倒數與 60 秒自動補滿機器人開賽
            ----------------------------------------------------------------- */
         function startLobbyTimer() {
             if (lobbyTimerInterval) return;
@@ -341,7 +334,7 @@
         }
 
         function updateLobbyTimerUI() {
-            document.getElementById('lobby-timer-text').innerText = `倒數 ${lobbyTimer} 秒 (滿 4 人即刻開始)`;
+            document.getElementById('lobby-timer-text').innerText = `倒數 ${lobbyTimer} 秒 (集滿 4 人即刻開始)`;
         }
 
         function fillRobotsAndStart() {
@@ -365,14 +358,8 @@
         }
 
         /* -----------------------------------------------------------------
-           6. 玩家加入邏輯
+           6. 掃碼連線玩家加入邏輯
            ----------------------------------------------------------------- */
-        document.getElementById('btn-add-player').addEventListener('click', () => {
-            const name = document.getElementById('player-name-input').value.trim();
-            if (name) addPlayer(name, false);
-            document.getElementById('player-name-input').value = '';
-        });
-
         document.getElementById('btn-mobile-join').addEventListener('click', () => {
             const name = document.getElementById('mobile-name-input').value.trim();
             if (!name) return alert('請輸入暱稱！');
@@ -386,13 +373,13 @@
             channel.postMessage({ type: 'ADD_PLAYER', player: { id: myPlayerId, name: name, isAI: false } });
         });
 
-        function addPlayer(name, isAI) {
-            if (players.length >= 4) return alert('參賽人數已滿 4 人！');
+        function addPlayer(name) {
+            if (players.length >= 4) return;
 
             const p = {
-                id: isAI ? 'ai_' + Date.now() : 'human_' + Date.now(),
+                id: 'human_' + Date.now(),
                 name: name,
-                isAI: isAI,
+                isAI: false,
                 score: 0,
                 answered: false,
                 choice: null,
@@ -401,10 +388,12 @@
             players.push(p);
             renderLobbyPlayers();
 
+            // 首位玩家掃碼加入時開始 60 秒計時
             if (players.filter(p => !p.isAI).length === 1) {
                 startLobbyTimer();
             }
 
+            // 滿 4 人自動開賽
             if (players.length === 4) {
                 if (lobbyTimerInterval) clearInterval(lobbyTimerInterval);
                 startGame();
@@ -414,6 +403,7 @@
         function renderLobbyPlayers() {
             const container = document.getElementById('player-list-lobby');
             container.innerHTML = '';
+
             players.forEach(p => {
                 const item = document.createElement('div');
                 item.className = 'flex justify-between items-center bg-slate-800 p-3 rounded-xl border border-slate-700';
@@ -423,7 +413,7 @@
                         <span class="font-bold text-white">${p.name}</span>
                     </div>
                     <span class="text-xs ${p.isAI ? 'bg-purple-900/80 text-purple-300' : 'bg-cyan-900/80 text-cyan-300'} px-2 py-0.5 rounded">
-                        ${p.isAI ? 'AI 機器人' : '現場玩家'}
+                        ${p.isAI ? 'AI 機器人' : '掃碼玩家'}
                     </span>
                 `;
                 container.appendChild(item);
@@ -431,13 +421,13 @@
         }
 
         /* -----------------------------------------------------------------
-           7. 廣播訊息與跨頁面同步 (BroadcastChannel)
+           7. 跨頁面訊息同步 (BroadcastChannel)
            ----------------------------------------------------------------- */
         channel.onmessage = (e) => {
             const data = e.data;
             if (data.type === 'ADD_PLAYER') {
                 if (players.length < 4) {
-                    addPlayer(data.player.name, false);
+                    addPlayer(data.player.name);
                 }
             } else if (data.type === 'SUBMIT_ANSWER') {
                 const target = players.find(p => p.id === data.playerId);
@@ -460,12 +450,6 @@
         /* -----------------------------------------------------------------
            8. 遊戲流程控制
            ----------------------------------------------------------------- */
-        document.getElementById('btn-start-game').addEventListener('click', () => {
-            if (players.length === 0) return alert('請至少有一位玩家加入！');
-            if (lobbyTimerInterval) clearInterval(lobbyTimerInterval);
-            fillRobotsAndStart();
-        });
-
         function startGame() {
             AudioFX.playClick();
             document.getElementById('view-lobby').classList.add('hidden');
@@ -526,20 +510,11 @@
             
             options.forEach((optText, i) => {
                 const btn = document.createElement('button');
-                btn.className = `option-btn w-full p-4 text-left rounded-xl border-2 border-slate-700 bg-slate-800/90 flex items-center space-x-4 text-lg font-bold`;
+                btn.className = `option-btn w-full p-4 text-left rounded-xl border-2 border-slate-700 bg-slate-800/90 flex items-center space-x-4 text-lg font-bold pointer-events-none`;
                 btn.innerHTML = `
                     <span class="w-10 h-10 flex items-center justify-center rounded-lg bg-slate-900 text-neon-blue font-black">${labels[i]}</span>
                     <span class="text-white">${optText}</span>
                 `;
-                btn.addEventListener('click', () => {
-                    const hostPlayer = players.find(p => !p.isAI && !p.answered && p.isQualified);
-                    if (hostPlayer) {
-                        hostPlayer.answered = true;
-                        hostPlayer.choice = i;
-                        renderPlayersDashboard();
-                        checkAllAnswered();
-                    }
-                });
                 container.appendChild(btn);
             });
         }
@@ -623,7 +598,6 @@
             const correctAns = qData.answer;
 
             document.querySelectorAll('.option-btn').forEach((btn, idx) => {
-                btn.disabled = true;
                 if (idx === correctAns) {
                     btn.classList.add('bg-emerald-950', 'border-neon-green');
                 }
