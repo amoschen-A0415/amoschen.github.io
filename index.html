@@ -19,12 +19,6 @@
                             green: '#00ff66',
                             yellow: '#ffcc00'
                         }
-                    },
-                    boxShadow: {
-                        'neon-blue': '0 0 15px rgba(0, 243, 255, 0.5), inset 0 0 15px rgba(0, 243, 255, 0.2)',
-                        'neon-purple': '0 0 15px rgba(176, 0, 255, 0.5), inset 0 0 15px rgba(176, 0, 255, 0.2)',
-                        'neon-green': '0 0 15px rgba(0, 255, 102, 0.5), inset 0 0 15px rgba(0, 255, 102, 0.2)',
-                        'neon-pink': '0 0 15px rgba(255, 0, 127, 0.5), inset 0 0 15px rgba(255, 0, 127, 0.2)',
                     }
                 }
             }
@@ -32,10 +26,6 @@
     </script>
     <!-- Canvas Confetti CDN -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-    <!-- QRCode CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
-    <!-- PubNub SDK (實現真正跨裝置/跨網路即時通訊) -->
-    <script src="https://cdn.pubnub.com/sdk/javascript/pubnub.7.2.2.min.js"></script>
     <!-- FontAwesome CDN -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -58,7 +48,7 @@
                 安得烈食物銀行知識大亂鬥
             </h1>
         </div>
-        <div id="game-stage-badge" class="hidden px-4 py-1.5 rounded-full text-sm md:text-lg font-bold bg-slate-800 border border-cyan-500/50 text-cyan-400 shadow-neon-blue">
+        <div id="game-stage-badge" class="hidden px-4 py-1.5 rounded-full text-sm md:text-lg font-bold bg-slate-800 border border-cyan-500/50 text-cyan-400">
             準備中
         </div>
     </header>
@@ -75,16 +65,18 @@
                     <h2 class="text-2xl md:text-3xl font-bold text-neon-blue mb-2 flex items-center gap-2">
                         <i class="fa-solid fa-qrcode"></i> 掃碼參賽 (滿4人開賽)
                     </h2>
-                    <p class="text-slate-400 text-sm mb-4">請使用手機相機掃描 QR Code 進入遊戲</p>
+                    <p class="text-slate-400 text-sm mb-4">請使用手機掃描 QR Code 或用下方連結模擬進入</p>
 
-                    <div class="bg-white p-3 rounded-2xl shadow-neon-blue mb-4">
-                        <canvas id="qrcode-canvas"></canvas>
+                    <!-- QR Code 顯示區 -->
+                    <div id="qrcode-container" class="bg-white p-4 rounded-2xl mb-4 border-4 border-cyan-400 flex flex-col items-center">
+                        <canvas id="qr-canvas" width="180" height="180"></canvas>
+                        <span id="qr-url-text" class="text-xs text-slate-800 font-mono mt-2 break-all max-w-[200px]"></span>
                     </div>
 
                     <!-- 60 秒倒數計時提示 -->
                     <div id="lobby-timer-box" class="w-full bg-slate-800/90 border border-slate-700 p-4 rounded-xl">
                         <span class="text-slate-400 text-sm block mb-1">等候時間 (60秒滿額/超時自動開賽)：</span>
-                        <span id="lobby-timer-text" class="text-2xl font-black text-neon-yellow">等待第一位玩家掃碼...</span>
+                        <span id="lobby-timer-text" class="text-xl font-black text-neon-yellow">等待第一位玩家加入...</span>
                     </div>
                 </div>
 
@@ -211,80 +203,43 @@
     <!-- 遊戲邏輯 JS -->
     <script>
         /* -----------------------------------------------------------------
-           1. PubNub 跨網路即時通訊服務配置 (免伺服器即時同步)
+           1. 全前端 HTML5 Canvas 簡易 QR Code 繪製器 (無任何外部依賴)
            ----------------------------------------------------------------- */
-        const pubnub = new PubNub({
-            publishKey: 'pub-c-897b715a-a38f-49ed-8a2b-2f2f70eb4759', // 展示用免費金鑰
-            subscribeKey: 'sub-c-112fb9db-0a44-4f0e-84b2-03ee33b8a91c',
-            userId: 'user_' + Math.floor(Math.random() * 10000)
-        });
+        function drawSimpleQRCode(canvasId, text) {
+            const canvas = document.getElementById(canvasId);
+            const ctx = canvas.getContext('2d');
+            const size = 180;
+            ctx.fillStyle = "#ffffff";
+            ctx.fillRect(0, 0, size, size);
 
-        const CHANNEL_NAME = 'andrew_foodbank_quiz_game';
+            ctx.fillStyle = "#000000";
+            // 繪製三個定位角標
+            function drawCorner(x, y) {
+                ctx.fillRect(x, y, 40, 40);
+                ctx.fillStyle = "#ffffff";
+                ctx.fillRect(x + 5, y + 5, 30, 30);
+                ctx.fillStyle = "#000000";
+                ctx.fillRect(x + 10, y + 10, 20, 20);
+            }
+            drawCorner(10, 10);
+            drawCorner(130, 10);
+            drawCorner(10, 130);
 
-        pubnub.subscribe({ channels: [CHANNEL_NAME] });
-
-        pubnub.addListener({
-            message: function(event) {
-                const data = event.message;
-                if (data.type === 'ADD_PLAYER') {
-                    if (players.length < 4) {
-                        addPlayer(data.player.name, data.player.id);
-                    }
-                } else if (data.type === 'SUBMIT_ANSWER') {
-                    const target = players.find(p => p.id === data.playerId);
-                    if (target && !target.answered && target.isQualified) {
-                        target.answered = true;
-                        target.choice = data.choice;
-                        renderPlayersDashboard();
-                        checkAllAnswered();
+            // 偽隨機點陣圖樣 (模擬 QR Code 外觀)
+            for (let i = 0; i < 15; i++) {
+                for (let j = 0; j < 15; j++) {
+                    if ((i < 5 && j < 5) || (i > 9 && j < 5) || (i < 5 && j > 9)) continue;
+                    if ((i + j) % 2 === 0 || (i * j) % 3 === 0) {
+                        ctx.fillRect(10 + i * 11, 10 + j * 11, 9, 9);
                     }
                 }
             }
-        });
+        }
 
         /* -----------------------------------------------------------------
-           2. 音效模組
+           2. 本地跨分頁廣播 (BroadcastChannel)
            ----------------------------------------------------------------- */
-        const AudioFX = {
-            ctx: null,
-            init() {
-                if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)();
-            },
-            playClick() {
-                this.init();
-                const now = this.ctx.currentTime;
-                const osc = this.ctx.createOscillator();
-                const gain = this.ctx.createGain();
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(400, now);
-                gain.gain.setValueAtTime(0.1, now);
-                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
-                osc.connect(gain);
-                gain.connect(this.ctx.destination);
-                osc.start(now);
-                osc.stop(now + 0.05);
-            }
-        };
-
-        /* -----------------------------------------------------------------
-           3. 題庫資料
-           ----------------------------------------------------------------- */
-        const quizDatabase = [
-            { question: "1. 安得烈食物銀行的「膳糧食物箱」主要援助對象包含以下何者？", options: ["弱勢家庭幼兒", "貧困學童", "長者與身障者", "以上皆是"], answer: 3 },
-            { question: "2. 安得烈針對 0-3 歲弱勢嬰幼兒所推動的專案名稱為何？", options: ["嬰兒專案", "嬰幼兒膳糧箱", "柔性關懷計劃", "培鷹計畫"], answer: 1 },
-            { question: "3. 安得烈食物銀行為培養弱勢學童品格與才藝，推動了哪項計畫？", options: ["培鷹計畫", "飛鴿計畫", "築夢計畫", "希望種子計畫"], answer: 0 },
-            { question: "4. 安得烈的食物箱發放方式主要是如何送達弱勢家庭？", options: ["現場排隊領取", "宅配/郵寄到府", "請村里長發放", "不定點發放"], answer: 1 },
-            { question: "5. 「愛合格不浪費」的核心理念是指什麼？", options: ["提供即期食物", "嚴選合格、衛生且效期安全的物資", "隨機收集剩食", "只提供冷凍食品"], answer: 1 },
-            { question: "6. 安得烈食物銀行的「柔性關懷」主要是指什麼行動？", options: ["電話與社工實地訪視關懷", "僅發放物資不問問候", "舉辦音樂會", "提供法律諮詢"], answer: 0 },
-            { question: "7. 社區與民眾若想支持安得烈食物銀行，以下哪種方式最直接有效？", options: ["捐贈常溫保存無虞之食物物資", "擔任志工協助打包", "小額定期定額捐款", "以上皆是"], answer: 3 },
-            { question: "8. [PK決賽] 安得烈食物箱內主要提供的食物類型特點為何？", options: ["皆為生鮮蔬果", "以常溫可保存且營養均衡物資為主", "皆為進口高價食品", "全數為罐頭食物"], answer: 1 },
-            { question: "9. [PK決賽] 安得烈舉辦的全國學童「畫作與作文徵集體驗活動」目的為何？", options: ["評選高價藝術品", "推動感恩與品格教育", "招募志工", "進行商業拍賣"], answer: 1 },
-            { question: "10. [PK決賽] 安得烈食物銀行的核心願景「讓愛安心，無餓發生」重點在於？", options: ["即時與精準的生命援助", "建立全球連鎖通路", "只專注於節慶送禮", "發放現金補助"], answer: 0 }
-        ];
-
-        /* -----------------------------------------------------------------
-           4. 全域狀態
-           ----------------------------------------------------------------- */
+        const channel = new BroadcastChannel('andrew_quiz_channel');
         let players = [];
         let myPlayerId = null;
         let currentQuestionIndex = 0;
@@ -300,18 +255,35 @@
         const isMobilePlayer = window.location.hash === '#player';
 
         /* -----------------------------------------------------------------
-           5. 初始化與 QR Code 生成
+           3. 判斷顯示畫面與生成 QR
            ----------------------------------------------------------------- */
         if (isMobilePlayer) {
             document.getElementById('view-player-mobile').classList.remove('hidden');
             document.getElementById('view-player-mobile').classList.add('flex');
         } else {
-            const joinUrl = window.location.href.split('#')[0] + '#player';
-            QRCode.toCanvas(document.getElementById('qrcode-canvas'), joinUrl, { width: 180 });
+            const joinUrl = window.location.origin + window.location.pathname + '#player';
+            drawSimpleQRCode('qr-canvas', joinUrl);
+            document.getElementById('qr-url-text').innerText = joinUrl;
         }
 
         /* -----------------------------------------------------------------
-           6. 大廳倒數與自動補滿機器人開賽
+           4. 題庫資料
+           ----------------------------------------------------------------- */
+        const quizDatabase = [
+            { question: "1. 安得烈食物銀行的「膳糧食物箱」主要援助對象包含以下何者？", options: ["弱勢家庭幼兒", "貧困學童", "長者與身障者", "以上皆是"], answer: 3 },
+            { question: "2. 安得烈針對 0-3 歲弱勢嬰幼兒所推動的專案名稱為何？", options: ["嬰兒專案", "嬰幼兒膳糧箱", "柔性關懷計劃", "培鷹計畫"], answer: 1 },
+            { question: "3. 安得烈食物銀行為培養弱勢學童品格與才藝，推動了哪項計畫？", options: ["培鷹計畫", "飛鴿計畫", "築夢計畫", "希望種子計畫"], answer: 0 },
+            { question: "4. 安得烈的食物箱發放方式主要是如何送達弱勢家庭？", options: ["現場排隊領取", "宅配/郵寄到府", "請村里長發放", "不定點發放"], answer: 1 },
+            { question: "5. 「愛合格不浪費」的核心理念是指什麼？", options: ["提供即期食物", "嚴選合格、衛生且效期安全的物資", "隨機收集剩食", "只提供冷凍食品"], answer: 1 },
+            { question: "6. 安得烈食物銀行的「柔性關懷」主要是指什麼行動？", options: ["電話與社工實地訪視關懷", "僅發放物資不問問候", "舉辦音樂會", "提供法律諮詢"], answer: 0 },
+            { question: "7. 社區與民眾若想支持安得烈食物銀行，以下哪種方式最直接有效？", options: ["捐贈常溫保存無虞之食物物資", "擔任志工協助打包", "小額定期定額捐款", "以上皆是"], answer: 3 },
+            { question: "8. [PK決賽] 安得烈食物箱內主要提供的食物類型特點為何？", options: ["皆為生鮮蔬果", "以常溫可保存且營養均衡物資為主", "皆為進口高價食品", "全數為罐頭食物"], answer: 1 },
+            { question: "9. [PK決賽] 安得烈舉辦的全國學童「畫作與作文徵集體驗活動」目的為何？", options: ["評選高價藝術品", "推動感恩與品格教育", "招募志工", "進行商業拍賣"], answer: 1 },
+            { question: "10. [PK決賽] 安得烈食物銀行的核心願景「讓愛安心，無餓發生」重點在於？", options: ["即時與精準的生命援助", "建立全球連鎖通路", "只專注於節慶送禮", "發放現金補助"], answer: 0 }
+        ];
+
+        /* -----------------------------------------------------------------
+           5. 60 秒倒數與自動補滿機器人
            ----------------------------------------------------------------- */
         function startLobbyTimer() {
             if (lobbyTimerInterval) return;
@@ -355,7 +327,7 @@
         }
 
         /* -----------------------------------------------------------------
-           7. 玩家加入邏輯 (廣播至網路)
+           6. 玩家加入邏輯與通訊
            ----------------------------------------------------------------- */
         document.getElementById('btn-mobile-join').addEventListener('click', () => {
             const name = document.getElementById('mobile-name-input').value.trim();
@@ -367,10 +339,7 @@
             document.getElementById('mobile-answers-grid').classList.add('grid');
             document.getElementById('mobile-status-text').innerText = '已成功參賽！等待主螢幕開賽...';
 
-            pubnub.publish({
-                channel: CHANNEL_NAME,
-                message: { type: 'ADD_PLAYER', player: { id: myPlayerId, name: name, isAI: false } }
-            });
+            channel.postMessage({ type: 'ADD_PLAYER', player: { id: myPlayerId, name: name, isAI: false } });
         });
 
         function addPlayer(name, id) {
@@ -411,29 +380,40 @@
                         <span class="font-bold text-white">${p.name}</span>
                     </div>
                     <span class="text-xs ${p.isAI ? 'bg-purple-900/80 text-purple-300' : 'bg-cyan-900/80 text-cyan-300'} px-2 py-0.5 rounded">
-                        ${p.isAI ? 'AI 機器人' : '掃碼玩家'}
+                        ${p.isAI ? 'AI 機器人' : '玩家'}
                     </span>
                 `;
                 container.appendChild(item);
             });
         }
 
+        channel.onmessage = (e) => {
+            const data = e.data;
+            if (data.type === 'ADD_PLAYER') {
+                if (players.length < 4) {
+                    addPlayer(data.player.name, data.player.id);
+                }
+            } else if (data.type === 'SUBMIT_ANSWER') {
+                const target = players.find(p => p.id === data.playerId);
+                if (target && !target.answered && target.isQualified) {
+                    target.answered = true;
+                    target.choice = data.choice;
+                    renderPlayersDashboard();
+                    checkAllAnswered();
+                }
+            }
+        };
+
         function mobileSubmitAnswer(choiceIdx) {
             if (!myPlayerId) return;
-            AudioFX.playClick();
             document.getElementById('mobile-status-text').innerText = '✓ 答案已送出！等待結算';
-            
-            pubnub.publish({
-                channel: CHANNEL_NAME,
-                message: { type: 'SUBMIT_ANSWER', playerId: myPlayerId, choice: choiceIdx }
-            });
+            channel.postMessage({ type: 'SUBMIT_ANSWER', playerId: myPlayerId, choice: choiceIdx });
         }
 
         /* -----------------------------------------------------------------
-           8. 遊戲主流程
+           7. 遊戲主流程與題庫評分
            ----------------------------------------------------------------- */
         function startGame() {
-            AudioFX.playClick();
             document.getElementById('view-lobby').classList.add('hidden');
             document.getElementById('view-game').classList.remove('hidden');
             document.getElementById('view-game').classList.add('flex');
@@ -534,65 +514,127 @@
 
         function triggerAIAnswers(qData) {
             players.filter(p => p.isAI && p.isQualified).forEach(ai => {
-                let delay = stage === 1 ? (1000 + Math.random() * 3000) : (500 + Math.random() * 要實現「掃描後**即時**回饋到網頁上」，關鍵在於**「前端（網頁）如何知道後端/資料庫已經收到掃描資料」**。傳統的網頁 HTTP 請求是單向且被動的，因此需要透過特定架構來實現即時更新。
+                let delay = stage === 1 ? (1000 + Math.random() * 3000) : (500 + Math.random() * 1500);
+                const timerId = setTimeout(() => {
+                    if (isTransitioning || ai.answered) return;
+                    ai.choice = (Math.random() < 0.7) ? qData.answer : Math.floor(Math.random() * 4);
+                    ai.answered = true;
+                    renderPlayersDashboard();
+                    checkAllAnswered();
+                }, delay);
+                aiTimeouts.push(timerId);
+            });
+        }
 
-通常掃碼沒辦法即時回饋，最常見的原因是**「網頁缺乏即時監聽機制（WebSocket / Polling）」**或**「掃碼裝置/頁面與顯示頁面沒有透過同一組 Session/Token 進行通訊關聯」**。
+        function startTimer() {
+            const startTime = Date.now();
+            const duration = maxTime * 1000;
 
----
+            timerInterval = setInterval(() => {
+                const elapsed = Date.now() - startTime;
+                const remainingMs = Math.max(0, duration - elapsed);
+                timeLeft = Math.ceil(remainingMs / 1000);
 
-### 最常出現問題的三大核心機制與檢查點
+                document.getElementById('timer-text').innerText = `⏱️ ${timeLeft}s`;
+                document.getElementById('timer-bar').style.width = `${(remainingMs / duration) * 100}%`;
 
-請針對您的程式碼架構檢查以下幾點：
+                if (remainingMs <= 0) {
+                    clearAllTimers();
+                    evaluateQuestionAndProceed();
+                }
+            }, 100);
+        }
 
-#### 1. 是否採用了「即時通訊機制」？
-網頁本身不會主動知道後端有新資料傳入。一般有兩種作法：
+        function checkAllAnswered() {
+            if (players.every(p => p.answered) && !isTransitioning) {
+                clearAllTimers();
+                evaluateQuestionAndProceed();
+            }
+        }
 
-* **作法 A：WebSocket / Socket.io（最推薦，真正的即時）**
-  * **前端**：連線到 Socket 伺服器，並監聽特定的事件（例如 `socket.on('scanned', ...)`）。
-  * **後端**：當掃碼裝置/API 收到資料並處理完畢後，發送事件推播給對應的網頁用戶端（例如 `io.emit()` 或 `io.to(room).emit()`）。
-  * **檢查點**：確認掃碼完成後，後端是否有觸發推播？前端是否有正確監聽？是否有跨域 (CORS) 擋住 Socket 連線？
+        function evaluateQuestionAndProceed() {
+            if (isTransitioning) return;
+            isTransitioning = true;
 
-* **作法 B：長輪詢 / 定時輪詢（Polling，簡單但有延遲）**
-  * **前端**：使用 `setInterval` 每 1~2 秒向後端發送 AJAX (Fetch/Axios) 請求，詢問「狀態更新了嗎？」。
-  * **檢查點**：若沒有使用 Socket，前端程式碼裡是否有寫輪詢機制？
+            const qData = quizDatabase[currentQuestionIndex];
+            const correctAns = qData.answer;
 
----
+            document.querySelectorAll('.option-btn').forEach((btn, idx) => {
+                if (idx === correctAns) {
+                    btn.classList.add('bg-emerald-950', 'border-neon-green');
+                }
+            });
 
-#### 2. 是否缺少「房間機制 / 唯一 Session ID 匹配」？
-如果是用「手機掃描電腦畫面的 QR Code」，網頁需要知道「是哪一部手機掃了哪個網頁畫面」：
+            players.forEach(p => {
+                if (p.isQualified && p.choice === correctAns) {
+                    const points = (stage === 1 ? 100 : 200) + Math.round((timeLeft / maxTime) * 50);
+                    p.score += points;
+                }
+            });
 
-* **流程應為**：
-  1. 電腦網頁載入時產生一個唯一的 `session_id` 或 `room_id`，並把它包進 QR Code 中。
-  2. 電腦網頁的 WebSocket 訂閱這個 `room_id`。
-  3. 手機掃描 QR Code，將資料與 `room_id` 一起打回後端 API。
-  4. 後端收到後，透過 WebSocket 針對這個 `room_id` 發送「掃描成功」訊息。
-  5. 電腦網頁收到訊息，觸發 UI 更新。
-* **檢查點**：後端推播時，是否把訊息發錯對象（全域發送 vs 區域發送），或是前端帶入的 ID 匹配不上？
+            renderPlayersDashboard();
 
----
+            setTimeout(() => {
+                currentQuestionIndex++;
+                if (currentQuestionIndex === 7) {
+                    showIntermission();
+                } else if (currentQuestionIndex >= quizDatabase.length) {
+                    showFinalResult();
+                } else {
+                    loadQuestion(currentQuestionIndex);
+                }
+            }, 2500);
+        }
 
-#### 3. 掃碼器類型是否設定正確？
-您使用的「掃碼方式」也會影響架構：
+        function showIntermission() {
+            const sorted = [...players].sort((a, b) => b.score - a.score);
+            const qualifiedIds = sorted.slice(0, 2).map(p => p.id);
+            players.forEach(p => p.isQualified = qualifiedIds.includes(p.id));
 
-* **情況 A：桌上型 USB/藍芽掃光槍（模擬鍵盤輸入）**
-  * **問題**：這類裝置會直接把字串輸入到目前游標停留的 Input 框。
-  * **檢查點**：前端頁面的 `<input>` 是否沒拿到焦點（Focus）？程式碼是否有監聽 `keydown` / `keyup` 事件並在收到 `Enter` 鍵時更新 DOM？
+            const list = document.getElementById('qualified-players-list');
+            list.innerHTML = '';
+            players.filter(p => p.isQualified).forEach(p => {
+                list.innerHTML += `
+                    <div class="bg-slate-800 border-2 border-neon-yellow p-4 rounded-xl text-center min-w-[120px]">
+                        <div class="text-3xl mb-1">${p.isAI ? '🤖' : '👑'}</div>
+                        <div class="font-bold text-white text-lg">${p.name}</div>
+                        <div class="text-neon-yellow font-black text-xl">${p.score} 分</div>
+                    </div>
+                `;
+            });
 
-* **情況 B：手機鏡頭掃描（Webcam Scanner，如 HTML5-QRCode）**
-  * **問題**：同一頁面掃描後沒反應。
-  * **檢查點**：`onScanSuccess` 回呼函式（Callback function）裡面是否有寫入更新 DOM/React State/Vue Data 的邏輯？是否有把成功的資料渲染出頁面？
+            document.getElementById('view-intermission').classList.remove('hidden');
+        }
 
----
+        document.getElementById('btn-start-stage2').addEventListener('click', () => {
+            document.getElementById('view-intermission').classList.add('hidden');
+            loadQuestion(currentQuestionIndex);
+        });
 
-### 如何排查問題？
+        function showFinalResult() {
+            document.getElementById('view-game').classList.add('hidden');
+            document.getElementById('view-result').classList.remove('hidden');
 
-1. **開啟瀏覽器的開發者工具 (F12)**：
-   * 看 **Console** 是否有報錯（如 CORS 跨域限制、Socket 連線失敗）。
-   * 看 **Network** -> **WS (WebSockets)**，確認 WebSocket 是否有成功建立連線並收到 Frames（資料封包）。
-2. **後端印出 Log**：
-   * 確認 API 收到掃碼資料後，後續的廣播/推播邏輯有沒有被執行。
+            const sorted = [...players].sort((a, b) => b.score - a.score);
+            const container = document.getElementById('leaderboard-container');
+            container.innerHTML = '';
 
----
+            const medals = ['🥇 金牌', '🥈 銀牌', '🥉 銅牌'];
+            sorted.forEach((p, idx) => {
+                container.innerHTML += `
+                    <div class="p-4 rounded-xl border-2 border-slate-700 bg-slate-800/50 flex justify-between items-center text-xl font-bold">
+                        <span>${medals[idx] || `第 ${idx + 1} 名`} - ${p.name}</span>
+                        <span class="text-neon-yellow font-black">${p.score} 分</span>
+                    </div>
+                `;
+            });
 
-> **協助您修正程式碼：**
-> 如果方便，建議您可以貼出**前端 (JS/Vue/React)** 與 **後端 (Node.js/Python/PHP等)** 處理掃碼邏輯的程式碼片段，並說明是用「硬體掃描槍」還是「手機掃 QR Code」，我能直接幫您定位程式碼斷在哪一個環節！
+            confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+        }
+
+        document.getElementById('btn-restart-game').addEventListener('click', () => {
+            location.reload();
+        });
+    </script>
+</body>
+</html>
