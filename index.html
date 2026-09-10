@@ -6,6 +6,14 @@
     <title>安得烈食物銀行 - 即時互動問答大亂鬥</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- PeerJS (實現手機與大螢幕跨裝置 P2P 連線) & QRCode.js -->
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <!-- Canvas Confetti CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <!-- FontAwesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -24,10 +32,6 @@
             }
         }
     </script>
-    <!-- Canvas Confetti CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-    <!-- FontAwesome CDN -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap');
         body {
@@ -56,7 +60,7 @@
     <!-- 主要內容區域 -->
     <main class="flex-grow flex items-center justify-center p-4 md:p-6 relative">
 
-        <!-- 1. 遊戲大廳 / 純掃碼參賽畫面 -->
+        <!-- ==================== 1. 大螢幕 - 遊戲大廳 / 掃碼進入 ==================== -->
         <div id="view-lobby" class="w-full max-w-5xl bg-slate-900/80 border-2 border-slate-700/80 rounded-2xl p-6 md:p-10 shadow-2xl backdrop-blur-xl">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                 
@@ -65,18 +69,14 @@
                     <h2 class="text-2xl md:text-3xl font-bold text-neon-blue mb-2 flex items-center gap-2">
                         <i class="fa-solid fa-qrcode"></i> 掃碼參賽 (滿4人開賽)
                     </h2>
-                    <p class="text-slate-400 text-sm mb-4">請使用手機掃描 QR Code 或用下方連結模擬進入</p>
+                    <p class="text-slate-400 text-sm mb-4">請使用手機相機掃描 QR Code 進入遊戲</p>
 
-                    <!-- QR Code 顯示區 -->
-                    <div id="qrcode-container" class="bg-white p-4 rounded-2xl mb-4 border-4 border-cyan-400 flex flex-col items-center">
-                        <canvas id="qr-canvas" width="180" height="180"></canvas>
-                        <span id="qr-url-text" class="text-xs text-slate-800 font-mono mt-2 break-all max-w-[200px]"></span>
-                    </div>
+                    <div id="qrcode" class="bg-white p-3 rounded-2xl border-4 border-cyan-400 mb-4"></div>
 
                     <!-- 60 秒倒數計時提示 -->
                     <div id="lobby-timer-box" class="w-full bg-slate-800/90 border border-slate-700 p-4 rounded-xl">
-                        <span class="text-slate-400 text-sm block mb-1">等候時間 (60秒滿額/超時自動開賽)：</span>
-                        <span id="lobby-timer-text" class="text-xl font-black text-neon-yellow">等待第一位玩家加入...</span>
+                        <span class="text-slate-400 text-sm block mb-1">等候時間 (60秒滿額/超時自動補機器人開賽)：</span>
+                        <span id="lobby-timer-text" class="text-xl font-black text-neon-yellow">等待玩家連線...</span>
                     </div>
                 </div>
 
@@ -88,28 +88,26 @@
                         </h2>
 
                         <!-- 玩家清單 -->
-                        <div class="space-y-2">
-                            <div id="player-list-lobby" class="grid grid-cols-1 gap-3 max-h-60 overflow-y-auto pr-1">
-                                <div class="text-slate-500 text-center py-8 font-bold border border-dashed border-slate-800 rounded-xl">
-                                    尚無玩家連線，請掃描 QR Code 加入...
-                                </div>
+                        <div id="player-list-lobby" class="grid grid-cols-1 gap-3 max-h-60 overflow-y-auto pr-1">
+                            <div class="text-slate-500 text-center py-8 font-bold border border-dashed border-slate-800 rounded-xl">
+                                尚無玩家連線，請掃描 QR Code 加入...
                             </div>
                         </div>
                     </div>
 
                     <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700/50 text-center text-slate-400 text-sm">
-                        ⚡ 提示：首位玩家掃碼後自動啟動 60 秒計時，集滿 4 人或時間結束將自動補充機器人開賽。
+                        ⚡ 提示：首位玩家掃碼連線後自動啟動 60 秒計時，滿 4 人或時間結束自動開賽。
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- 手機玩家操作介面 Modal -->
+        <!-- ==================== 2. 手機端 - 玩家控制器畫面 ==================== -->
         <div id="view-player-mobile" class="hidden fixed inset-0 z-50 bg-slate-950 p-6 flex-col justify-between">
             <div class="text-center space-y-2">
                 <span class="text-4xl">🍞</span>
                 <h2 class="text-2xl font-black text-neon-blue">安得烈答題控制器</h2>
-                <p id="player-mobile-name" class="text-neon-yellow font-bold text-lg">尚未登錄</p>
+                <p id="player-mobile-name" class="text-neon-yellow font-bold text-lg">正在連線大螢幕...</p>
             </div>
 
             <!-- 登錄名稱區 -->
@@ -123,19 +121,19 @@
 
             <!-- 答題按鈕區 -->
             <div id="mobile-answers-grid" class="hidden grid-cols-2 gap-4 my-auto">
-                <button onclick="mobileSubmitAnswer(0)" class="h-32 bg-blue-600 active:bg-blue-700 rounded-2xl text-4xl font-black text-white shadow-lg">A</button>
-                <button onclick="mobileSubmitAnswer(1)" class="h-32 bg-emerald-600 active:bg-emerald-700 rounded-2xl text-4xl font-black text-white shadow-lg">B</button>
-                <button onclick="mobileSubmitAnswer(2)" class="h-32 bg-amber-600 active:bg-amber-700 rounded-2xl text-4xl font-black text-white shadow-lg">C</button>
-                <button onclick="mobileSubmitAnswer(3)" class="h-32 bg-rose-600 active:bg-rose-700 rounded-2xl text-4xl font-black text-white shadow-lg">D</button>
+                <button onclick="mobileSubmitAnswer(0)" class="h-28 bg-blue-600 active:bg-blue-700 rounded-2xl text-4xl font-black text-white shadow-lg">A</button>
+                <button onclick="mobileSubmitAnswer(1)" class="h-28 bg-emerald-600 active:bg-emerald-700 rounded-2xl text-4xl font-black text-white shadow-lg">B</button>
+                <button onclick="mobileSubmitAnswer(2)" class="h-28 bg-amber-600 active:bg-amber-700 rounded-2xl text-4xl font-black text-white shadow-lg">C</button>
+                <button onclick="mobileSubmitAnswer(3)" class="h-28 bg-rose-600 active:bg-rose-700 rounded-2xl text-4xl font-black text-white shadow-lg">D</button>
             </div>
 
             <!-- 作答狀態 -->
             <div id="mobile-status-text" class="text-center text-slate-400 font-bold py-2">
-                請輸入暱稱完成登錄
+                連線成功！請輸入暱稱完成登錄
             </div>
         </div>
 
-        <!-- 2. 遊戲主畫面 (大螢幕顯示) -->
+        <!-- ==================== 3. 大螢幕 - 遊戲主畫面 ==================== -->
         <div id="view-game" class="hidden w-full max-w-6xl flex-col gap-6">
             <div class="bg-slate-900/90 border-2 border-cyan-500/30 rounded-2xl p-6 md:p-8 shadow-2xl backdrop-blur-xl relative overflow-hidden">
                 <div class="w-full bg-slate-800 h-3 rounded-full mb-6 overflow-hidden border border-slate-700">
@@ -164,32 +162,28 @@
             </div>
         </div>
 
-        <!-- 3. 中場晉級公告 modal -->
+        <!-- ==================== 4. 中場晉級公告 modal ==================== -->
         <div id="view-intermission" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
-            <div class="bg-slate-900 border-2 border-neon-purple rounded-2xl p-8 max-w-2xl w-full text-center shadow-neon-purple">
+            <div class="bg-slate-900 border-2 border-neon-purple rounded-2xl p-8 max-w-2xl w-full text-center">
                 <h2 class="text-3xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-neon-blue via-neon-yellow to-neon-pink mb-4">
                     🔥 STAGE 1 預賽結束！
                 </h2>
                 <p class="text-slate-300 text-xl mb-6">總積分前 2 名成功晉級 STAGE 2 雙人 PK 決賽！</p>
-                
                 <div id="qualified-players-list" class="flex justify-center gap-6 mb-8"></div>
-
                 <button id="btn-start-stage2" class="w-full py-4 text-2xl font-bold text-black bg-neon-yellow rounded-xl shadow-lg hover:brightness-110 transition">
                     ⚔️ 進入 STAGE 2 雙人 PK 賽
                 </button>
             </div>
         </div>
 
-        <!-- 4. 最終頒獎典禮畫面 -->
+        <!-- ==================== 5. 最終頒獎典禮畫面 ==================== -->
         <div id="view-result" class="hidden w-full max-w-4xl bg-slate-900/90 border-2 border-neon-yellow/50 rounded-2xl p-6 md:p-10 shadow-2xl backdrop-blur-xl text-center">
             <h2 class="text-4xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-neon-yellow via-amber-300 to-yellow-500 mb-2">
                 🏆 頒獎典禮 🏆
             </h2>
             <p class="text-slate-400 text-lg md:text-xl mb-8">感謝大家參與「安得烈食物銀行」愛心知識大亂鬥！</p>
-
             <div id="leaderboard-container" class="space-y-3 mb-8"></div>
-
-            <button id="btn-restart-game" class="px-10 py-4 text-xl font-bold text-white bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl shadow-neon-purple transition">
+            <button id="btn-restart-game" class="px-10 py-4 text-xl font-bold text-white bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl transition">
                 🔄 重新開啟新局
             </button>
         </div>
@@ -200,46 +194,24 @@
         安得烈食物銀行 關懷弱勢・愛合格不浪費 | 互動問答大亂鬥
     </footer>
 
-    <!-- 遊戲邏輯 JS -->
+    <!-- 遊戲全域 JavaScript 邏輯 -->
     <script>
-        /* -----------------------------------------------------------------
-           1. 全前端 HTML5 Canvas 簡易 QR Code 繪製器 (無任何外部依賴)
-           ----------------------------------------------------------------- */
-        function drawSimpleQRCode(canvasId, text) {
-            const canvas = document.getElementById(canvasId);
-            const ctx = canvas.getContext('2d');
-            const size = 180;
-            ctx.fillStyle = "#ffffff";
-            ctx.fillRect(0, 0, size, size);
+        // 題庫資料
+        const quizDatabase = [
+            { question: "1. 安得烈食物銀行的「膳糧食物箱」主要援助對象包含以下何者？", options: ["弱勢家庭幼兒", "貧困學童", "長者與身障者", "以上皆是"], answer: 3 },
+            { question: "2. 安得烈針對 0-3 歲弱勢嬰幼兒所推動的專案名稱為何？", options: ["嬰兒專案", "嬰幼兒膳糧箱", "柔性關懷計劃", "培鷹計畫"], answer: 1 },
+            { question: "3. 安得烈食物銀行為培養弱勢學童品格與才藝，推動了哪項計畫？", options: ["培鷹計畫", "飛鴿計畫", "築夢計畫", "希望種子計畫"], answer: 0 },
+            { question: "4. 安得烈的食物箱發放方式主要是如何送達弱勢家庭？", options: ["現場排隊領取", "宅配/郵寄到府", "請村里長發放", "不定點發放"], answer: 1 },
+            { question: "5. 「愛合格不浪費」的核心理念是指什麼？", options: ["提供即期食物", "嚴選合格、衛生且效期安全的物資", "隨機收集剩食", "只提供冷凍食品"], answer: 1 },
+            { question: "6. 安得烈食物銀行的「柔性關懷」主要是指什麼行動？", options: ["電話與社工實地訪視關懷", "僅發放物資不問問候", "舉辦音樂會", "提供法律諮詢"], answer: 0 },
+            { question: "7. 社區與民眾若想支持安得烈食物銀行，以下哪種方式最直接有效？", options: ["捐贈常溫保存無虞之物資", "擔任志工協助打包", "小額定期定額捐款", "以上皆是"], answer: 3 },
+            { question: "8. [PK決賽] 安得烈食物箱內主要提供的食物類型特點為何？", options: ["皆為生鮮蔬果", "以常溫可保存且營養均衡物資為主", "皆為進口高價食品", "全數為罐頭食物"], answer: 1 },
+            { question: "9. [PK決賽] 安得烈舉辦的全國學童「畫作與作文徵集體驗活動」目的為何？", options: ["評選高價藝術品", "推動感恩與品格教育", "招募志工", "進行商業拍賣"], answer: 1 },
+            { question: "10. [PK決賽] 安得烈食物銀行的核心願景「讓愛安心，無餓發生」重點在於？", options: ["即時與精準的生命援助", "建立全球連鎖通路", "只專注於節慶送禮", "發放現金補助"], answer: 0 }
+        ];
 
-            ctx.fillStyle = "#000000";
-            // 繪製三個定位角標
-            function drawCorner(x, y) {
-                ctx.fillRect(x, y, 40, 40);
-                ctx.fillStyle = "#ffffff";
-                ctx.fillRect(x + 5, y + 5, 30, 30);
-                ctx.fillStyle = "#000000";
-                ctx.fillRect(x + 10, y + 10, 20, 20);
-            }
-            drawCorner(10, 10);
-            drawCorner(130, 10);
-            drawCorner(10, 130);
-
-            // 偽隨機點陣圖樣 (模擬 QR Code 外觀)
-            for (let i = 0; i < 15; i++) {
-                for (let j = 0; j < 15; j++) {
-                    if ((i < 5 && j < 5) || (i > 9 && j < 5) || (i < 5 && j > 9)) continue;
-                    if ((i + j) % 2 === 0 || (i * j) % 3 === 0) {
-                        ctx.fillRect(10 + i * 11, 10 + j * 11, 9, 9);
-                    }
-                }
-            }
-        }
-
-        /* -----------------------------------------------------------------
-           2. 本地跨分頁廣播 (BroadcastChannel)
-           ----------------------------------------------------------------- */
-        const channel = new BroadcastChannel('andrew_quiz_channel');
+        let peer = null;
+        let hostConn = null;
         let players = [];
         let myPlayerId = null;
         let currentQuestionIndex = 0;
@@ -252,102 +224,124 @@
         let lobbyTimer = 60;
         let lobbyTimerInterval = null;
 
-        const isMobilePlayer = window.location.hash === '#player';
+        // 初始化：判斷是「大螢幕」還是「手機控制器」
+        window.onload = () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const hostId = urlParams.get('host');
 
-        /* -----------------------------------------------------------------
-           3. 判斷顯示畫面與生成 QR
-           ----------------------------------------------------------------- */
-        if (isMobilePlayer) {
-            document.getElementById('view-player-mobile').classList.remove('hidden');
-            document.getElementById('view-player-mobile').classList.add('flex');
-        } else {
-            const joinUrl = window.location.origin + window.location.pathname + '#player';
-            drawSimpleQRCode('qr-canvas', joinUrl);
-            document.getElementById('qr-url-text').innerText = joinUrl;
-        }
-
-        /* -----------------------------------------------------------------
-           4. 題庫資料
-           ----------------------------------------------------------------- */
-        const quizDatabase = [
-            { question: "1. 安得烈食物銀行的「膳糧食物箱」主要援助對象包含以下何者？", options: ["弱勢家庭幼兒", "貧困學童", "長者與身障者", "以上皆是"], answer: 3 },
-            { question: "2. 安得烈針對 0-3 歲弱勢嬰幼兒所推動的專案名稱為何？", options: ["嬰兒專案", "嬰幼兒膳糧箱", "柔性關懷計劃", "培鷹計畫"], answer: 1 },
-            { question: "3. 安得烈食物銀行為培養弱勢學童品格與才藝，推動了哪項計畫？", options: ["培鷹計畫", "飛鴿計畫", "築夢計畫", "希望種子計畫"], answer: 0 },
-            { question: "4. 安得烈的食物箱發放方式主要是如何送達弱勢家庭？", options: ["現場排隊領取", "宅配/郵寄到府", "請村里長發放", "不定點發放"], answer: 1 },
-            { question: "5. 「愛合格不浪費」的核心理念是指什麼？", options: ["提供即期食物", "嚴選合格、衛生且效期安全的物資", "隨機收集剩食", "只提供冷凍食品"], answer: 1 },
-            { question: "6. 安得烈食物銀行的「柔性關懷」主要是指什麼行動？", options: ["電話與社工實地訪視關懷", "僅發放物資不問問候", "舉辦音樂會", "提供法律諮詢"], answer: 0 },
-            { question: "7. 社區與民眾若想支持安得烈食物銀行，以下哪種方式最直接有效？", options: ["捐贈常溫保存無虞之食物物資", "擔任志工協助打包", "小額定期定額捐款", "以上皆是"], answer: 3 },
-            { question: "8. [PK決賽] 安得烈食物箱內主要提供的食物類型特點為何？", options: ["皆為生鮮蔬果", "以常溫可保存且營養均衡物資為主", "皆為進口高價食品", "全數為罐頭食物"], answer: 1 },
-            { question: "9. [PK決賽] 安得烈舉辦的全國學童「畫作與作文徵集體驗活動」目的為何？", options: ["評選高價藝術品", "推動感恩與品格教育", "招募志工", "進行商業拍賣"], answer: 1 },
-            { question: "10. [PK決賽] 安得烈食物銀行的核心願景「讓愛安心，無餓發生」重點在於？", options: ["即時與精準的生命援助", "建立全球連鎖通路", "只專注於節慶送禮", "發放現金補助"], answer: 0 }
-        ];
-
-        /* -----------------------------------------------------------------
-           5. 60 秒倒數與自動補滿機器人
-           ----------------------------------------------------------------- */
-        function startLobbyTimer() {
-            if (lobbyTimerInterval) return;
-            lobbyTimer = 60;
-            updateLobbyTimerUI();
-
-            lobbyTimerInterval = setInterval(() => {
-                lobbyTimer--;
-                updateLobbyTimerUI();
-
-                if (lobbyTimer <= 0) {
-                    clearInterval(lobbyTimerInterval);
-                    lobbyTimerInterval = null;
-                    fillRobotsAndStart();
-                }
-            }, 1000);
-        }
-
-        function updateLobbyTimerUI() {
-            document.getElementById('lobby-timer-text').innerText = `倒數 ${lobbyTimer} 秒 (集滿 4 人即刻開始)`;
-        }
-
-        function fillRobotsAndStart() {
-            const humanCount = players.filter(p => !p.isAI).length;
-            const neededRobots = 4 - humanCount;
-            const robotNames = ['🤖 AI 智庫', '⚡ AI 閃電手', '🎲 AI 運氣王', '🧠 AI 學霸'];
-
-            for (let i = 0; i < neededRobots; i++) {
-                players.push({
-                    id: 'ai_' + Date.now() + '_' + i,
-                    name: robotNames[i],
-                    isAI: true,
-                    score: 0,
-                    answered: false,
-                    choice: null,
-                    isQualified: true
-                });
+            if (hostId) {
+                // 手機連線模式
+                document.getElementById('view-lobby').style.display = 'none';
+                document.getElementById('view-player-mobile').classList.remove('hidden');
+                document.getElementById('view-player-mobile').classList.add('flex');
+                initMobileController(hostId);
+            } else {
+                // 大螢幕主機模式
+                initHostPeer();
             }
-            renderLobbyPlayers();
-            startGame();
+        };
+
+        /* -----------------------------------------------------------------
+           1. 大螢幕端 PeerJS 監聽與 QR Code 生成
+           ----------------------------------------------------------------- */
+        function initHostPeer() {
+            peer = new Peer();
+            
+            peer.on('open', (id) => {
+                // 生成含有 host ID 的手機連線網址
+                const joinUrl = `${window.location.href.split('?')[0]}?host=${id}`;
+                
+                // 動態產生 QR Code
+                document.getElementById("qrcode").innerHTML = "";
+                new QRCode(document.getElementById("qrcode"), {
+                    text: joinUrl,
+                    width: 160,
+                    height: 160
+                });
+            });
+
+            peer.on('connection', (conn) => {
+                conn.on('open', () => {
+                    conn.on('data', (data) => {
+                        if (data.type === 'JOIN') {
+                            if (players.length < 4) {
+                                addPlayer(data.name, conn, data.playerId);
+                            }
+                        } else if (data.type === 'SUBMIT_ANSWER') {
+                            const target = players.find(p => p.id === data.playerId);
+                            if (target && !target.answered && target.isQualified) {
+                                target.answered = true;
+                                target.choice = data.choice;
+                                renderPlayersDashboard();
+                                checkAllAnswered();
+                            }
+                        }
+                    });
+
+                    conn.on('close', () => {
+                        players = players.filter(p => p.conn !== conn);
+                        renderLobbyPlayers();
+                    });
+                });
+            });
         }
 
         /* -----------------------------------------------------------------
-           6. 玩家加入邏輯與通訊
+           2. 手機端 PeerJS 連線與控制
            ----------------------------------------------------------------- */
+        function initMobileController(hostId) {
+            peer = new Peer();
+            peer.on('open', (id) => {
+                myPlayerId = 'p_' + id;
+                hostConn = peer.connect(hostId);
+
+                hostConn.on('open', () => {
+                    document.getElementById('player-mobile-name').innerText = "已連線至大螢幕";
+                });
+
+                hostConn.on('data', (data) => {
+                    if (data.type === 'GAME_START') {
+                        document.getElementById('mobile-status-text').innerText = '🎮 遊戲開始，請看大螢幕準備作答！';
+                    } else if (data.type === 'NEXT_QUESTION') {
+                        document.getElementById('mobile-status-text').innerText = '請點選答案 (A/B/C/D)';
+                    }
+                });
+            });
+        }
+
         document.getElementById('btn-mobile-join').addEventListener('click', () => {
             const name = document.getElementById('mobile-name-input').value.trim();
             if (!name) return alert('請輸入暱稱！');
-            myPlayerId = 'human_' + Date.now();
-            document.getElementById('player-mobile-name').innerText = `玩家：${name}`;
-            document.getElementById('mobile-join-form').classList.add('hidden');
-            document.getElementById('mobile-answers-grid').classList.remove('hidden');
-            document.getElementById('mobile-answers-grid').classList.add('grid');
-            document.getElementById('mobile-status-text').innerText = '已成功參賽！等待主螢幕開賽...';
 
-            channel.postMessage({ type: 'ADD_PLAYER', player: { id: myPlayerId, name: name, isAI: false } });
+            if (hostConn && hostConn.open) {
+                hostConn.send({ type: 'JOIN', name: name, playerId: myPlayerId });
+                document.getElementById('player-mobile-name').innerText = `玩家：${name}`;
+                document.getElementById('mobile-join-form').classList.add('hidden');
+                document.getElementById('mobile-answers-grid').classList.remove('hidden');
+                document.getElementById('mobile-answers-grid').classList.add('grid');
+                document.getElementById('mobile-status-text').innerText = '已成功進入大廳，等待開賽...';
+            } else {
+                alert('連線建立中，請稍候再試...');
+            }
         });
 
-        function addPlayer(name, id) {
-            if (players.some(p => p.id === id) || players.length >= 4) return;
+        function mobileSubmitAnswer(choiceIdx) {
+            if (hostConn && hostConn.open) {
+                hostConn.send({ type: 'SUBMIT_ANSWER', playerId: myPlayerId, choice: choiceIdx });
+                document.getElementById('mobile-status-text').innerText = '✓ 答案已送出！等待結算';
+            }
+        }
+
+        /* -----------------------------------------------------------------
+           3. 大螢幕大廳與玩家管理
+           ----------------------------------------------------------------- */
+        function addPlayer(name, conn, playerId) {
+            if (players.some(p => p.id === playerId) || players.length >= 4) return;
 
             const p = {
-                id: id || ('human_' + Date.now()),
+                id: playerId,
                 name: name,
+                conn: conn,
                 isAI: false,
                 score: 0,
                 answered: false,
@@ -367,6 +361,48 @@
             }
         }
 
+        function startLobbyTimer() {
+            if (lobbyTimerInterval) return;
+            lobbyTimer = 60;
+            updateLobbyTimerUI();
+
+            lobbyTimerInterval = setInterval(() => {
+                lobbyTimer--;
+                updateLobbyTimerUI();
+
+                if (lobbyTimer <= 0) {
+                    clearInterval(lobbyTimerInterval);
+                    lobbyTimerInterval = null;
+                    fillRobotsAndStart();
+                }
+            }, 1000);
+        }
+
+        function updateLobbyTimerUI() {
+            document.getElementById('lobby-timer-text').innerText = `倒數 ${lobbyTimer} 秒 (滿 4 人自動開賽)`;
+        }
+
+        function fillRobotsAndStart() {
+            const humanCount = players.filter(p => !p.isAI).length;
+            const neededRobots = 4 - humanCount;
+            const robotNames = ['🤖 AI 智庫', '⚡ AI 閃電手', '🎲 AI 運氣王', '🧠 AI 學霸'];
+
+            for (let i = 0; i < neededRobots; i++) {
+                players.push({
+                    id: 'ai_' + Date.now() + '_' + i,
+                    name: robotNames[i],
+                    conn: null,
+                    isAI: true,
+                    score: 0,
+                    answered: false,
+                    choice: null,
+                    isQualified: true
+                });
+            }
+            renderLobbyPlayers();
+            startGame();
+        }
+
         function renderLobbyPlayers() {
             const container = document.getElementById('player-list-lobby');
             container.innerHTML = '';
@@ -376,48 +412,29 @@
                 item.className = 'flex justify-between items-center bg-slate-800 p-3 rounded-xl border border-slate-700';
                 item.innerHTML = `
                     <div class="flex items-center gap-2">
-                        <span class="text-xl">${p.isAI ? '🤖' : '👤'}</span>
+                        <span class="text-xl">${p.isAI ? '🤖' : '📱'}</span>
                         <span class="font-bold text-white">${p.name}</span>
                     </div>
                     <span class="text-xs ${p.isAI ? 'bg-purple-900/80 text-purple-300' : 'bg-cyan-900/80 text-cyan-300'} px-2 py-0.5 rounded">
-                        ${p.isAI ? 'AI 機器人' : '玩家'}
+                        ${p.isAI ? 'AI 機器人' : '掃碼連線'}
                     </span>
                 `;
                 container.appendChild(item);
             });
         }
 
-        channel.onmessage = (e) => {
-            const data = e.data;
-            if (data.type === 'ADD_PLAYER') {
-                if (players.length < 4) {
-                    addPlayer(data.player.name, data.player.id);
-                }
-            } else if (data.type === 'SUBMIT_ANSWER') {
-                const target = players.find(p => p.id === data.playerId);
-                if (target && !target.answered && target.isQualified) {
-                    target.answered = true;
-                    target.choice = data.choice;
-                    renderPlayersDashboard();
-                    checkAllAnswered();
-                }
-            }
-        };
-
-        function mobileSubmitAnswer(choiceIdx) {
-            if (!myPlayerId) return;
-            document.getElementById('mobile-status-text').innerText = '✓ 答案已送出！等待結算';
-            channel.postMessage({ type: 'SUBMIT_ANSWER', playerId: myPlayerId, choice: choiceIdx });
-        }
-
         /* -----------------------------------------------------------------
-           7. 遊戲主流程與題庫評分
+           4. 遊戲主流程與計分
            ----------------------------------------------------------------- */
         function startGame() {
             document.getElementById('view-lobby').classList.add('hidden');
             document.getElementById('view-game').classList.remove('hidden');
             document.getElementById('view-game').classList.add('flex');
             document.getElementById('game-stage-badge').classList.remove('hidden');
+
+            players.forEach(p => {
+                if (p.conn) p.conn.send({ type: 'GAME_START' });
+            });
 
             currentQuestionIndex = 0;
             stage = 1;
@@ -451,6 +468,7 @@
             players.forEach(p => {
                 p.choice = null;
                 p.answered = (stage === 2 && !p.isQualified);
+                if (p.conn) p.conn.send({ type: 'NEXT_QUESTION' });
             });
 
             document.getElementById('question-number').innerText = `QUESTION 0${index + 1}/10`;
@@ -501,7 +519,7 @@
                 card.innerHTML = `
                     <div class="flex items-center justify-between">
                         <span class="font-bold text-sm text-slate-200 truncate">${p.name}</span>
-                        ${p.isAI ? '<i class="fa-solid fa-robot text-purple-400 text-xs"></i>' : '<i class="fa-solid fa-user text-cyan-400 text-xs"></i>'}
+                        ${p.isAI ? '<i class="fa-solid fa-robot text-purple-400 text-xs"></i>' : '<i class="fa-solid fa-mobile-screen text-cyan-400 text-xs"></i>'}
                     </div>
                     <div class="mt-2 flex items-end justify-between">
                         <span class="text-neon-yellow font-black text-lg">${p.score} <span class="text-xs text-slate-400">分</span></span>
