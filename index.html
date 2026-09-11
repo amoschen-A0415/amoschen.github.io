@@ -196,56 +196,61 @@
 
     <!-- 遊戲全域 JavaScript 邏輯 -->
     <script>
-        // 參照簡介簡報更新之 30 題完整題庫
-        const masterQuizDatabase = [
-            { question: "安得烈慈善協會成立於哪一年哪一個月份？", options: ["2010年8月", "2011年8月", "2012年8月", "2013年8月"], answer: 1 },
-            { question: "安得烈食物銀行主要提供何種性質的食物箱來幫助弱勢？", options: ["全冷凍冷藏物資", "生鮮蔬菜與水果", "客製化、常溫保存食物箱", "隨機剩食配給箱"], answer: 2 },
-            { question: "針對初生至 3 歲的弱勢嬰幼兒，安得烈提供哪種專屬物資箱？", options: ["膳糧食物箱", "嬰兒物資箱", "松柏食物箱", "安心食物箱"], answer: 1 },
-            { question: "適用於 3 歲至 15 歲弱勢兒少的主要食物箱類型為何？", options: ["長青食物箱", "年菜食物箱", "膳糧食物箱", "專案物資箱"], answer: 2 },
-            { question: "安得烈針對 65 至 80 歲的弱勢長者，提供哪一種食物箱？", options: ["安心食物箱", "松柏食物箱", "長青食物箱", "嬰兒物資箱"], answer: 0 },
-            { question: "針對 80 歲以上的弱勢長者，安得烈主要發放哪一種食物箱？", options: ["安心食物箱", "松柏食物箱", "膳糧食物箱", "專案物資箱"], answer: 1 },
-            { question: "安得烈為重病、罕病或特殊飲食需求者提供的客製化箱別是？", options: ["長青食物箱", "素食/專案物資箱", "年菜食物箱", "幼兒專案箱"], answer: 1 },
-            { question: "安得烈在春節前夕特別準備給弱勢家庭的物資箱為何？", options: ["年菜食物箱", "安心食物箱", "松柏食物箱", "培鷹食物箱"], answer: 0 },
-            { question: "安得烈「培鷹計畫」的主要目標是什麼？", options: ["僅給予生活津貼補助", "引導弱勢兒少適性發展、培育品格與技能", "籌辦商業體育競賽", "提供短期的餐點外送"], answer: 1 },
-            { question: "安得烈舉辦的學藝競賽活動包含哪些項目？", options: ["作文、繪畫、書法", "朗讀、演講、歌唱", "賽跑、游泳、籃球", "心算、棋藝、舞蹈"], answer: 0 },
-            { question: "每年暑假針對國小及國中學生舉辦的品格成長活動名稱為何？", options: ["飛颺營", "生命成長營", "善果營", "培鷹夏令營"], answer: 1 },
-            { question: "每年暑假針對高中及大學生舉辦的培育營隊名稱為何？", options: ["生命成長營", "飛颺營", "安心營", "希望營"], answer: 1 },
-            { question: "生命成長營與飛颺營四大活動目標包含品格成長、知識成長、視野成長與？", options: ["財力成長", "實力成長", "體能成長", "職位成長"], answer: 1 },
-            { question: "安得烈每學年提供獎(助)學金，並鼓勵獲獎學生參與什麼活動以回饋社會？", options: ["服務學習", "企業實習", "海外留學", "商業推廣"], answer: 0 },
-            { question: "安得烈推動「希望工程方案」協助清寒弱勢學生鑽研專業技術，屬於哪項計畫？", options: ["急難救助", "技職培訓", "善果計畫", "災害援助"], answer: 1 },
-            { question: "安得烈在技職培訓中提出「職業引介」的口號是什麼？", options: ["為企業找人才、為弱勢找出路", "愛合格不浪費", "讓愛安心，無餓發生", "知福惜福，感恩助人"], answer: 0 },
-            { question: "當弱勢家庭遭遇重大疾病、災難或突發事故時，協會執行哪項專案提供急難救助金或安心食物箱？", options: ["善果專案", "安心專案", "培鷹專案", "飛颺專案"], answer: 1 },
-            { question: "配合學校生命教育課程或飢餓工作坊推動的教育推廣計畫名稱為何？", options: ["善果計畫", "希望計畫", "感恩計畫", "築夢計畫"], answer: 0 },
-            { question: "「善果計畫」鼓勵學子具備的六大觀念不包含下列何者？", options: ["知福、惜福", "感恩、助人", "分享、惜食", "追求名利"], answer: 3 },
-            { question: "依據2026年7月資料，安得烈單月份援助個案總人數高達多少人？", options: ["3500人", "4200人", "5784人", "6800人"], answer: 2 },
-            { question: "安得烈個案的通報來源不包含以下何者？", options: ["國中與國小、社福機構", "教會、警察機關", "公部門或個人", "營利連鎖超商直接指定"], answer: 3 },
-            { question: "安得烈志工協助檢查食品效期時，規定食品效期需在多久以上？", options: ["1個月以上", "3個月以上", "6個月以上", "1年以上"], answer: 2 },
-            { question: "志工檢查食品重量時，單件物資原則上需在多少公斤以下（白米除外）？", options: ["1公斤以下", "2公斤以下", "3公斤以下", "5公斤以下"], answer: 0 },
-            { question: "食品安全檢查時，若發現物資有何種狀況必須剔除？", options: ["破損", "發霉", "長蟲", "以上皆是"], answer: 3 },
-            { question: "基於受助者營養與健康考量，以下哪種食品絕對「不會」放入安得烈食物箱？", options: ["真空包裝白米", "泡麵及高鹽高糖醃漬品", "常溫保存保鮮牛奶", "燕麥片與黑穀粉"], answer: 1 },
-            { question: "安得烈每月提供約多少箱客製化食物箱？", options: ["1000餘箱", "3000餘箱", "5000餘箱", "10000餘箱"], answer: 2 },
-            { question: "安得烈食物箱完成打包後，主要透過哪些管道寄送至個案家中？", options: ["交付郵局及兩家物流公司或社工專員親送", "全部由志工親自外送", "請受助者自行至總部領取", "無人機載運"], answer: 0 },
-            { question: "一般大眾若想為弱勢家庭盡一份心力，可以透過以下哪些方式？", options: ["捐贈發票與食物", "志工服務與小額捐款", "通報需要幫助的個案", "以上皆可"], answer: 3 },
-            { question: "安得烈服務理念表達對關懷行動的承諾，口號為：「那裡有需要，___」？", options: ["就往哪裡去", "我們就在哪裡送餐", "希望就在哪裡", "愛心就到哪裡"], answer: 0 },
-            { question: "「施比受更有福！」安得烈強調助人也是助己，能帶來更多什麼？", options: ["財富與名聲", "幸福與快樂", "工作與機會", "讚美與榮譽"], answer: 1 }
+        // 完整 50 題題庫資料來源：安得烈慈善協會題庫
+        const fullQuizDatabase = [
+            { question: "1. 本協會的正確名稱為何？", options: ["社團法人中華安德烈慈善協會", "社團法人中華安得烈慈善協會", "財團法人安德烈食物銀行", "社團法人安得路慈善協會"], answer: 1 },
+            { question: "2. 安得烈慈善協會的英文名稱是？", options: ["ANDREW Charity Association", "ANDRE Charity Association", "ANDREW Food Bank", "ANDREW Love Association"], answer: 0 },
+            { question: "3. 安得烈慈善協會的 Logo 標誌中，不包含下列哪一個元素圖案？", options: ["麥穗", "愛心", "魚", "飛鷹"], answer: 3 },
+            { question: "4. 安得烈食物銀行紙箱上印製的吉祥祝福語是？", options: ["祝您 豐衣足食 萬事如意", "祝您 食來運轉 平安得福", "祝您 健康平安 永保安康", "祝您 迎春納福 吃飽穿暖"], answer: 1 },
+            { question: "5. 下列何者不是安得烈慈善協會的核心工作項目？", options: ["食物銀行計畫 / 急難救助", "弱勢扶助培鷹計畫 / 災害援助", "教育推廣（善果計畫）", "海外移民留學輔導"], answer: 3 },
+            { question: "6. 針對「初生至 3 歲」的嬰兒，安得烈提供哪一種專案物資箱？", options: ["膳糧食物箱", "嬰兒物資箱", "松柏食物箱", "長青食物箱"], answer: 1 },
+            { question: "7. 針對「3 歲至 15 歲」的弱勢兒少，安得烈主要提供哪一種食物箱？", options: ["嬰兒物資箱", "膳糧食物箱", "松柏食物箱", "安心食物箱"], answer: 1 },
+            { question: "8. 「松柏食物箱」主要服務的對象年齡層為？", options: ["65 歲至 80 歲弱勢長者", "80 歲以上弱勢長者", "50 歲至 65 歲弱勢長者", "100 歲以上人瑞"], answer: 1 },
+            { question: "9. 「長青食物箱」主要提供給哪一個年齡層的弱勢長者？", options: ["55 至 65 歲", "65 至 80 歲", "80 歲以上", "全年齡層通用"], answer: 1 },
+            { question: "10. 針對重病或罕見疾病者等特殊飲食需求者，安得烈可提供下列哪種膳糧食物箱？", options: ["專案物資箱", "低糖無鹽食物箱", "生酮飲食食物箱", "全海鮮食物箱"], answer: 0 },
+            { question: "11. 為了幫助弱勢家庭過好年，安得烈會在歲末節慶推出什麼特色食物箱？", options: ["中秋月餅箱", "年菜食物箱", "端午粽子箱", "尾牙禮盒箱"], answer: 1 },
+            { question: "12. 安得烈引導弱勢家庭孩子適性發展、鼓勵完成學業或培育技能的計畫稱為？", options: ["育鷹計畫", "培鷹計畫", "飛鷹計畫", "雄鷹計畫"], answer: 1 },
+            { question: "13. 安得烈為增進弱勢兒少藝文創作能力所舉辦的全國學藝競賽，不包含下列哪一項目？", options: ["作文", "繪畫", "書法", "朗讀"], answer: 3 },
+            { question: "14. 安得烈每年暑假針對「國小、國中」梯次學童舉辦的營隊名稱為？", options: ["飛颺營", "生命成長營", "探索冒險營", "快樂學習營"], answer: 1 },
+            { question: "15. 安得烈每年暑假針對「高中、大學」梯次學生舉辦的營隊名稱為？", options: ["飛颺營", "領袖培訓營", "生命成長營", "青苗成長營"], answer: 0 },
+            { question: "16. 安得烈營隊活動的四大發展目標，不包含下列哪一項？", options: ["品格成長", "知識成長", "財富成長", "視野成長 / 實力成長"], answer: 2 },
+            { question: "17. 安得烈提供獎(助)學金鼓勵學生完成學業，同時鼓勵他們參與什麼活動以回饋社會？", options: ["服務學習", "企業實習", "環保淨灘", "海外留學"], answer: 0 },
+            { question: "18. 因應技職教育發展，安得烈推動何種方案培育清寒弱勢學生的技能專長？", options: ["百年樹人方案", "希望工程方案", "職人造樹方案", "築夢踏實方案"], answer: 1 },
+            { question: "19. 針對遭逢重大疾病、災難或突發事故之弱勢家庭，安得烈透過何種計畫提供急難救助？", options: ["安心計畫", "安居計畫", "順心計畫", "暖心計畫"], answer: 0 },
+            { question: "20. 安得烈配合學校生命教育課程推動的教育推廣計畫稱為？", options: ["善花計畫", "善果計畫", "善心計畫", "善苗計畫"], answer: 1 },
+            { question: "21. 「善果計畫」旨在鼓勵學子具備多項觀念，下列何者非其強調觀念？", options: ["知福、惜福", "感恩、助人", "分享、惜食", "競爭、贏在起跑點"], answer: 3 },
+            { question: "22. 下列何者不是安得烈援助個案的主要通報來源之一？", options: ["國中、小學 / 教會", "社福機構 / 警察機關", "公部門村里長或個人通報", "國外跨國營利企業"], answer: 3 },
+            { question: "23. 下列何者不是安得烈物資的主要來源之一？", options: ["愛心捐款與幸福一日捐", "民眾捐贈物資", "企業廠商捐贈物資", "政府強制扣繳之稅收"], answer: 3 },
+            { question: "24. 安得烈志工在協助食品效期檢查時，原則上要求剩餘效期需在多久以上？", options: ["1 個月以上", "3 個月以上", "6 個月以上", "1 年以上"], answer: 2 },
+            { question: "25. 志工檢查捐贈食品重量時，除了白米之外，單件食品重量原則上需在多少以下？", options: ["500 公克", "1 公斤以下", "2 公斤以下", "5 公斤以下"], answer: 1 },
+            { question: "26. 志工進行食品安全檢查時，若發現下列何種情況該食品不能放入食物箱？", options: ["包裝完整", "效期還有 8 個月", "破損、發霉、長蟲或凹罐", "標示清晰"], answer: 2 },
+            { question: "27. 基於受助兒童與長者的健康需求，下列哪種食品絕對不會放入安得烈的食物箱？", options: ["白米與麵條", "泡麵及高鹽、高糖、醃漬食品", "營養奶粉", "罐頭肉鬆"], answer: 1 },
+            { question: "28. 安得烈食物箱完成打包後，主要透過哪些管道寄送或送達？", options: ["郵局及物流公司", "社工及專員家訪親送", "配搭合作單位轉送", "以上皆是"], answer: 3 },
+            { question: "29. 一般大眾可以透過哪些方式來支持安得烈慈善協會？", options: ["捐贈發票與食物物資", "參與志工服務", "定額/小額捐款與通報身邊個案", "以上皆可"], answer: 3 },
+            { question: "30. 安得烈簡報與宣導中常傳達的座右銘理念是？", options: ["施比受更有福", "獨善其身", "錦上添花", "腳踏實地"], answer: 0 },
+            { question: "31. 下列哪一個字是安得烈慈善協會的正確用字？", options: ["安「德」烈", "安「得」烈", "安「特」烈", "安「達」烈"], answer: 1 },
+            { question: "32. 若在宣傳單看到「安德烈食物銀行」，最可能的情況是？", options: ["這是安得烈慈善協會的正式簡稱", "常見的字面誤寫，正確應為「安得烈食物銀行」", "專門給外國人參加的慈善機構", "一家連鎖超市"], answer: 1 },
+            { question: "33. 安得烈食物箱內的食物處理原則為何？", options: ["提供熟食便食", "提供客製化、可常溫保存的乾糧物資", "只提供冷凍生鮮", "只提供新鮮蔬菜水果"], answer: 1 },
+            { question: "34. 嬰兒物資箱主要提供給嬰幼兒什麼樣的必備物資？", options: ["玩具與繪本", "奶粉與尿布", "嬰兒推車", "兒童腳踏車"], answer: 1 },
+            { question: "35. 下列何者不是安得烈志工在現場整備物資時的核心工作？", options: ["食品效期檢查", "食品安全檢驗", "食物箱裝箱與封箱", "現場烹飪熱食"], answer: 3 },
+            { question: "36. 安得烈食物箱的服務範圍涵蓋哪些地區？", options: ["僅限台北市與新北市", "僅限西部直轄市", "涵蓋全台各地及澎湖、金門、馬祖、蘭嶼、綠島等離島", "僅限海外地區"], answer: 2 },
+            { question: "37. 當民眾捐贈醬瓜、豆腐乳等醃漬品給安得烈時，協會會如何處理？", options: ["放入長青食物箱", "放入膳糧食物箱", "考量高鈉健康因素，不放入食物箱發放", "煮成大鍋菜給志工吃"], answer: 2 },
+            { question: "38. 安得烈推動職場媒合或職業引介的目的為？", options: ["為企業找人才、為弱勢找出路", "收取求職仲介費", "協助企業進行海外投資", "舉辦大型聯誼"], answer: 0 },
+            { question: "39. 下列何者不是安得烈學藝競賽的常見分組？", options: ["國小 3-4 年級組", "國小 5-6 年級組", "國中 7-9 年級組 / 高中 10-12 年級組", "學齡前幼兒組"], answer: 3 },
+            { question: "40. 安得烈精神號召的口號「哪裡有需要，……」下一句接續為？", options: ["就往哪裡去", "就往哪裡捐", "就往哪裡搬", "就往哪裡送"], answer: 0 },
+            { question: "41. 想要成為安得烈的包裝志工，最需要具備什麼條件？", options: ["熱心與熱情", "必須擁有營養師執照", "必須具備堆高機駕照", "必須會講三種外語"], answer: 0 },
+            { question: "42. 關於捐贈給安得烈慈善協會的愛心捐款，下列敘述何者正確？", options: ["不能列單據", "可依法開立正式收據用於綜合所得稅抵減", "只能捐贈外幣", "必須親自送到協會總部"], answer: 1 },
+            { question: "43. 膳糧食物箱內最常見的主食類物資包含下列何者？", options: ["披薩與漢堡", "白米、麵條、燕麥片", "生鮮水餃", "冷凍牛排"], answer: 1 },
+            { question: "44. 「集食行善-幸福一日捐」主要是鼓勵大家做什麼？", options: ["捐出自己一天的所得或購買物資分享給弱勢家庭", "一整天不吃不喝體驗飢餓", "參加一日遊活動", "一整天到街上宣導"], answer: 0 },
+            { question: "45. 下列何者是安得烈食物銀行標準紙箱外觀的主要特徵？", options: ["黑色金屬箱", "牛皮紙原色搭配品牌標示與祝福語", "全粉紅色禮盒", "透明塑膠箱"], answer: 1 },
+            { question: "46. 下列何者不是安得烈慈善協會主要關懷服務的對象類型？", options: ["弱勢兒少與嬰幼兒", "孤、貧、殘、疾之弱勢長者", "急難或災害受助家庭", "身價千萬且生活無虞的富商"], answer: 3 },
+            { question: "47. 在物資檢查過程中，若發現餅乾包裝「有些微漏氣膨脹」，志工應該？", options: ["繼續放進食物箱", "判定包裝破損不合規格，予以剔除", "自己當場吃掉", "用膠帶黏住繼續用"], answer: 1 },
+            { question: "48. 安得烈食物箱每月大約發放多少箱來幫助弱勢家庭？", options: ["約 100 箱", "約 500 箱", "五千餘箱", "五十萬箱"], answer: 2 },
+            { question: "49. 關於安得烈「生命成長營」，下列何者正確？", options: ["旨在幫助學員具備正確觀念、品格、知識與視野", "是一個要收費數萬元的商業減重營", "只在冬天舉辦", "專門培訓極限運動員"], answer: 0 },
+            { question: "50. 遇到鄰居或身邊朋友突然遭遇重大變故、斷糧求助無門時，我們最適合的做法是？", options: ["冷漠不理會", "向安得烈慈善協會等社福機構通報個案尋求資源協助", "在網路上嘲笑對方", "叫對方自己想辦法"], answer: 1 }
         ];
 
-        let peer = null;
-        let hostConn = null;
-        let players = [];
-        let myPlayerId = null;
-        let currentQuestionIndex = 0;
-        let gameQuestions = []; // 隨機抽取的 10 題
-        let stage = 1;
-        let timerInterval = null;
-        let aiTimeouts = [];
-        let isTransitioning = false;
-        let timeLeft = 10;
-        let maxTime = 10;
-        let lobbyTimer = 60;
-        let lobbyTimerInterval = null;
-
-        // 隨機洗牌函式 (Fisher-Yates Shuffle)
+        // 隨機洗牌陣列 (Fisher-Yates Shuffle Algorithm)
         function shuffleArray(array) {
             const arr = [...array];
             for (let i = arr.length - 1; i > 0; i--) {
@@ -254,6 +259,23 @@
             }
             return arr;
         }
+
+        // 抽取 10 題作為當局遊戲題庫
+        let quizDatabase = shuffleArray(fullQuizDatabase).slice(0, 10);
+
+        let peer = null;
+        let hostConn = null;
+        let players = [];
+        let myPlayerId = null;
+        let currentQuestionIndex = 0;
+        let stage = 1;
+        let timerInterval = null;
+        let aiTimeouts = [];
+        let isTransitioning = false;
+        let timeLeft = 10;
+        let maxTime = 10;
+        let lobbyTimer = 60;
+        let lobbyTimerInterval = null;
 
         // 初始化：判斷是「大螢幕」還是「手機控制器」
         window.onload = () => {
@@ -455,17 +477,13 @@
         }
 
         /* -----------------------------------------------------------------
-           4. 遊戲主流程與計分 (隨機從30題庫抽10題出題)
+           4. 遊戲主流程與計分
            ----------------------------------------------------------------- */
         function startGame() {
             document.getElementById('view-lobby').classList.add('hidden');
             document.getElementById('view-game').classList.remove('hidden');
             document.getElementById('view-game').classList.add('flex');
             document.getElementById('game-stage-badge').classList.remove('hidden');
-
-            // 隨機選取 10 個題目
-            const shuffledDB = shuffleArray(masterQuizDatabase);
-            gameQuestions = shuffledDB.slice(0, 10);
 
             players.forEach(p => {
                 if (p.conn) p.conn.send({ type: 'GAME_START' });
@@ -486,7 +504,7 @@
             clearAllTimers();
             isTransitioning = false;
 
-            const qData = gameQuestions[index];
+            const qData = quizDatabase[index];
 
             if (index < 7) {
                 stage = 1;
@@ -506,8 +524,8 @@
                 if (p.conn) p.conn.send({ type: 'NEXT_QUESTION' });
             });
 
-            document.getElementById('question-number').innerText = `QUESTION ${index + 1 < 10 ? '0' + (index + 1) : (index + 1)}/10`;
-            document.getElementById('question-text').innerText = `${index + 1}. ${qData.question}`;
+            document.getElementById('question-number').innerText = `QUESTION 0${index + 1}/10`;
+            document.getElementById('question-text').innerText = qData.question;
             document.getElementById('timer-text').innerText = `⏱️ ${timeLeft}s`;
             document.getElementById('timer-bar').style.width = '100%';
 
@@ -570,7 +588,7 @@
                 let delay = stage === 1 ? (1000 + Math.random() * 3000) : (500 + Math.random() * 1500);
                 const timerId = setTimeout(() => {
                     if (isTransitioning || ai.answered) return;
-                    ai.choice = (Math.random() < 0.75) ? qData.answer : Math.floor(Math.random() * 4);
+                    ai.choice = (Math.random() < 0.7) ? qData.answer : Math.floor(Math.random() * 4);
                     ai.answered = true;
                     renderPlayersDashboard();
                     checkAllAnswered();
@@ -609,7 +627,7 @@
             if (isTransitioning) return;
             isTransitioning = true;
 
-            const qData = gameQuestions[currentQuestionIndex];
+            const qData = quizDatabase[currentQuestionIndex];
             const correctAns = qData.answer;
 
             document.querySelectorAll('.option-btn').forEach((btn, idx) => {
@@ -631,7 +649,7 @@
                 currentQuestionIndex++;
                 if (currentQuestionIndex === 7) {
                     showIntermission();
-                } else if (currentQuestionIndex >= gameQuestions.length) {
+                } else if (currentQuestionIndex >= quizDatabase.length) {
                     showFinalResult();
                 } else {
                     loadQuestion(currentQuestionIndex);
