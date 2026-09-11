@@ -165,14 +165,14 @@
 
         <!-- ==================== 4. 中場晉級公告 modal ==================== -->
         <div id="view-intermission" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
-            <div class="bg-slate-900 border-2 border-neon-purple rounded-2xl p-8 max-w-2xl w-full text-center">
+            <div class="bg-slate-900 border-2 border-neon-purple rounded-2xl p-8 max-w-3xl w-full text-center">
                 <h2 class="text-3xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-neon-blue via-neon-yellow to-neon-pink mb-4">
                     🔥 STAGE 1 預賽結束！
                 </h2>
-                <p class="text-slate-300 text-xl mb-6">總積分前 2 名成功晉級 STAGE 2 雙人 PK 決賽！</p>
-                <div id="qualified-players-list" class="flex justify-center gap-6 mb-8"></div>
+                <p id="intermission-desc" class="text-slate-300 text-xl mb-6">晉級名單確定！</p>
+                <div id="qualified-players-list" class="flex flex-wrap justify-center gap-4 mb-8"></div>
                 <button id="btn-start-stage2" class="w-full py-4 text-2xl font-bold text-black bg-neon-yellow rounded-xl shadow-lg hover:brightness-110 transition">
-                    ⚔️ 進入 STAGE 2 雙人 PK 賽
+                    ⚔️ 進入 STAGE 2 決戰
                 </button>
             </div>
         </div>
@@ -200,7 +200,7 @@
 
     <!-- 遊戲全域 JavaScript 邏輯 -->
     <script>
-        // 完整 50 題題庫資料來源：安得烈慈善協會題庫[cite: 2]
+        // 50 題題庫資料來源：安得烈慈善協會題庫[cite: 2]
         const fullQuizDatabase = [
             { question: "1. 本協會的正確名稱為何？", options: ["社團法人中華安德烈慈善協會", "社團法人中華安得烈慈善協會", "財團法人安德烈食物銀行", "社團法人安得路慈善協會"], answer: 1 },
             { question: "2. 安得烈慈善協會的英文名稱是？", options: ["ANDREW Charity Association", "ANDRE Charity Association", "ANDREW Food Bank", "ANDREW Love Association"], answer: 0 },
@@ -254,7 +254,7 @@
             { question: "50. 遇到鄰居或身邊朋友突然遭遇重大變故、斷糧求助無門時，我們最適合的做法是？", options: ["冷漠不理會", "向安得烈慈善協會等社福機構通報個案尋求資源協助", "在網路上嘲笑對方", "叫對方自己想辦法"], answer: 1 }
         ];
 
-        // 隨機洗牌陣列 (Fisher-Yates Shuffle)
+        // 洗牌演算法
         function shuffleArray(array) {
             const arr = [...array];
             for (let i = arr.length - 1; i > 0; i--) {
@@ -273,6 +273,7 @@
         let stage = 1;
         let stage1Count = 7;
         let stage2Count = 3;
+        let stage2AdvancingCount = 2; // 晉級第二階段人數
         let timerInterval = null;
         let aiTimeouts = [];
         let isTransitioning = false;
@@ -283,7 +284,7 @@
         let audioCtx = null;
         let isBgmPlaying = false;
 
-        // 初始化：判斷是大螢幕還是手機控制器
+        // 初始化判斷：大螢幕 vs 手機控制器
         window.onload = () => {
             const urlParams = new URLSearchParams(window.location.search);
             const hostId = urlParams.get('host');
@@ -299,7 +300,7 @@
         };
 
         /* -----------------------------------------------------------------
-           緊張刺激背景音樂生成器 (Web Audio API)
+           台灣經典綜藝《百戰百勝》風格音效產生器 (Web Audio API)
            ----------------------------------------------------------------- */
         function initAudio() {
             if (!audioCtx) {
@@ -307,42 +308,75 @@
             }
         }
 
-        function playTenseBgm() {
+        function playBaizhanBgm() {
             initAudio();
             if (isBgmPlaying) return;
             isBgmPlaying = true;
 
-            function playNoteSequence() {
-                if (!isBgmPlaying) return;
-                const now = audioCtx.currentTime;
+            // 百戰百勝經典歡樂快節奏小號/銅管與大鼓旋律風格 (135 BPM)
+            const tempo = 135;
+            const beatDuration = 60 / tempo;
 
-                // 低音鼓點律動
-                for (let i = 0; i < 8; i++) {
+            // C Major 經典熱鬧旋律音階
+            const melody = [
+                { note: 523.25, duration: 0.25 }, // C5
+                { note: 523.25, duration: 0.25 }, // C5
+                { note: 659.25, duration: 0.25 }, // E5
+                { note: 783.99, duration: 0.25 }, // G5
+                { note: 880.00, duration: 0.5 },  // A5
+                { note: 783.99, duration: 0.5 },  // G5
+                { note: 659.25, duration: 0.25 }, // E5
+                { note: 523.25, duration: 0.25 }, // C5
+                { note: 587.33, duration: 0.5 },  // D5
+                { note: 392.00, duration: 0.5 }   // G4
+            ];
+
+            function playLoop() {
+                if (!isBgmPlaying) return;
+                let currentTime = audioCtx.currentTime;
+
+                melody.forEach(item => {
                     const osc = audioCtx.createOscillator();
                     const gain = audioCtx.createGain();
-                    osc.type = 'sawtooth';
-                    
-                    // 隨機緊張音階 (D Minor 緊張感)
-                    const freq = [73.42, 77.78, 87.31, 98.00, 103.83][Math.floor(Math.random() * 5)];
-                    osc.frequency.setValueAtTime(freq, now + i * 0.25);
 
-                    gain.gain.setValueAtTime(0.15, now + i * 0.25);
-                    gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.25 + 0.2);
+                    // 使用 square 鋸齒/方波類比經典 80-90 年代綜藝節目綜藝音效
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(item.note, currentTime);
+
+                    gain.gain.setValueAtTime(0.2, currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, currentTime + item.duration * beatDuration * 0.9);
 
                     osc.connect(gain);
                     gain.connect(audioCtx.destination);
 
-                    osc.start(now + i * 0.25);
-                    osc.stop(now + i * 0.25 + 0.2);
-                }
+                    osc.start(currentTime);
+                    osc.stop(currentTime + item.duration * beatDuration);
 
-                setTimeout(playNoteSequence, 2000);
+                    // 伴奏輕快重音小鼓節奏
+                    const drumOsc = audioCtx.createOscillator();
+                    const drumGain = audioCtx.createGain();
+                    drumOsc.type = 'sine';
+                    drumOsc.frequency.setValueAtTime(120, currentTime);
+                    drumOsc.frequency.exponentialRampToValueAtTime(0.01, currentTime + 0.1);
+                    drumGain.gain.setValueAtTime(0.3, currentTime);
+                    drumGain.gain.exponentialRampToValueAtTime(0.01, currentTime + 0.1);
+
+                    drumOsc.connect(drumGain);
+                    drumGain.connect(audioCtx.destination);
+                    drumOsc.start(currentTime);
+                    drumOsc.stop(currentTime + 0.1);
+
+                    currentTime += item.duration * beatDuration;
+                });
+
+                const totalLoopTime = melody.reduce((sum, item) => sum + item.duration * beatDuration, 0);
+                setTimeout(playLoop, totalLoopTime * 1000);
             }
 
-            playNoteSequence();
+            playLoop();
         }
 
-        function stopTenseBgm() {
+        function stopBgm() {
             isBgmPlaying = false;
         }
 
@@ -433,7 +467,7 @@
         }
 
         /* -----------------------------------------------------------------
-           3. 大螢幕大廳與玩家管理
+           3. 大廳與規則邏輯 (題數與晉級人數)
            ----------------------------------------------------------------- */
         function addPlayer(name, conn, playerId) {
             if (players.some(p => p.id === playerId)) return;
@@ -451,7 +485,6 @@
             players.push(p);
             renderLobbyPlayers();
 
-            // 首位玩家加入，開啟 60 秒倒數
             if (players.filter(p => !p.isAI).length === 1) {
                 startLobbyTimer();
             }
@@ -482,7 +515,7 @@
             const humanCount = players.filter(p => !p.isAI).length;
             let robotsToAdd = 0;
 
-            // 規則：10人以下補2位AI；11~20人補1位AI；21人以上不補AI
+            // 規則 1：AI 補充規則 (<=10人補2人, 11~20人補1人, 21人以上不補)
             if (humanCount <= 10) {
                 robotsToAdd = 2;
             } else if (humanCount <= 20) {
@@ -491,7 +524,7 @@
                 robotsToAdd = 0;
             }
 
-            const robotNames = ['🤖 AI 智庫', '⚡ AI 閃電手', '🎲 AI 運氣王', '🧠 AI 學霸'];
+            const robotNames = ['🤖 魔王隊長', '⚡ 魔王魔將', '🎲 闖關魔王', '🧠 魔王智囊'];
             for (let i = 0; i < robotsToAdd; i++) {
                 players.push({
                     id: 'ai_' + Date.now() + '_' + i,
@@ -506,21 +539,24 @@
             }
 
             renderLobbyPlayers();
-            setupQuestionsByPlayerCount(players.length);
+            setupRulesByPlayerCount(players.length);
             startGame();
         }
 
-        // 依人數設定題數規則
-        function setupQuestionsByPlayerCount(totalPlayers) {
+        // 規則 2 & 最新需求：設定題數與第二階段晉級人數
+        function setupRulesByPlayerCount(totalPlayers) {
             if (totalPlayers <= 10) {
                 stage1Count = 7;
                 stage2Count = 3;
+                stage2AdvancingCount = 2; // <=10人: 第二階段2人
             } else if (totalPlayers <= 20) {
                 stage1Count = 15;
                 stage2Count = 5;
+                stage2AdvancingCount = 5; // 11~20人: 第二階段5人
             } else {
                 stage1Count = 20;
                 stage2Count = 10;
+                stage2AdvancingCount = 7; // >=21人: 第二階段7人
             }
 
             const totalNeeded = stage1Count + stage2Count;
@@ -550,7 +586,7 @@
         }
 
         /* -----------------------------------------------------------------
-           4. 遊戲主流程與計分
+           4. 遊戲主流程
            ----------------------------------------------------------------- */
         function startGame() {
             document.getElementById('view-lobby').classList.add('hidden');
@@ -558,7 +594,7 @@
             document.getElementById('view-game').classList.add('flex');
             document.getElementById('game-stage-badge').classList.remove('hidden');
 
-            playTenseBgm();
+            playBaizhanBgm();
 
             players.forEach(p => {
                 if (p.conn) p.conn.send({ type: 'GAME_START' });
@@ -589,7 +625,7 @@
                 stage = 2;
                 maxTime = 5;
                 const stage2Index = index - stage1Count + 1;
-                document.getElementById('game-stage-badge').innerText = `STAGE 2 - 雙人 PK 決賽 (${stage2Index}/${stage2Count})`;
+                document.getElementById('game-stage-badge').innerText = `STAGE 2 - 決戰區 (${stage2Index}/${stage2Count})`;
             }
 
             timeLeft = maxTime;
@@ -628,7 +664,6 @@
             });
         }
 
-        // 大螢幕看板：僅顯示分數前 5 名
         function renderPlayersDashboard() {
             const dashboard = document.getElementById('players-dashboard');
             dashboard.innerHTML = '';
@@ -739,19 +774,24 @@
             }, 2500);
         }
 
+        /* -----------------------------------------------------------------
+           中場晉級展示：依據新人數規則 (2人 / 5人 / 7人)
+           ----------------------------------------------------------------- */
         function showIntermission() {
             const sorted = [...players].sort((a, b) => b.score - a.score);
-            const qualifiedIds = sorted.slice(0, 2).map(p => p.id);
+            const qualifiedIds = sorted.slice(0, stage2AdvancingCount).map(p => p.id);
             players.forEach(p => p.isQualified = qualifiedIds.includes(p.id));
+
+            document.getElementById('intermission-desc').innerText = `總積分前 ${stage2AdvancingCount} 名成功晉級 STAGE 2 決戰！`;
 
             const list = document.getElementById('qualified-players-list');
             list.innerHTML = '';
             players.filter(p => p.isQualified).forEach(p => {
                 list.innerHTML += `
-                    <div class="bg-slate-800 border-2 border-neon-yellow p-4 rounded-xl text-center min-w-[120px]">
+                    <div class="bg-slate-800 border-2 border-neon-yellow p-4 rounded-xl text-center min-w-[110px]">
                         <div class="text-3xl mb-1">${p.isAI ? '🤖' : '👑'}</div>
-                        <div class="font-bold text-white text-lg">${p.name}</div>
-                        <div class="text-neon-yellow font-black text-xl">${p.score} 分</div>
+                        <div class="font-bold text-white text-base truncate max-w-[100px]">${p.name}</div>
+                        <div class="text-neon-yellow font-black text-lg">${p.score} 分</div>
                     </div>
                 `;
             });
@@ -766,7 +806,7 @@
 
         // 結束公佈全員分數與得名
         function showFinalResult() {
-            stopTenseBgm();
+            stopBgm();
             document.getElementById('view-game').classList.add('hidden');
             document.getElementById('view-result').classList.remove('hidden');
 
@@ -784,7 +824,7 @@
                 `;
             });
 
-            confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 } });
+            confetti({ particleCount: 150, spread: 90, origin: { y: 0.6 } });
         }
 
         document.getElementById('btn-restart-game').addEventListener('click', () => {
