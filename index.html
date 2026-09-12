@@ -280,7 +280,7 @@
         let lobbyTimer = 60;
         let lobbyTimerInterval = null;
         
-        // 音訊系統
+        // 音訊系統變數
         let audioCtx = null;
         let currentBgmType = null;
         let bgmTimeoutId = null;
@@ -300,7 +300,7 @@
         };
 
         /* -----------------------------------------------------------------
-           瑪莉兄弟 Web Audio 8-bit BGM 音樂播放器
+           流暢流行音樂風格 (Pop / Synth-Pop) Web Audio BGM 播放器
            ----------------------------------------------------------------- */
         function initAudio() {
             if (!audioCtx) {
@@ -311,141 +311,127 @@
             }
         }
 
-        function playSingleNote(freq, duration, type = 'square', gainValue = 0.12) {
+        // 柔和流行風格的發音器 (支援淡入淡出與波形選擇)
+        function playPopNote(freq, duration, type = 'sine', gainValue = 0.08) {
             if (!audioCtx || freq <= 0) return;
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
-            osc.type = type;
+            
+            osc.type = type; // 'sine' 柔和、'triangle' 溫潤流行、'sawtooth' 重低音
             osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-            gain.gain.setValueAtTime(gainValue, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration * 0.95);
+            
+            // 流行樂平滑的攻擊感與釋放感 (Attack & Release)
+            gain.gain.setValueAtTime(0, audioCtx.currentTime);
+            gain.gain.linearRampToValueAtTime(gainValue, audioCtx.currentTime + 0.03);
+            gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+            
             osc.connect(gain);
             gain.connect(audioCtx.destination);
             osc.start();
             osc.stop(audioCtx.currentTime + duration);
         }
 
-        // 第一階段：瑪莉兄弟 第一代 完整一般關卡 BGM (節奏調慢 1 倍：90 BPM)
+        // 第一階段：輕快流暢流行樂 (Chilled Pop / 115 BPM / C - G - Am - F 經典流行和弦)
         function playMarioStage1Bgm() {
             initAudio();
             stopBgm();
             currentBgmType = 'stage1';
 
-            const N = {
-                E4: 329.63, F4: 349.23, G4: 392.00, A4: 440.00, Bb4: 466.16, B4: 493.88,
-                C5: 523.25, D5: 587.33, Eb5: 622.25, E5: 659.25, F5: 698.46, Fs5: 739.99,
-                G5: 783.99, Ab5: 830.61, A5: 880.00, Bb5: 932.33, B5: 987.77, C6: 1046.50
-            };
-
-            // 速度放慢一倍 (180 -> 90 BPM)
-            const tempo = 90; 
+            const tempo = 115;
             const beat = 60 / tempo;
 
+            // 流行旋律與和弦音高 (C Major)
+            const N = {
+                C3: 130.81, G3: 196.00, A3: 220.00, F3: 174.61, // 低音 Bass
+                C4: 261.63, E4: 329.63, G4: 392.00, B4: 493.88, // 中音和弦
+                C5: 523.25, D5: 587.33, E5: 659.25, G5: 783.99, A5: 880.00 // 流行主旋律
+            };
+
+            // 8 小節流暢流行樂旋律 + Bass 組合
             const sequence = [
-                // 前奏
-                { f: N.E5, d: 0.25 }, { f: N.E5, d: 0.25 }, { f: 0, d: 0.25 }, { f: N.E5, d: 0.25 },
-                { f: 0, d: 0.25 }, { f: N.C5, d: 0.25 }, { f: N.E5, d: 0.5 },
-                { f: N.G5, d: 0.5 }, { f: 0, d: 0.5 }, { f: N.G4, d: 0.5 }, { f: 0, d: 0.5 },
+                // C 和弦段落
+                { melody: N.E5, bass: N.C3, d: 0.5 }, { melody: N.G5, bass: 0, d: 0.5 },
+                { melody: N.C5, bass: N.C3, d: 0.5 }, { melody: N.D5, bass: 0, d: 0.5 },
+                
+                // G 和弦段落
+                { melody: N.B4, bass: N.G3, d: 0.5 }, { melody: N.D5, bass: 0, d: 0.5 },
+                { melody: N.G5, bass: N.G3, d: 0.5 }, { melody: N.E5, bass: 0, d: 0.5 },
 
-                // A 段樂句 1
-                { f: N.C5, d: 0.375 }, { f: 0, d: 0.125 }, { f: N.G4, d: 0.375 }, { f: 0, d: 0.125 }, { f: N.E4, d: 0.5 },
-                { f: N.A4, d: 0.25 }, { f: N.B4, d: 0.25 }, { f: N.Bb4, d: 0.25 }, { f: N.A4, d: 0.25 },
-                { f: N.G4, d: 0.33 }, { f: N.E5, d: 0.33 }, { f: N.G5, d: 0.33 }, { f: N.A5, d: 0.5 },
-                { f: N.F5, d: 0.25 }, { f: N.G5, d: 0.25 }, { f: 0, d: 0.25 }, { f: N.E5, d: 0.25 },
-                { f: N.C5, d: 0.25 }, { f: N.D5, d: 0.25 }, { f: N.B4, d: 0.5 },
+                // Am 和弦段落
+                { melody: N.A5, bass: N.A3, d: 0.5 }, { melody: N.G5, bass: 0, d: 0.5 },
+                { melody: N.E5, bass: N.A3, d: 0.5 }, { melody: N.C5, bass: 0, d: 0.5 },
 
-                // A 段重複 2
-                { f: N.C5, d: 0.375 }, { f: 0, d: 0.125 }, { f: N.G4, d: 0.375 }, { f: 0, d: 0.125 }, { f: N.E4, d: 0.5 },
-                { f: N.A4, d: 0.25 }, { f: N.B4, d: 0.25 }, { f: N.Bb4, d: 0.25 }, { f: N.A4, d: 0.25 },
-                { f: N.G4, d: 0.33 }, { f: N.E5, d: 0.33 }, { f: N.G5, d: 0.33 }, { f: N.A5, d: 0.5 },
-                { f: N.F5, d: 0.25 }, { f: N.G5, d: 0.25 }, { f: 0, d: 0.25 }, { f: N.E5, d: 0.25 },
-                { f: N.C5, d: 0.25 }, { f: N.D5, d: 0.25 }, { f: N.B4, d: 0.5 },
-
-                // B 段副歌 1
-                { f: 0, d: 0.25 }, { f: N.G5, d: 0.25 }, { f: N.Fs5, d: 0.25 }, { f: N.F5, d: 0.25 },
-                { f: N.Eb5, d: 0.25 }, { f: N.E5, d: 0.25 }, { f: 0, d: 0.25 }, { f: N.Ab5, d: 0.25 },
-                { f: N.A5, d: 0.25 }, { f: N.C6, d: 0.25 }, { f: 0, d: 0.25 }, { f: N.A5, d: 0.25 },
-                { f: N.C6, d: 0.25 }, { f: N.D5, d: 0.5 },
-
-                // B 段副歌 2
-                { f: 0, d: 0.25 }, { f: N.G5, d: 0.25 }, { f: N.Fs5, d: 0.25 }, { f: N.F5, d: 0.25 },
-                { f: N.Eb5, d: 0.25 }, { f: N.E5, d: 0.25 }, { f: 0, d: 0.25 }, { f: N.C6, d: 0.25 },
-                { f: 0, d: 0.25 }, { f: N.C6, d: 0.25 }, { f: N.C6, d: 0.25 }, { f: 0, d: 0.5 },
-
-                // C 段轉調段落
-                { f: N.C5, d: 0.25 }, { f: N.C5, d: 0.25 }, { f: 0, d: 0.25 }, { f: N.C5, d: 0.25 },
-                { f: 0, d: 0.25 }, { f: N.C5, d: 0.25 }, { f: N.D5, d: 0.5 },
-                { f: N.E5, d: 0.25 }, { f: N.C5, d: 0.25 }, { f: 0, d: 0.25 }, { f: N.A4, d: 0.25 }, { f: N.G4, d: 0.5 },
-
-                { f: N.C5, d: 0.25 }, { f: N.C5, d: 0.25 }, { f: 0, d: 0.25 }, { f: N.C5, d: 0.25 },
-                { f: 0, d: 0.25 }, { f: N.C5, d: 0.25 }, { f: N.D5, d: 0.25 }, { f: N.E5, d: 0.25 }, { f: 0, d: 0.75 }
+                // F 和弦段落
+                { melody: N.D5, bass: N.F3, d: 0.5 }, { melody: N.E5, bass: 0, d: 0.5 },
+                { melody: N.C5, bass: N.F3, d: 0.5 }, { melody: 0,    bass: 0, d: 0.5 },
             ];
 
             let step = 0;
             function loop() {
                 if (currentBgmType !== 'stage1') return;
                 const item = sequence[step];
-                if (item.f > 0) {
-                    playSingleNote(item.f, item.d * beat, 'square', 0.12);
-                }
+                
+                // 主旋律 (柔和的三角波)
+                if (item.melody > 0) playPopNote(item.melody, item.d * beat * 1.2, 'triangle', 0.1);
+                // Bass 低音襯底 (正弦波)
+                if (item.bass > 0) playPopNote(item.bass, item.d * beat * 1.5, 'sine', 0.15);
+
                 step = (step + 1) % sequence.length;
                 bgmTimeoutId = setTimeout(loop, item.d * beat * 1000);
             }
             loop();
         }
 
-        // 第二階段：瑪莉兄弟 魔王城堡關卡音樂
+        // 第二階段：緊湊動感流行樂 (Upbeat EDM / 128 BPM / 小調魔王感)
         function playMarioCastleBgm() {
             initAudio();
             stopBgm();
             currentBgmType = 'stage2';
 
-            const tempo = 120;
+            const tempo = 128;
             const beat = 60 / tempo;
 
+            const N = {
+                A2: 110.00, F2: 87.31, G2: 98.00, E2: 82.41,
+                A4: 440.00, C5: 523.25, E5: 659.25, D5: 587.33, F5: 698.46
+            };
+
             const sequence = [
-                { f: 146.83, d: 0.25 }, { f: 155.56, d: 0.25 }, { f: 164.81, d: 0.25 },
-                { f: 146.83, d: 0.25 }, { f: 155.56, d: 0.25 }, { f: 164.81, d: 0.25 },
-                { f: 130.81, d: 0.25 }, { f: 138.59, d: 0.25 }, { f: 146.83, d: 0.25 },
-                { f: 116.54, d: 0.25 }, { f: 123.47, d: 0.25 }, { f: 130.81, d: 0.25 }
+                { melody: N.A4, bass: N.A2, d: 0.25 }, { melody: N.C5, bass: 0, d: 0.25 },
+                { melody: N.E5, bass: N.A2, d: 0.25 }, { melody: N.A4, bass: 0, d: 0.25 },
+                { melody: N.F5, bass: N.F2, d: 0.25 }, { melody: N.D5, bass: 0, d: 0.25 },
+                { melody: N.E5, bass: N.E2, d: 0.5 }
             ];
 
             let step = 0;
             function loop() {
                 if (currentBgmType !== 'stage2') return;
                 const item = sequence[step];
-                playSingleNote(item.f, item.d * beat, 'sawtooth', 0.18);
+                if (item.melody > 0) playPopNote(item.melody, item.d * beat, 'sawtooth', 0.08);
+                if (item.bass > 0) playPopNote(item.bass, item.d * beat * 1.2, 'triangle', 0.18);
+
                 step = (step + 1) % sequence.length;
                 bgmTimeoutId = setTimeout(loop, item.d * beat * 1000);
             }
             loop();
         }
 
-        // 最終頒獎：瑪莉兄弟 過關勝利音樂
+        // 最終頒獎：流暢歡樂勝利音效
         function playMarioVictoryFanfare() {
             initAudio();
             stopBgm();
             currentBgmType = 'victory';
 
             const notes = [
-                { f: 261.63, d: 0.15 }, { f: 329.63, d: 0.15 }, { f: 392.00, d: 0.15 },
                 { f: 523.25, d: 0.15 }, { f: 659.25, d: 0.15 }, { f: 783.99, d: 0.15 },
-                { f: 1046.50, d: 0.4 }, { f: 783.99, d: 0.4 },
-                
-                { f: 277.18, d: 0.15 }, { f: 349.23, d: 0.15 }, { f: 415.30, d: 0.15 },
-                { f: 554.37, d: 0.15 }, { f: 698.46, d: 0.15 }, { f: 830.61, d: 0.15 },
-                { f: 1108.73, d: 0.4 }, { f: 830.61, d: 0.4 },
-
-                { f: 293.66, d: 0.15 }, { f: 369.99, d: 0.15 }, { f: 440.00, d: 0.15 },
-                { f: 587.33, d: 0.15 }, { f: 739.99, d: 0.15 }, { f: 880.00, d: 0.15 },
-                { f: 1174.66, d: 0.6 }
+                { f: 1046.50, d: 0.4 }, { f: 880.00, d: 0.2 }, { f: 1046.50, d: 0.6 }
             ];
 
             let i = 0;
             function playNext() {
                 if (i >= notes.length) return;
                 const item = notes[i];
-                playSingleNote(item.f, item.d, 'triangle', 0.25);
+                playPopNote(item.f, item.d * 1.5, 'triangle', 0.2);
                 i++;
                 setTimeout(playNext, item.d * 1000);
             }
