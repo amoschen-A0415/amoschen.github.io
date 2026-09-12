@@ -300,7 +300,7 @@
         };
 
         /* -----------------------------------------------------------------
-           瑪莉兄弟 Web Audio 完整 8-bit BGM 音樂播放器
+           瑪莉兄弟 Web Audio 8-bit BGM 音樂播放器
            ----------------------------------------------------------------- */
         function initAudio() {
             if (!audioCtx) {
@@ -325,7 +325,7 @@
             osc.stop(audioCtx.currentTime + duration);
         }
 
-        // 第一階段：瑪莉兄弟 第一代 完整一般關卡 BGM (Overworld Full Theme)
+        // 第一階段：瑪莉兄弟 第一代 完整一般關卡 BGM (節奏調慢 1 倍：90 BPM)
         function playMarioStage1Bgm() {
             initAudio();
             stopBgm();
@@ -337,10 +337,10 @@
                 G5: 783.99, Ab5: 830.61, A5: 880.00, Bb5: 932.33, B5: 987.77, C6: 1046.50
             };
 
-            const tempo = 180; 
+            // 速度放慢一倍 (180 -> 90 BPM)
+            const tempo = 90; 
             const beat = 60 / tempo;
 
-            // 完整的主題旋律表 (含 A/B/C 段完整旋律)
             const sequence = [
                 // 前奏
                 { f: N.E5, d: 0.25 }, { f: N.E5, d: 0.25 }, { f: 0, d: 0.25 }, { f: N.E5, d: 0.25 },
@@ -365,7 +365,7 @@
                 { f: 0, d: 0.25 }, { f: N.G5, d: 0.25 }, { f: N.Fs5, d: 0.25 }, { f: N.F5, d: 0.25 },
                 { f: N.Eb5, d: 0.25 }, { f: N.E5, d: 0.25 }, { f: 0, d: 0.25 }, { f: N.Ab5, d: 0.25 },
                 { f: N.A5, d: 0.25 }, { f: N.C6, d: 0.25 }, { f: 0, d: 0.25 }, { f: N.A5, d: 0.25 },
-                { f: N.C6, d: 0.25 }, { f: N.D6 || N.D5, d: 0.5 },
+                { f: N.C6, d: 0.25 }, { f: N.D5, d: 0.5 },
 
                 // B 段副歌 2
                 { f: 0, d: 0.25 }, { f: N.G5, d: 0.25 }, { f: N.Fs5, d: 0.25 }, { f: N.F5, d: 0.25 },
