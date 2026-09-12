@@ -78,8 +78,8 @@
                         <span id="lobby-timer-label" class="text-slate-400 text-sm block mb-1">大廳等候倒數：</span>
                         <span id="lobby-timer-text" class="text-xl font-black text-neon-yellow">等待首位玩家連線...</span>
                         
-                        <!-- 倒數結束後出現的開始遊戲按鈕 -->
-                        <button id="btn-start-game" class="hidden w-full mt-2 py-3 px-6 text-xl font-black text-slate-950 bg-gradient-to-r from-neon-green to-neon-yellow rounded-xl shadow-lg hover:brightness-110 active:scale-95 transition-all animate-bounce">
+                        <!-- 倒數結束後出現的開始遊戲按鈕 (已放大與置中) -->
+                        <button id="btn-start-game" class="hidden mx-auto max-w-md w-full mt-4 py-5 px-8 text-2xl font-black text-slate-950 bg-gradient-to-r from-neon-green to-neon-yellow rounded-2xl shadow-2xl hover:brightness-110 active:scale-95 transition-all animate-bounce flex items-center justify-center gap-2">
                             🎮 開始遊戲
                         </button>
                     </div>
@@ -246,7 +246,7 @@
             { question: "38. 安得烈推動職場媒合或職業引介的目的為？", options: ["為企業找人才、為弱勢找出路", "收取求職仲介費", "協助企業進行海外投資", "舉辦大型聯誼"], answer: 0 },
             { question: "39. 下列何者不是安得烈學藝競賽的常見分組？", options: ["國小 3-4 年級組", "國小 5-6 年級組", "國中 7-9 年級組 / 高中 10-12 年級組", "學齡前幼兒組"], answer: 3 },
             { question: "40. 安得烈精神號召的口號「哪裡有需要，……」下一句接續為？", options: ["就往哪裡去", "就往哪裡捐", "就往哪裡搬", "就往哪裡送"], answer: 0 },
-            { question: "41. 想要成為安得烈的包裝志工，最需要具備什麼條件？", options: ["熱心與熱情", "必須擁有營養師執照", "必須具備堆高機駕照", "必須會講三種外語"], answer: 0 },
+            { question: "41. 想要成為安得烈的包裝志工，最需要具備什麼條件？", options: ["熱心與熱情", "必須擁有夥食證照", "必須具備堆高機駕照", "必須會講三種外語"], answer: 0 },
             { question: "42. 關於捐贈給安得烈慈善協會的愛心捐款，下列敘述何者正確？", options: ["不能列單據", "可依法開立正式收據用於綜合所得稅抵減", "只能捐贈外幣", "必須親自送到協會總部"], answer: 1 },
             { question: "43. 膳糧食物箱內最常見的主食類物資包含下列何者？", options: ["披薩與漢堡", "白米、麵條、燕麥片", "生鮮水餃", "冷凍牛排"], answer: 1 },
             { question: "44. 「集食行善-幸福一日捐」主要是鼓勵大家做什麼？", options: ["捐出自己一天的所得或購買物資分享給弱勢家庭", "一整天不吃不喝體驗飢餓", "參加一日遊活動", "一整天到街上宣導"], answer: 0 },
@@ -330,7 +330,7 @@
             osc.stop(audioCtx.currentTime + duration);
         }
 
-        // 1. 第一階段：瑪莉兄弟一般關卡主題曲 (Overworld Theme)
+        // 1. 第一階段：瑪莉兄弟一般關卡主題曲 (Overworld Theme) - 已放慢 2 倍速度 (tempo: 75)
         function playMarioStage1Bgm() {
             initAudio();
             stopBgm();
@@ -343,7 +343,7 @@
                 A5: 880.00
             };
 
-            const tempo = 150;
+            const tempo = 75; // 放慢兩倍 (原 150)
             const beat = 60 / tempo;
 
             const sequence = [
