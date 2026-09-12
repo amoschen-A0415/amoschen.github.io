@@ -80,7 +80,7 @@
                         
                         <!-- 倒數結束後出現的開始遊戲按鈕 -->
                         <button id="btn-start-game" class="hidden w-full mt-2 py-3 px-6 text-xl font-black text-slate-950 bg-gradient-to-r from-neon-green to-neon-yellow rounded-xl shadow-lg hover:brightness-110 active:scale-95 transition-all animate-bounce">
-                            🎮 開始遊戲 (點擊播放第一階段音樂)
+                            🎮 開始遊戲
                         </button>
                     </div>
                 </div>
@@ -205,7 +205,6 @@
 
     <!-- 遊戲全域 JavaScript 邏輯 -->
     <script>
-        // 50 題題庫資料來源：安得烈慈善協會題庫[cite: 2]
         const fullQuizDatabase = [
             { question: "1. 本協會的正確名稱為何？", options: ["社團法人中華安德烈慈善協會", "社團法人中華安得烈慈善協會", "財團法人安德烈食物銀行", "社團法人安得路慈善協會"], answer: 1 },
             { question: "2. 安得烈慈善協會的英文名稱是？", options: ["ANDREW Charity Association", "ANDRE Charity Association", "ANDREW Food Bank", "ANDREW Love Association"], answer: 0 },
@@ -259,7 +258,6 @@
             { question: "50. 遇到鄰居或身邊朋友突然遭遇重大變故、斷糧求助無門時，我們最適合的做法是？", options: ["冷漠不理會", "向安得烈慈善協會等社福機構通報個案尋求資源協助", "在網路上嘲笑對方", "叫對方自己想辦法"], answer: 1 }
         ];
 
-        // 洗牌演算法
         function shuffleArray(array) {
             const arr = [...array];
             for (let i = arr.length - 1; i > 0; i--) {
@@ -307,7 +305,7 @@
         };
 
         /* -----------------------------------------------------------------
-           瑪莉兄弟第一代 Web Audio 經典音效樂曲播放器
+           瑪莉兄弟 Web Audio 經典樂曲播放器
            ----------------------------------------------------------------- */
         function initAudio() {
             if (!audioCtx) {
@@ -332,13 +330,12 @@
             osc.stop(audioCtx.currentTime + duration);
         }
 
-        // 1. 第一階段：瑪莉兄弟第一代一般關卡主題曲 (Overworld Theme)
+        // 1. 第一階段：瑪莉兄弟一般關卡主題曲 (Overworld Theme)
         function playMarioStage1Bgm() {
             initAudio();
             stopBgm();
             currentBgmType = 'stage1';
 
-            // 音階對應表
             const notes = {
                 E5: 659.25, C5: 523.25, G5: 783.99, G4: 392.00,
                 A4: 440.00, B4: 493.88, Bb4: 466.16, F5: 698.46,
@@ -374,7 +371,7 @@
             loop();
         }
 
-        // 2. 第二階段：瑪莉兄弟第一代魔王城堡關卡音樂 (Castle Theme)
+        // 2. 第二階段：瑪莉兄弟魔王城堡關卡音樂 (Castle Theme)
         function playMarioCastleBgm() {
             initAudio();
             stopBgm();
@@ -383,7 +380,6 @@
             const tempo = 120;
             const beat = 60 / tempo;
 
-            // 魔王關卡低沉緊張三音組循環
             const sequence = [
                 { f: 146.83, d: 0.25 }, { f: 155.56, d: 0.25 }, { f: 164.81, d: 0.25 },
                 { f: 146.83, d: 0.25 }, { f: 155.56, d: 0.25 }, { f: 164.81, d: 0.25 },
@@ -402,7 +398,7 @@
             loop();
         }
 
-        // 3. 最終頒獎：瑪莉兄弟第一代過關旗幟勝利音樂 (Level Clear Fanfare)
+        // 3. 最終頒獎：瑪莉兄弟過關勝利音樂 (Level Clear Fanfare)
         function playMarioVictoryFanfare() {
             initAudio();
             stopBgm();
@@ -564,7 +560,6 @@
                     clearInterval(lobbyTimerInterval);
                     lobbyTimerInterval = null;
                     
-                    // 倒數結束：顯示「開始遊戲」按鈕
                     document.getElementById('lobby-timer-label').innerText = "大廳等候結束：";
                     document.getElementById('lobby-timer-text').innerText = "參賽人數已齊備！";
                     document.getElementById('btn-start-game').classList.remove('hidden');
@@ -578,10 +573,8 @@
 
         // 點擊「開始遊戲」按鈕事件
         document.getElementById('btn-start-game').addEventListener('click', () => {
-            // 觸發使用者互動以解鎖音效並開始播放第一階段音樂
             initAudio();
             playMarioStage1Bgm();
-
             finalizePlayersAndStart();
         });
 
@@ -620,15 +613,15 @@
             if (totalPlayers <= 10) {
                 stage1Count = 7;
                 stage2Count = 3;
-                stage2AdvancingCount = 2; // <=10人: 第二階段2人
+                stage2AdvancingCount = 2;
             } else if (totalPlayers <= 20) {
                 stage1Count = 15;
                 stage2Count = 5;
-                stage2AdvancingCount = 5; // 11~20人: 第二階段5人
+                stage2AdvancingCount = 5;
             } else {
                 stage1Count = 20;
                 stage2Count = 10;
-                stage2AdvancingCount = 7; // >=21人: 第二階段7人
+                stage2AdvancingCount = 7;
             }
 
             const totalNeeded = stage1Count + stage2Count;
@@ -692,7 +685,7 @@
                 maxTime = 10;
                 document.getElementById('game-stage-badge').innerText = `STAGE 1 - 預賽大亂鬥 (${index + 1}/${stage1Count})`;
                 if (currentBgmType !== 'stage1') {
-                    playMarioStage1Bgm(); // 切換瑪莉兄弟第一階段一般關卡音樂
+                    playMarioStage1Bgm();
                 }
             } else {
                 stage = 2;
@@ -700,7 +693,7 @@
                 const stage2Index = index - stage1Count + 1;
                 document.getElementById('game-stage-badge').innerText = `STAGE 2 - 魔王城堡決戰 (${stage2Index}/${stage2Count})`;
                 if (currentBgmType !== 'stage2') {
-                    playMarioCastleBgm(); // 切換瑪莉兄弟第二階段魔王關卡音樂
+                    playMarioCastleBgm();
                 }
             }
 
@@ -880,12 +873,14 @@
             loadQuestion(currentQuestionIndex);
         });
 
-        // 5. 結束公佈排行榜：播放瑪莉兄弟過關勝利音樂 (Victory Fanfare)
+        /* -----------------------------------------------------------------
+           5. 最終頒獎典禮
+           ----------------------------------------------------------------- */
         function showFinalResult() {
             document.getElementById('view-game').classList.add('hidden');
             document.getElementById('view-result').classList.remove('hidden');
 
-            playMarioVictoryFanfare(); // 瑪莉兄弟第一代過關勝利音樂
+            playMarioVictoryFanfare();
 
             const sorted = [...players].sort((a, b) => b.score - a.score);
             const container = document.getElementById('leaderboard-container');
