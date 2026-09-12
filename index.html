@@ -73,10 +73,15 @@
 
                     <div id="qrcode" class="bg-white p-3 rounded-2xl border-4 border-cyan-400 mb-4"></div>
 
-                    <!-- 60 秒倒數計時提示 -->
-                    <div id="lobby-timer-box" class="w-full bg-slate-800/90 border border-slate-700 p-4 rounded-xl">
-                        <span class="text-slate-400 text-sm block mb-1">大廳等候倒數：</span>
+                    <!-- 60 秒倒數計時提示與開始按鈕 -->
+                    <div id="lobby-timer-box" class="w-full bg-slate-800/90 border border-slate-700 p-4 rounded-xl flex flex-col items-center">
+                        <span id="lobby-timer-label" class="text-slate-400 text-sm block mb-1">大廳等候倒數：</span>
                         <span id="lobby-timer-text" class="text-xl font-black text-neon-yellow">等待首位玩家連線...</span>
+                        
+                        <!-- 倒數結束後出現的開始遊戲按鈕 -->
+                        <button id="btn-start-game" class="hidden w-full mt-2 py-3 px-6 text-xl font-black text-slate-950 bg-gradient-to-r from-neon-green to-neon-yellow rounded-xl shadow-lg hover:brightness-110 active:scale-95 transition-all animate-bounce">
+                            🎮 開始遊戲 (點擊播放第一階段音樂)
+                        </button>
                     </div>
                 </div>
 
@@ -200,7 +205,7 @@
 
     <!-- 遊戲全域 JavaScript 邏輯 -->
     <script>
-        // 50 題題庫資料來源：安得烈慈善協會題庫
+        // 50 題題庫資料來源：安得烈慈善協會題庫[cite: 2]
         const fullQuizDatabase = [
             { question: "1. 本協會的正確名稱為何？", options: ["社團法人中華安德烈慈善協會", "社團法人中華安得烈慈善協會", "財團法人安德烈食物銀行", "社團法人安得路慈善協會"], answer: 1 },
             { question: "2. 安得烈慈善協會的英文名稱是？", options: ["ANDREW Charity Association", "ANDRE Charity Association", "ANDREW Food Bank", "ANDREW Love Association"], answer: 0 },
@@ -315,32 +320,33 @@
 
         function playSingleNote(freq, duration, type = 'square', gainValue = 0.15) {
             if (!audioCtx || freq <= 0) return;
-            try {
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc.type = type;
-                osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-                gain.gain.setValueAtTime(gainValue, audioCtx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration * 0.95);
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                osc.start();
-                osc.stop(audioCtx.currentTime + duration);
-            } catch(e) {}
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            gain.gain.setValueAtTime(gainValue, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration * 0.95);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + duration);
         }
 
-        // 1. 第一階段：瑪莉兄弟第一代一般關卡主題曲 (Overworld Theme) - 已修復循環邏輯
+        // 1. 第一階段：瑪莉兄弟第一代一般關卡主題曲 (Overworld Theme)
         function playMarioStage1Bgm() {
             initAudio();
             stopBgm();
             currentBgmType = 'stage1';
 
+            // 音階對應表
             const notes = {
-                E4: 329.63, G4: 392.00, A4: 440.00, Bb4: 466.16, B4: 493.88,
-                C5: 523.25, D5: 587.33, E5: 659.25, F5: 698.46, G5: 783.99, A5: 880.00
+                E5: 659.25, C5: 523.25, G5: 783.99, G4: 392.00,
+                A4: 440.00, B4: 493.88, Bb4: 466.16, F5: 698.46,
+                D5: 587.33, Fs5: 739.99, Ds5: 622.25, E4: 329.63,
+                A5: 880.00
             };
 
-            const tempo = 180;
+            const tempo = 150;
             const beat = 60 / tempo;
 
             const sequence = [
@@ -359,12 +365,11 @@
             function loop() {
                 if (currentBgmType !== 'stage1') return;
                 const item = sequence[step];
-                const noteDuration = item.d * beat;
                 if (item.f > 0) {
-                    playSingleNote(item.f, noteDuration, 'square', 0.12);
+                    playSingleNote(item.f, item.d * beat, 'square', 0.12);
                 }
                 step = (step + 1) % sequence.length;
-                bgmTimeoutId = setTimeout(loop, noteDuration * 1000);
+                bgmTimeoutId = setTimeout(loop, item.d * beat * 1000);
             }
             loop();
         }
@@ -378,6 +383,7 @@
             const tempo = 120;
             const beat = 60 / tempo;
 
+            // 魔王關卡低沉緊張三音組循環
             const sequence = [
                 { f: 146.83, d: 0.25 }, { f: 155.56, d: 0.25 }, { f: 164.81, d: 0.25 },
                 { f: 146.83, d: 0.25 }, { f: 155.56, d: 0.25 }, { f: 164.81, d: 0.25 },
@@ -389,10 +395,9 @@
             function loop() {
                 if (currentBgmType !== 'stage2') return;
                 const item = sequence[step];
-                const noteDuration = item.d * beat;
-                playSingleNote(item.f, noteDuration, 'sawtooth', 0.18);
+                playSingleNote(item.f, item.d * beat, 'sawtooth', 0.18);
                 step = (step + 1) % sequence.length;
-                bgmTimeoutId = setTimeout(loop, noteDuration * 1000);
+                bgmTimeoutId = setTimeout(loop, item.d * beat * 1000);
             }
             loop();
         }
@@ -558,14 +563,27 @@
                 if (lobbyTimer <= 0) {
                     clearInterval(lobbyTimerInterval);
                     lobbyTimerInterval = null;
-                    finalizePlayersAndStart();
+                    
+                    // 倒數結束：顯示「開始遊戲」按鈕
+                    document.getElementById('lobby-timer-label').innerText = "大廳等候結束：";
+                    document.getElementById('lobby-timer-text').innerText = "參賽人數已齊備！";
+                    document.getElementById('btn-start-game').classList.remove('hidden');
                 }
             }, 1000);
         }
 
         function updateLobbyTimerUI() {
-            document.getElementById('lobby-timer-text').innerText = `倒數 ${lobbyTimer} 秒後自動開賽`;
+            document.getElementById('lobby-timer-text').innerText = `倒數 ${lobbyTimer} 秒後自動結算參賽者`;
         }
+
+        // 點擊「開始遊戲」按鈕事件
+        document.getElementById('btn-start-game').addEventListener('click', () => {
+            // 觸發使用者互動以解鎖音效並開始播放第一階段音樂
+            initAudio();
+            playMarioStage1Bgm();
+
+            finalizePlayersAndStart();
+        });
 
         function finalizePlayersAndStart() {
             const humanCount = players.filter(p => !p.isAI).length;
@@ -602,15 +620,15 @@
             if (totalPlayers <= 10) {
                 stage1Count = 7;
                 stage2Count = 3;
-                stage2AdvancingCount = 2;
+                stage2AdvancingCount = 2; // <=10人: 第二階段2人
             } else if (totalPlayers <= 20) {
                 stage1Count = 15;
                 stage2Count = 5;
-                stage2AdvancingCount = 5;
+                stage2AdvancingCount = 5; // 11~20人: 第二階段5人
             } else {
                 stage1Count = 20;
                 stage2Count = 10;
-                stage2AdvancingCount = 7;
+                stage2AdvancingCount = 7; // >=21人: 第二階段7人
             }
 
             const totalNeeded = stage1Count + stage2Count;
@@ -674,7 +692,7 @@
                 maxTime = 10;
                 document.getElementById('game-stage-badge').innerText = `STAGE 1 - 預賽大亂鬥 (${index + 1}/${stage1Count})`;
                 if (currentBgmType !== 'stage1') {
-                    playMarioStage1Bgm();
+                    playMarioStage1Bgm(); // 切換瑪莉兄弟第一階段一般關卡音樂
                 }
             } else {
                 stage = 2;
@@ -682,7 +700,7 @@
                 const stage2Index = index - stage1Count + 1;
                 document.getElementById('game-stage-badge').innerText = `STAGE 2 - 魔王城堡決戰 (${stage2Index}/${stage2Count})`;
                 if (currentBgmType !== 'stage2') {
-                    playMarioCastleBgm();
+                    playMarioCastleBgm(); // 切換瑪莉兄弟第二階段魔王關卡音樂
                 }
             }
 
@@ -867,7 +885,7 @@
             document.getElementById('view-game').classList.add('hidden');
             document.getElementById('view-result').classList.remove('hidden');
 
-            playMarioVictoryFanfare();
+            playMarioVictoryFanfare(); // 瑪莉兄弟第一代過關勝利音樂
 
             const sorted = [...players].sort((a, b) => b.score - a.score);
             const container = document.getElementById('leaderboard-container');
