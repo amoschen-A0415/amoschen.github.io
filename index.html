@@ -61,15 +61,7 @@
     <main class="flex-grow flex items-center justify-center p-4 md:p-6 relative">
 
         <!-- ==================== 1. 大螢幕 - 遊戲大廳 / 掃碼進入 ==================== -->
-        <div id="view-lobby" class="w-full max-w-5xl bg-slate-900/80 border-2 border-slate-700/80 rounded-2xl p-6 md:p-10 shadow-2xl backdrop-blur-xl relative">
-            
-            <!-- 居中置頂置中的「開始遊戲」按鈕（放大的2倍尺寸，懸浮於大廳正中央） -->
-            <div class="absolute inset-0 z-20 flex items-center justify-center pointer-events-none">
-                <button id="btn-start-game" class="hidden pointer-events-auto py-8 px-16 text-4xl font-black text-slate-950 bg-gradient-to-r from-neon-green via-neon-yellow to-neon-green border-4 border-white shadow-[0_0_50px_rgba(0,255,102,0.8)] rounded-3xl hover:scale-105 active:scale-95 transition-all animate-bounce flex items-center justify-center gap-4 cursor-pointer">
-                    🎮 開始遊戲
-                </button>
-            </div>
-
+        <div id="view-lobby" class="w-full max-w-5xl bg-slate-900/80 border-2 border-slate-700/80 rounded-2xl p-6 md:p-10 shadow-2xl backdrop-blur-xl">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                 
                 <!-- 掃碼區域 -->
@@ -81,10 +73,15 @@
 
                     <div id="qrcode" class="bg-white p-3 rounded-2xl border-4 border-cyan-400 mb-4"></div>
 
-                    <!-- 60 秒倒數計時提示 -->
+                    <!-- 60 秒倒數計時提示與開始按鈕 -->
                     <div id="lobby-timer-box" class="w-full bg-slate-800/90 border border-slate-700 p-4 rounded-xl flex flex-col items-center">
                         <span id="lobby-timer-label" class="text-slate-400 text-sm block mb-1">大廳等候倒數：</span>
                         <span id="lobby-timer-text" class="text-xl font-black text-neon-yellow">等待首位玩家連線...</span>
+                        
+                        <!-- 倒數結束後出現的開始遊戲按鈕 -->
+                        <button id="btn-start-game" class="hidden mx-auto max-w-md w-full mt-4 py-5 px-8 text-2xl font-black text-slate-950 bg-gradient-to-r from-neon-green to-neon-yellow rounded-2xl shadow-2xl hover:brightness-110 active:scale-95 transition-all animate-bounce flex items-center justify-center gap-2">
+                            🎮 開始遊戲
+                        </button>
                     </div>
                 </div>
 
@@ -750,9 +747,9 @@
             
             options.forEach((optText, i) => {
                 const btn = document.createElement('button');
-                btn.className = `option-btn w-full p-4 text-left rounded-xl border-2 border-slate-700 bg-slate-800/90 flex items-center space-x-4 text-lg font-bold pointer-events-none`;
+                btn.className = `option-btn w-full p-4 text-left rounded-xl border-2 border-slate-700 bg-slate-800/90 flex items-center space-x-4 text-2xl md:text-4xl font-bold pointer-events-none`;
                 btn.innerHTML = `
-                    <span class="w-10 h-10 flex items-center justify-center rounded-lg bg-slate-900 text-neon-blue font-black">${labels[i]}</span>
+                    <span class="w-12 h-12 flex-shrink-0 flex items-center justify-center rounded-lg bg-slate-900 text-neon-blue font-black">${labels[i]}</span>
                     <span class="text-white">${optText}</span>
                 `;
                 container.appendChild(btn);
