@@ -69,14 +69,16 @@
                     <h2 class="text-2xl md:text-3xl font-bold text-neon-blue mb-2 flex items-center gap-2">
                         <i class="fa-solid fa-qrcode"></i> 掃碼參賽 (無人數上限)
                     </h2>
-                    <p class="text-slate-400 text-sm mb-4">首位加入者起算 1 分鐘倒數開賽</p>
+                    <p class="text-slate-400 text-sm mb-4">掃描下方 QR Code 即可加入遊戲</p>
 
                     <div id="qrcode" class="bg-white p-3 rounded-2xl border-4 border-cyan-400 mb-4"></div>
 
-                    <!-- 60 秒倒數計時提示 -->
-                    <div id="lobby-timer-box" class="w-full bg-slate-800/90 border border-slate-700 p-4 rounded-xl flex flex-col items-center">
-                        <span id="lobby-timer-label" class="text-slate-400 text-sm block mb-1">大廳等候倒數：</span>
-                        <span id="lobby-timer-text" class="text-xl font-black text-neon-yellow">等待首位玩家連線...</span>
+                    <!-- 原倒數計時位置：改為直接顯示開始遊戲按鈕 -->
+                    <div id="lobby-start-box" class="w-full min-h-[80px] flex items-center justify-center">
+                        <button id="btn-start-game" class="hidden w-full py-4 text-2xl font-black text-slate-950 bg-gradient-to-r from-neon-green to-neon-yellow rounded-2xl shadow-[0_0_30px_rgba(0,255,102,0.5)] hover:brightness-110 active:scale-95 transition-all animate-bounce border-2 border-white/40">
+                            🎮 開始遊戲
+                        </button>
+                        <span id="lobby-waiting-text" class="text-slate-400 font-bold">等待首位玩家連線...</span>
                     </div>
                 </div>
 
@@ -97,11 +99,6 @@
                     </div>
                 </div>
             </div>
-
-            <!-- 倒數結束後出現的開始遊戲按鈕 (置中並放大 2 倍) -->
-            <button id="btn-start-game" class="hidden absolute inset-0 m-auto w-11/12 max-w-xl h-28 py-6 px-12 text-4xl font-black text-slate-950 bg-gradient-to-r from-neon-green to-neon-yellow rounded-3xl shadow-[0_0_50px_rgba(0,255,102,0.6)] hover:brightness-110 active:scale-95 transition-all animate-bounce flex items-center justify-center gap-4 border-4 border-white/40 z-20">
-                🎮 開始遊戲
-            </button>
         </div>
 
         <!-- ==================== 2. 手機端 - 玩家控制器畫面 ==================== -->
@@ -110,10 +107,14 @@
                 <span class="text-4xl">🍞</span>
                 <h2 class="text-2xl font-black text-neon-blue">安得烈答題控制器</h2>
                 <p id="player-mobile-name" class="text-neon-yellow font-bold text-lg">正在連線大螢幕...</p>
+                <!-- 顯示當前題數 Banner，不顯示題目內容 -->
+                <div id="mobile-question-banner" class="hidden bg-slate-900 border border-slate-700 py-2 px-4 rounded-xl text-neon-green font-extrabold text-xl shadow-inner">
+                    第 1 題
+                </div>
             </div>
 
             <!-- 登錄名稱區 -->
-            <div id="mobile-join-form" class="space-y-4 bg-slate-900 p-6 rounded-2xl border border-slate-800">
+            <div id="mobile-join-form" class="space-y-4 bg-slate-900 p-6 rounded-2xl border border-slate-800 my-auto">
                 <input type="text" id="mobile-name-input" maxlength="8" placeholder="請輸入您的暱稱..." 
                     class="w-full bg-slate-800 border-2 border-slate-700 p-4 rounded-xl text-center text-white text-xl font-bold focus:border-neon-purple outline-none">
                 <button id="btn-mobile-join" class="w-full py-4 bg-gradient-to-r from-neon-blue to-neon-purple text-black font-black text-xl rounded-xl shadow-lg">
@@ -135,7 +136,15 @@
             </div>
         </div>
 
-        <!-- ==================== 3. 大螢幕 - 遊戲主畫面 ==================== -->
+        <!-- ==================== 3. 大螢幕 - 題目間隔動畫 Overlay (1秒) ==================== -->
+        <div id="view-question-splash" class="hidden fixed inset-0 z-40 bg-slate-950/95 backdrop-blur-md flex flex-col items-center justify-center animate-fade-in">
+            <span class="text-2xl text-slate-400 font-bold tracking-widest mb-2">NEXT QUESTION</span>
+            <h1 id="splash-question-number" class="text-6xl md:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-r from-neon-blue via-neon-yellow to-neon-pink">
+                第 1 題
+            </h1>
+        </div>
+
+        <!-- ==================== 4. 大螢幕 - 遊戲主畫面 ==================== -->
         <div id="view-game" class="hidden w-full max-w-7xl grid grid-cols-1 md:grid-cols-4 gap-6">
             <!-- 參賽者面板 (左側顯示前10名) -->
             <div class="md:col-span-1 bg-slate-900/80 border border-slate-800 rounded-2xl p-4 md:p-6 backdrop-blur-xl flex flex-col justify-between">
@@ -159,7 +168,7 @@
 
                     <div class="flex justify-between items-center mb-4">
                         <span id="question-number" class="text-neon-blue font-black text-xl md:text-2xl tracking-wider">QUESTION 01/10</span>
-                        <span id="timer-text" class="text-2xl md:text-3xl font-black text-neon-yellow">⏱️ 10s</span>
+                        <span id="timer-text" class="text-2xl md:text-3xl font-black text-neon-yellow">⏱️ 8s</span>
                     </div>
 
                     <h2 id="question-text" class="text-2xl md:text-4xl font-extrabold text-white leading-relaxed mb-8 min-h-[80px]">
@@ -171,7 +180,7 @@
             </div>
         </div>
 
-        <!-- ==================== 4. 中場晉級公告 modal ==================== -->
+        <!-- ==================== 5. 中場晉級公告 modal ==================== -->
         <div id="view-intermission" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
             <div class="bg-slate-900 border-2 border-neon-purple rounded-2xl p-8 max-w-3xl w-full text-center">
                 <h2 class="text-3xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-neon-blue via-neon-yellow to-neon-pink mb-4">
@@ -185,7 +194,7 @@
             </div>
         </div>
 
-        <!-- ==================== 5. 最終頒獎典禮畫面 ==================== -->
+        <!-- ==================== 6. 最終頒獎典禮畫面 ==================== -->
         <div id="view-result" class="hidden w-full max-w-4xl bg-slate-900/90 border-2 border-neon-yellow/50 rounded-2xl p-6 md:p-10 shadow-2xl backdrop-blur-xl text-center">
             <h2 class="text-4xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-neon-yellow via-amber-300 to-yellow-500 mb-2">
                 🏆 頒獎典禮 🏆
@@ -278,16 +287,15 @@
         let stage = 1;
         let stage1Count = 7;
         let stage2Count = 3;
-        let stage1Time = 9;
-        let stage2Time = 5;
+        let stage1Time = 8; // 預設值 (會依人數改變)
+        let stage2Time = 4; // 預設值 (會依人數改變)
+        let revealTime = 1; // 答案顯示固定1秒
         let stage2AdvancingCount = 2;
         let timerInterval = null;
         let aiTimeouts = [];
         let isTransitioning = false;
-        let timeLeft = 10;
-        let maxTime = 10;
-        let lobbyTimer = 60;
-        let lobbyTimerInterval = null;
+        let timeLeft = 8;
+        let maxTime = 8;
         let hasSubmittedCurrentAnswer = false;
         
         // 音訊系統
@@ -335,7 +343,6 @@
             osc.stop(audioCtx.currentTime + duration);
         }
 
-        // 第一階段：瑪莉兄弟 第一代 完整一般關卡 BGM (節奏調慢 1 倍：90 BPM)
         function playMarioStage1Bgm() {
             initAudio();
             stopBgm();
@@ -351,43 +358,14 @@
             const beat = 60 / tempo;
 
             const sequence = [
-                // 前奏
                 { f: N.E5, d: 0.25 }, { f: N.E5, d: 0.25 }, { f: 0, d: 0.25 }, { f: N.E5, d: 0.25 },
                 { f: 0, d: 0.25 }, { f: N.C5, d: 0.25 }, { f: N.E5, d: 0.5 },
                 { f: N.G5, d: 0.5 }, { f: 0, d: 0.5 }, { f: N.G4, d: 0.5 }, { f: 0, d: 0.5 },
-
-                // A 段樂句 1
                 { f: N.C5, d: 0.375 }, { f: 0, d: 0.125 }, { f: N.G4, d: 0.375 }, { f: 0, d: 0.125 }, { f: N.E4, d: 0.5 },
                 { f: N.A4, d: 0.25 }, { f: N.B4, d: 0.25 }, { f: N.Bb4, d: 0.25 }, { f: N.A4, d: 0.25 },
                 { f: N.G4, d: 0.33 }, { f: N.E5, d: 0.33 }, { f: N.G5, d: 0.33 }, { f: N.A5, d: 0.5 },
                 { f: N.F5, d: 0.25 }, { f: N.G5, d: 0.25 }, { f: 0, d: 0.25 }, { f: N.E5, d: 0.25 },
-                { f: N.C5, d: 0.25 }, { f: N.D5, d: 0.25 }, { f: N.B4, d: 0.5 },
-
-                // A 段重複 2
-                { f: N.C5, d: 0.375 }, { f: 0, d: 0.125 }, { f: N.G4, d: 0.375 }, { f: 0, d: 0.125 }, { f: N.E4, d: 0.5 },
-                { f: N.A4, d: 0.25 }, { f: N.B4, d: 0.25 }, { f: N.Bb4, d: 0.25 }, { f: N.A4, d: 0.25 },
-                { f: N.G4, d: 0.33 }, { f: N.E5, d: 0.33 }, { f: N.G5, d: 0.33 }, { f: N.A5, d: 0.5 },
-                { f: N.F5, d: 0.25 }, { f: N.G5, d: 0.25 }, { f: 0, d: 0.25 }, { f: N.E5, d: 0.25 },
-                { f: N.C5, d: 0.25 }, { f: N.D5, d: 0.25 }, { f: N.B4, d: 0.5 },
-
-                // B 段副歌 1
-                { f: 0, d: 0.25 }, { f: N.G5, d: 0.25 }, { f: N.Fs5, d: 0.25 }, { f: N.F5, d: 0.25 },
-                { f: N.Eb5, d: 0.25 }, { f: N.E5, d: 0.25 }, { f: 0, d: 0.25 }, { f: N.Ab5, d: 0.25 },
-                { f: N.A5, d: 0.25 }, { f: N.C6, d: 0.25 }, { f: 0, d: 0.25 }, { f: N.A5, d: 0.25 },
-                { f: N.C6, d: 0.25 }, { f: N.D5, d: 0.5 },
-
-                // B 段副歌 2
-                { f: 0, d: 0.25 }, { f: N.G5, d: 0.25 }, { f: N.Fs5, d: 0.25 }, { f: N.F5, d: 0.25 },
-                { f: N.Eb5, d: 0.25 }, { f: N.E5, d: 0.25 }, { f: 0, d: 0.25 }, { f: N.C6, d: 0.25 },
-                { f: 0, d: 0.25 }, { f: N.C6, d: 0.25 }, { f: N.C6, d: 0.25 }, { f: 0, d: 0.5 },
-
-                // C 段轉調段落
-                { f: N.C5, d: 0.25 }, { f: N.C5, d: 0.25 }, { f: 0, d: 0.25 }, { f: N.C5, d: 0.25 },
-                { f: 0, d: 0.25 }, { f: N.C5, d: 0.25 }, { f: N.D5, d: 0.5 },
-                { f: N.E5, d: 0.25 }, { f: N.C5, d: 0.25 }, { f: 0, d: 0.25 }, { f: N.A4, d: 0.25 }, { f: N.G4, d: 0.5 },
-
-                { f: N.C5, d: 0.25 }, { f: N.C5, d: 0.25 }, { f: 0, d: 0.25 }, { f: N.C5, d: 0.25 },
-                { f: 0, d: 0.25 }, { f: N.C5, d: 0.25 }, { f: N.D5, d: 0.25 }, { f: N.E5, d: 0.25 }, { f: 0, d: 0.75 }
+                { f: N.C5, d: 0.25 }, { f: N.D5, d: 0.25 }, { f: N.B4, d: 0.5 }
             ];
 
             let step = 0;
@@ -403,7 +381,6 @@
             loop();
         }
 
-        // 第二階段：瑪莉兄弟 魔王城堡關卡音樂
         function playMarioCastleBgm() {
             initAudio();
             stopBgm();
@@ -430,7 +407,6 @@
             loop();
         }
 
-        // 最終頒獎：瑪莉兄弟 過關勝利音樂
         function playMarioVictoryFanfare() {
             initAudio();
             stopBgm();
@@ -440,11 +416,9 @@
                 { f: 261.63, d: 0.15 }, { f: 329.63, d: 0.15 }, { f: 392.00, d: 0.15 },
                 { f: 523.25, d: 0.15 }, { f: 659.25, d: 0.15 }, { f: 783.99, d: 0.15 },
                 { f: 1046.50, d: 0.4 }, { f: 783.99, d: 0.4 },
-                
                 { f: 277.18, d: 0.15 }, { f: 349.23, d: 0.15 }, { f: 415.30, d: 0.15 },
                 { f: 554.37, d: 0.15 }, { f: 698.46, d: 0.15 }, { f: 830.61, d: 0.15 },
                 { f: 1108.73, d: 0.4 }, { f: 830.61, d: 0.4 },
-
                 { f: 293.66, d: 0.15 }, { f: 369.99, d: 0.15 }, { f: 440.00, d: 0.15 },
                 { f: 587.33, d: 0.15 }, { f: 739.99, d: 0.15 }, { f: 880.00, d: 0.15 },
                 { f: 1174.66, d: 0.6 }
@@ -527,6 +501,11 @@
                         document.getElementById('mobile-status-text').innerText = '🎮 遊戲開始，請看大螢幕準備作答！';
                         resetMobileButtons();
                     } else if (data.type === 'NEXT_QUESTION') {
+                        // 更新手機端顯示當前題數，但不顯示題目
+                        const banner = document.getElementById('mobile-question-banner');
+                        banner.innerText = `第 ${data.questionNumber} 題`;
+                        banner.classList.remove('hidden');
+
                         document.getElementById('mobile-status-text').innerText = '請點選答案 (A/B/C/D)';
                         resetMobileButtons();
                     }
@@ -570,7 +549,6 @@
                 hostConn.send({ type: 'SUBMIT_ANSWER', playerId: myPlayerId, choice: choiceIdx });
                 document.getElementById('mobile-status-text').innerText = '✓ 答案已送出！等待結算';
 
-                // 將未選擇的答案按鈕反黑禁用，所選答案維持正常亮起
                 for (let i = 0; i < 4; i++) {
                     const btn = document.getElementById(`mobile-btn-${i}`);
                     if (btn) {
@@ -603,33 +581,11 @@
             players.push(p);
             renderLobbyPlayers();
 
-            if (players.filter(p => !p.isAI).length === 1) {
-                startLobbyTimer();
+            // 第一人報名後，直接顯示「開始遊戲」按鈕
+            if (players.length >= 1) {
+                document.getElementById('lobby-waiting-text').classList.add('hidden');
+                document.getElementById('btn-start-game').classList.remove('hidden');
             }
-        }
-
-        function startLobbyTimer() {
-            if (lobbyTimerInterval) return;
-            lobbyTimer = 60;
-            updateLobbyTimerUI();
-
-            lobbyTimerInterval = setInterval(() => {
-                lobbyTimer--;
-                updateLobbyTimerUI();
-
-                if (lobbyTimer <= 0) {
-                    clearInterval(lobbyTimerInterval);
-                    lobbyTimerInterval = null;
-                    
-                    document.getElementById('lobby-timer-label').innerText = "大廳等候結束：";
-                    document.getElementById('lobby-timer-text').innerText = "參賽人數已齊備！";
-                    document.getElementById('btn-start-game').classList.remove('hidden');
-                }
-            }, 1000);
-        }
-
-        function updateLobbyTimerUI() {
-            document.getElementById('lobby-timer-text').innerText = `倒數 ${lobbyTimer} 秒後自動結算參賽者`;
         }
 
         // 點擊「開始遊戲」按鈕事件
@@ -670,24 +626,25 @@
             startGame();
         }
 
+        // 規則 2：依據總人數設定答題秒數
         function setupRulesByPlayerCount(totalPlayers) {
             if (totalPlayers <= 10) {
                 stage1Count = 7;
                 stage2Count = 3;
-                stage1Time = 9;
-                stage2Time = 5;
+                stage1Time = 8; // 8秒答題
+                stage2Time = 4; // 4秒答題
                 stage2AdvancingCount = 2;
             } else if (totalPlayers <= 20) {
                 stage1Count = 11;
                 stage2Count = 4;
-                stage1Time = 8;
-                stage2Time = 4;
+                stage1Time = 7; // 7秒答題
+                stage2Time = 3; // 3秒答題
                 stage2AdvancingCount = 5;
             } else {
                 stage1Count = 15;
                 stage2Count = 5;
-                stage1Time = 7;
-                stage2Time = 4;
+                stage1Time = 6; // 6秒答題
+                stage2Time = 3; // 3秒答題
                 stage2AdvancingCount = 7;
             }
 
@@ -732,7 +689,7 @@
 
             currentQuestionIndex = 0;
             stage = 1;
-            loadQuestion(currentQuestionIndex);
+            startQuestionFlow(currentQuestionIndex);
         }
 
         function clearAllTimers() {
@@ -741,10 +698,23 @@
             aiTimeouts = [];
         }
 
-        function loadQuestion(index) {
+        // 規則 4：題目與題目間隔，顯示題數 1 秒
+        function startQuestionFlow(index) {
             clearAllTimers();
-            isTransitioning = false;
+            isTransitioning = true;
 
+            const qNumText = `第 ${index + 1} 題`;
+            document.getElementById('splash-question-number').innerText = qNumText;
+            document.getElementById('view-question-splash').classList.remove('hidden');
+
+            setTimeout(() => {
+                document.getElementById('view-question-splash').classList.add('hidden');
+                loadQuestion(index);
+            }, 1000);
+        }
+
+        function loadQuestion(index) {
+            isTransitioning = false;
             const qData = quizDatabase[index];
 
             if (index < stage1Count) {
@@ -766,10 +736,14 @@
 
             timeLeft = maxTime;
 
+            // 廣播給手機端（傳送題數）
             players.forEach(p => {
                 p.choice = null;
                 p.answered = (stage === 2 && !p.isQualified);
-                if (p.conn) p.conn.send({ type: 'NEXT_QUESTION' });
+                if (p.conn) p.conn.send({ 
+                    type: 'NEXT_QUESTION', 
+                    questionNumber: index + 1 
+                });
             });
 
             document.getElementById('question-number').innerText = `QUESTION ${String(index + 1).padStart(2, '0')}/${quizDatabase.length}`;
@@ -838,7 +812,7 @@
 
         function triggerAIAnswers(qData) {
             players.filter(p => p.isAI && p.isQualified).forEach(ai => {
-                let delay = stage === 1 ? (1000 + Math.random() * 3000) : (500 + Math.random() * 1500);
+                let delay = stage === 1 ? (800 + Math.random() * (maxTime * 800)) : (400 + Math.random() * (maxTime * 700));
                 const timerId = setTimeout(() => {
                     if (isTransitioning || ai.answered) return;
                     ai.choice = (Math.random() < 0.7) ? qData.answer : Math.floor(Math.random() * 4);
@@ -876,6 +850,7 @@
             }
         }
 
+        // 規則 2：答題結束後進行 1 秒的答案揭曉顯示
         function evaluateQuestionAndProceed() {
             if (isTransitioning) return;
             isTransitioning = true;
@@ -898,6 +873,7 @@
 
             renderPlayersDashboard();
 
+            // 答案顯示 1 秒
             setTimeout(() => {
                 currentQuestionIndex++;
                 if (currentQuestionIndex === stage1Count) {
@@ -905,13 +881,13 @@
                 } else if (currentQuestionIndex >= quizDatabase.length) {
                     showFinalResult();
                 } else {
-                    loadQuestion(currentQuestionIndex);
+                    startQuestionFlow(currentQuestionIndex);
                 }
-            }, 2500);
+            }, revealTime * 1000);
         }
 
         /* -----------------------------------------------------------------
-           中場晉級展示
+           5. 中場晉級展示
            ----------------------------------------------------------------- */
         function showIntermission() {
             const sorted = [...players].sort((a, b) => b.score - a.score);
@@ -937,11 +913,11 @@
 
         document.getElementById('btn-start-stage2').addEventListener('click', () => {
             document.getElementById('view-intermission').classList.add('hidden');
-            loadQuestion(currentQuestionIndex);
+            startQuestionFlow(currentQuestionIndex);
         });
 
         /* -----------------------------------------------------------------
-           5. 最終頒獎典禮
+           6. 最終頒獎典禮
            ----------------------------------------------------------------- */
         function showFinalResult() {
             document.getElementById('view-game').classList.add('hidden');
