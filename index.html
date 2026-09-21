@@ -39,22 +39,23 @@
             background-color: #0b0f19;
             color: #f3f4f6;
             user-select: none;
-            overflow: hidden;
+            overflow: hidden; /* 防止出現全頁滾軸 */
         }
 
-        .no-scrollbar::-webkit-scrollbar {
-            display: none;
+        /* 嚴格禁止出現任何滾軸 */
+        * {
+            scrollbar-width: none !important;
+            -ms-overflow-style: none !important;
         }
-        .no-scrollbar {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
+        *::-webkit-scrollbar {
+            display: none !important;
+            width: 0 !important;
+            height: 0 !important;
         }
 
         #qrcode canvas, #qrcode img {
             margin: 0 auto;
             display: block;
-            max-width: 100%;
-            height: auto;
         }
     </style>
 </head>
@@ -87,9 +88,9 @@
                     </h2>
                     <p class="text-slate-300 text-base md:text-xl font-bold mb-3">請拿起手機相機掃描 QR Code 區域連線</p>
 
-                    <!-- 優化後的 QR Code 容器 -->
-                    <div class="p-3.5 bg-gradient-to-br from-cyan-400 via-purple-500 to-pink-500 rounded-3xl shadow-[0_0_60px_rgba(0,243,255,0.4)] my-auto transition-transform hover:scale-[1.02] duration-300 max-w-[320px] w-full">
-                        <div id="qrcode" class="bg-white p-3 rounded-2xl border-2 border-white flex items-center justify-center shadow-inner min-h-[260px]"></div>
+                    <!-- 極限放大且具視覺光彩的 QR Code 容器 -->
+                    <div class="p-3.5 bg-gradient-to-br from-cyan-400 via-purple-500 to-pink-500 rounded-3xl shadow-[0_0_60px_rgba(0,243,255,0.4)] my-auto transition-transform hover:scale-[1.02] duration-300">
+                        <div id="qrcode" class="bg-white p-3 rounded-2xl border-2 border-white flex items-center justify-center shadow-inner"></div>
                     </div>
 
                     <div id="lobby-waiting-text" class="text-neon-green text-xl md:text-2xl font-black mt-3 animate-pulse drop-shadow">
@@ -156,7 +157,7 @@
                     <h3 class="text-xl font-black text-neon-yellow">選擇您看好的決賽選手</h3>
                     <p class="text-xs text-slate-300 mt-0.5 font-bold">點擊皇冠為選手應援，將即時同步顯示於大螢幕！</p>
                 </div>
-                <div id="mobile-vote-list" class="space-y-2.5 max-h-[45vh] overflow-y-auto pr-1"></div>
+                <div id="mobile-vote-list" class="space-y-2.5 max-h-[45vh] overflow-hidden pr-1"></div>
                 <div id="mobile-vote-status" class="text-center text-sm font-bold text-neon-green hidden bg-emerald-950/60 border border-emerald-500/50 p-2 rounded-xl">
                     👑 您已成功送出皇冠為選手應援！
                 </div>
@@ -193,22 +194,23 @@
         <!-- ==================== 4. 大螢幕 - 遊戲主畫面 ==================== -->
         <div id="view-game" class="hidden w-full h-full max-h-[96vh] grid grid-cols-1 md:grid-cols-12 gap-4 overflow-hidden">
             
-            <!-- 左側：全顯示排行榜 -->
-            <div class="md:col-span-3 bg-slate-900/80 border border-slate-800 rounded-2xl p-3 backdrop-blur-xl flex flex-col justify-between overflow-hidden">
+            <!-- 左側：全顯示排行榜 (文字增大、區塊大小不變、超出隱藏、禁止出現滾軸) -->
+            <div class="md:col-span-4 lg:col-span-3 bg-slate-900/80 border border-slate-800 rounded-2xl p-3 backdrop-blur-xl flex flex-col justify-between overflow-hidden h-full">
                 <div class="overflow-hidden flex flex-col h-full">
-                    <h3 class="text-slate-300 text-lg md:text-xl font-black mb-2 flex items-center justify-between flex-shrink-0 border-b border-slate-800 pb-2">
+                    <h3 class="text-slate-300 text-xl md:text-2xl font-black mb-3 flex items-center justify-between flex-shrink-0 border-b border-slate-800 pb-2">
                         <span>🔥 實時全場排行榜</span>
-                        <span id="game-total-players-badge" class="text-sm bg-cyan-950 text-neon-blue px-2.5 py-0.5 rounded-full border border-cyan-800">0 人</span>
+                        <span id="game-total-players-badge" class="text-base bg-cyan-950 text-neon-blue px-3 py-1 rounded-full border border-cyan-800">0 人</span>
                     </h3>
-                    <div id="players-dashboard" class="flex flex-col space-y-2 overflow-y-auto no-scrollbar flex-grow pr-1"></div>
+                    <!-- 排行榜容器：禁止任何滾動，超出數量即隱藏 -->
+                    <div id="players-dashboard" class="flex flex-col space-y-2.5 overflow-hidden flex-grow"></div>
                 </div>
                 <div class="mt-2 pt-2 border-t border-slate-800 text-right flex-shrink-0">
-                    <span id="round-status-hint" class="text-neon-green font-bold text-sm">作答進行中...</span>
+                    <span id="round-status-hint" class="text-neon-green font-bold text-base">作答進行中...</span>
                 </div>
             </div>
 
             <!-- 右側：中央答題區 -->
-            <div class="md:col-span-9 bg-slate-900/90 border-2 border-cyan-500/30 rounded-3xl p-6 md:p-8 shadow-2xl backdrop-blur-xl flex flex-col justify-between overflow-hidden">
+            <div class="md:col-span-8 lg:col-span-9 bg-slate-900/90 border-2 border-cyan-500/30 rounded-3xl p-6 md:p-8 shadow-2xl backdrop-blur-xl flex flex-col justify-between overflow-hidden h-full">
                 <div class="w-full flex-shrink-0">
                     <div class="w-full bg-slate-800 h-4 rounded-full mb-4 overflow-hidden border border-slate-700">
                         <div id="timer-bar" class="h-full bg-gradient-to-r from-neon-blue to-neon-pink w-full transition-all duration-100 ease-linear"></div>
@@ -247,10 +249,10 @@
                             <span class="font-black text-2xl md:text-3xl text-cyan-300">參賽者/分數</span>
                             <span id="intermission-left-count" class="text-xs bg-slate-800 text-neon-blue px-2.5 py-1 rounded-full font-bold">0 人</span>
                         </div>
-                        <div id="intermission-left-list" class="space-y-2 overflow-y-auto no-scrollbar pr-1 flex-grow"></div>
+                        <div id="intermission-left-list" class="space-y-2 overflow-hidden pr-1 flex-grow"></div>
                     </div>
 
-                    <div class="md:col-span-6 bg-purple-950/30 border-2 border-neon-purple/50 rounded-2xl p-6 flex flex-col items-center justify-between text-center overflow-y-auto no-scrollbar shadow-inner">
+                    <div class="md:col-span-6 bg-purple-950/30 border-2 border-neon-purple/50 rounded-2xl p-6 flex flex-col items-center justify-between text-center overflow-hidden shadow-inner">
                         <div class="w-full">
                             <span class="text-neon-yellow text-base font-black tracking-widest">STAGE 2 QUALIFIERS</span>
                             <h3 class="text-3xl md:text-4xl font-black text-white mt-1 mb-6">🏆 進入決賽選手 🏆</h3>
@@ -269,7 +271,7 @@
                             <span class="font-black text-2xl md:text-3xl text-cyan-300">參賽者/分數</span>
                             <span id="intermission-right-count" class="text-xs bg-slate-800 text-neon-blue px-2.5 py-1 rounded-full font-bold">0 人</span>
                         </div>
-                        <div id="intermission-right-list" class="space-y-2 overflow-y-auto no-scrollbar pr-1 flex-grow"></div>
+                        <div id="intermission-right-list" class="space-y-2 overflow-hidden pr-1 flex-grow"></div>
                     </div>
 
                 </div>
@@ -293,11 +295,11 @@
                             <span class="font-black text-xl md:text-2xl text-amber-300">全場排名 (左)</span>
                             <span id="result-left-count" class="text-xs bg-slate-800 text-neon-yellow px-2.5 py-1 rounded-full font-bold">0 人</span>
                         </div>
-                        <div id="result-left-list" class="space-y-2 overflow-y-auto no-scrollbar pr-1 flex-grow"></div>
+                        <div id="result-left-list" class="space-y-2 overflow-hidden pr-1 flex-grow"></div>
                     </div>
 
                     <!-- 中央 Top 3 -->
-                    <div class="md:col-span-6 bg-amber-950/20 border-2 border-amber-500/40 rounded-2xl p-6 flex flex-col items-center justify-center text-center overflow-y-auto no-scrollbar shadow-inner">
+                    <div class="md:col-span-6 bg-amber-950/20 border-2 border-amber-500/40 rounded-2xl p-6 flex flex-col items-center justify-center text-center overflow-hidden shadow-inner">
                         <div class="w-full flex flex-col items-center">
                             <span class="text-amber-400 font-black tracking-widest text-sm mb-3">TOP 3 WINNERS</span>
                             <div id="top3-container" class="w-full flex flex-col items-center space-y-4 my-auto"></div>
@@ -310,7 +312,7 @@
                             <span class="font-black text-xl md:text-2xl text-amber-300">全場排名 (右)</span>
                             <span id="result-right-count" class="text-xs bg-slate-800 text-neon-yellow px-2.5 py-1 rounded-full font-bold">0 人</span>
                         </div>
-                        <div id="result-right-list" class="space-y-2 overflow-y-auto no-scrollbar pr-1 flex-grow"></div>
+                        <div id="result-right-list" class="space-y-2 overflow-hidden pr-1 flex-grow"></div>
                     </div>
 
                 </div>
@@ -359,7 +361,7 @@
             { question: "26. 志工進行食品安全檢查時，若發現下列何種情況該食品不能放入食物箱？", options: ["包裝完整", "效期還有 8 個月", "破損、發霉、長蟲或凹罐", "標示清晰"], answer: 2 },
             { question: "27. 基於受助兒童與長者的健康需求，下列哪種食品絕對不會放入安得烈的食物箱？", options: ["白米與麵條", "泡麵及高鹽、高糖、醃漬食品", "營養奶粉", "罐頭肉鬆"], answer: 1 },
             { question: "28. 安得烈食物箱完成打包後，主要透過哪些管道寄送或送達？", options: ["郵局及物流公司", "社工及專員家訪親送", "配搭合作單位轉送", "以上皆是"], answer: 3 },
-            { question: "29. 一般大眾可以透過哪些方式來支持安得烈慈善協會？", options: ["捐贈發票與食物物資", "參與志工服務", "定額/小額捐款與通報身邊個案", "以上皆可"], answer: 3 },
+            { question: "29. 一般大眾可以透過哪些方式來支持安得烈慈善協會？", options: ["捐贈發票與體物資", "參與志工服務", "定額/小額捐款與通報身邊個案", "以上皆可"], answer: 3 },
             { question: "30. 安得烈簡報與宣導中常傳達的座右銘理念是？", options: ["施比受更有福", "獨善其身", "錦上添花", "腳踏實地"], answer: 0 }
         ];
 
@@ -531,31 +533,17 @@
             }
         }
 
-        // 核心優化：更安全地推算可供其他裝置存取的網址
-        function getJoinUrl(hostId) {
-            let currentUrl = window.location.href.split('?')[0];
-            
-            // 警告及相容性提示：若為本機檔案，發出提示
-            if (currentUrl.startsWith('file://')) {
-                console.warn("目前以本地檔案模式開啟，其他裝置將無法掃碼。請將專案部署至伺服器或 Live Server。");
-            }
-
-            return `${currentUrl}?host=${hostId}`;
-        }
-
         function initHostPeer() {
             peer = new Peer();
             
             peer.on('open', (id) => {
-                const joinUrl = getJoinUrl(id);
+                const joinUrl = `${window.location.href.split('?')[0]}?host=${id}`;
                 document.getElementById("qrcode").innerHTML = "";
                 
-                // 優化：調降動態解析度至 260px，保證不同解析度之手機相機皆可秒掃
                 new QRCode(document.getElementById("qrcode"), {
                     text: joinUrl,
-                    width: 260,
-                    height: 260,
-                    correctLevel: QRCode.CorrectLevel.M
+                    width: 360,
+                    height: 360
                 });
             });
 
@@ -755,6 +743,7 @@
                 name: name,
                 conn: conn,
                 isAI: false,
+                aiType: null,
                 score: 0,
                 answered: false,
                 choice: null,
@@ -777,23 +766,33 @@
         });
 
         function finalizePlayersAndStart() {
-            const humanCount = players.filter(p => !p.isAI).length;
-            let robotsToAdd = (humanCount <= 10) ? 2 : (humanCount <= 20 ? 1 : 0);
+            // 預設指定 AI 設定
+            const defaultAIs = [
+                { name: '🤖 特工阿湯哥', type: 'tom', minAcc: 0.50, maxAcc: 0.80 },
+                { name: '🍄 瑪莉歐', type: 'mario', minAcc: 0.40, maxAcc: 0.70 },
+                { name: '🦆 可達鴨', type: 'duck', minAcc: 0.30, maxAcc: 0.60 }
+            ];
 
-            const robotNames = ['🤖 特工阿湯哥', '蘑菇 瑪利歐', '綠蕈 路易吉', '👑 碧姬公主'];
-            for (let i = 0; i < robotsToAdd; i++) {
+            // 1% 機率出現 安得鹿大魔王
+            if (Math.random() < 0.01) {
+                defaultAIs.push({ name: '😈 安得鹿大魔王', type: 'boss', minAcc: 0.90, maxAcc: 1.00 });
+            }
+
+            defaultAIs.forEach((aiSpec, i) => {
                 players.push({
                     id: 'ai_' + Date.now() + '_' + i,
-                    name: robotNames[i % robotNames.length],
+                    name: aiSpec.name,
                     conn: null,
                     isAI: true,
+                    aiType: aiSpec.type,
+                    aiSpec: aiSpec,
                     score: 0,
                     answered: false,
                     choice: null,
                     isQualified: true,
                     votes: 0
                 });
-            }
+            });
 
             renderLobbyPlayers();
             setupRulesByPlayerCount(players.length);
@@ -932,6 +931,7 @@
             });
         }
 
+        /* 渲染排行榜：文字增大為 2 倍、區域固定、禁止出現滾軸、超出自動隱藏 */
         function renderPlayersDashboard() {
             const dashboard = document.getElementById('players-dashboard');
             dashboard.innerHTML = '';
@@ -942,25 +942,26 @@
             
             sortedPlayers.forEach((p, rank) => {
                 const card = document.createElement('div');
-                let borderClass = 'border-slate-800 bg-slate-900/60';
-                let statusBadge = '<span class="text-xs text-slate-500">思考中</span>';
+                let borderClass = 'border-slate-800 bg-slate-900/70';
+                let statusBadge = '<span class="text-sm md:text-base text-slate-400 font-bold">思考中</span>';
 
                 if (!p.isQualified && stage === 2) {
                     borderClass = 'border-slate-800/40 opacity-40';
-                    statusBadge = '<span class="text-xs text-red-500 font-bold">淘汰</span>';
+                    statusBadge = '<span class="text-sm md:text-base text-red-500 font-extrabold">淘汰</span>';
                 } else if (p.answered) {
-                    borderClass = 'border-neon-green/50 bg-slate-800';
-                    statusBadge = '<span class="text-xs text-neon-green font-bold">✓ 答題</span>';
+                    borderClass = 'border-neon-green/60 bg-slate-800/90 shadow-[0_0_15px_rgba(0,255,102,0.2)]';
+                    statusBadge = '<span class="text-sm md:text-base text-neon-green font-extrabold">✓ 答題</span>';
                 }
 
-                card.className = `p-2 md:p-3 rounded-xl border ${borderClass} flex items-center justify-between text-base md:text-lg transition-all duration-200`;
+                // 文字放大：名次 text-xl/2xl、暱稱 text-2xl/3xl、分數 text-2xl/3xl
+                card.className = `p-3 md:p-3.5 rounded-2xl border-2 ${borderClass} flex items-center justify-between transition-all duration-200 flex-shrink-0`;
                 card.innerHTML = `
-                    <div class="flex items-center gap-2 truncate max-w-[65%]">
-                        <span class="font-black text-slate-400 min-w-[30px] text-center">#${rank + 1}</span>
-                        <span class="font-black text-white truncate">${p.name}</span>
+                    <div class="flex items-center gap-3 truncate max-w-[65%]">
+                        <span class="font-black text-neon-blue text-xl md:text-2xl min-w-[36px] text-center">#${rank + 1}</span>
+                        <span class="font-black text-white text-2xl md:text-3xl truncate tracking-wide">${p.name}</span>
                     </div>
-                    <div class="flex items-center gap-2 flex-shrink-0">
-                        <span class="text-neon-yellow font-black text-lg md:text-xl">${p.score}</span>
+                    <div class="flex items-center gap-3 flex-shrink-0">
+                        <span class="text-neon-yellow font-black text-2xl md:text-3xl">${p.score}</span>
                         ${statusBadge}
                     </div>
                 `;
@@ -970,14 +971,32 @@
 
         function triggerAIAnswers(qData) {
             players.filter(p => p.isAI && p.isQualified).forEach(ai => {
-                let delay = stage === 1 ? (800 + Math.random() * (maxTime * 800)) : (400 + Math.random() * (maxTime * 700));
+                const spec = ai.aiSpec || { minAcc: 0.5, maxAcc: 0.8 };
+                
+                // 根據速度與正確率區間計算正確機率
+                const targetAccuracy = spec.minAcc + Math.random() * (spec.maxAcc - spec.minAcc);
+                const isCorrect = Math.random() < targetAccuracy;
+
+                // 答題速度延遲 (速度與正確率成正比)
+                const speedFactor = 1 - (targetAccuracy * 0.6); // 機率越高反應越快
+                let delay = (speedFactor * (maxTime * 800)) + (Math.random() * 500);
+                delay = Math.min(delay, maxTime * 1000 - 300); // 確保在倒數結束前回答
+
                 const timerId = setTimeout(() => {
                     if (isTransitioning || ai.answered) return;
-                    ai.choice = (Math.random() < 0.7) ? qData.answer : Math.floor(Math.random() * 4);
+                    
+                    if (isCorrect) {
+                        ai.choice = qData.answer;
+                    } else {
+                        const wrongChoices = [0, 1, 2, 3].filter(c => c !== qData.answer);
+                        ai.choice = wrongChoices[Math.floor(Math.random() * wrongChoices.length)];
+                    }
+
                     ai.answered = true;
                     renderPlayersDashboard();
                     checkAllAnswered();
                 }, delay);
+
                 aiTimeouts.push(timerId);
             });
         }
