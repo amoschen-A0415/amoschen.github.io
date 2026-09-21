@@ -1,3 +1,4 @@
+<a_html_file name="index.html">
 <!DOCTYPE html>
 <html lang="zh-TW" class="dark">
 <head>
@@ -83,7 +84,7 @@
                     <h2 class="text-3xl md:text-5xl font-black text-neon-blue mb-1 flex items-center gap-3 drop-shadow-[0_0_15px_rgba(0,243,255,0.4)]">
                         <i class="fa-solid fa-qrcode text-neon-pink"></i> 掃碼參賽 (無人數上限)
                     </h2>
-                    <p class="text-slate-300 text-base md:text-xl font-bold mb-3">請拿起手機相機掃描 QR Code 立即連線</p>
+                    <p class="text-slate-300 text-base md:text-xl font-bold mb-3">請拿起手機相機掃描 QR Code 區域連線</p>
 
                     <!-- 極限放大且具視覺光彩的 QR Code 容器 -->
                     <div class="p-3.5 bg-gradient-to-br from-cyan-400 via-purple-500 to-pink-500 rounded-3xl shadow-[0_0_60px_rgba(0,243,255,0.4)] my-auto transition-transform hover:scale-[1.02] duration-300">
@@ -191,17 +192,17 @@
         <!-- ==================== 4. 大螢幕 - 遊戲主畫面 ==================== -->
         <div id="view-game" class="hidden w-full h-full max-h-[96vh] grid grid-cols-1 md:grid-cols-12 gap-4 overflow-hidden">
             
-            <!-- 左側：全顯示排行榜 (取消前10限制，自動呈捲軸全列顯示) -->
+            <!-- 左側：全顯示排行榜 (文字放大為2倍，維持區域大小) -->
             <div class="md:col-span-3 bg-slate-900/80 border border-slate-800 rounded-2xl p-3 backdrop-blur-xl flex flex-col justify-between overflow-hidden">
                 <div class="overflow-hidden flex flex-col h-full">
-                    <h3 class="text-slate-300 text-sm md:text-base font-black mb-2 flex items-center justify-between flex-shrink-0 border-b border-slate-800 pb-2">
+                    <h3 class="text-slate-300 text-lg md:text-xl font-black mb-2 flex items-center justify-between flex-shrink-0 border-b border-slate-800 pb-2">
                         <span>🔥 實時全場排行榜</span>
-                        <span id="game-total-players-badge" class="text-xs bg-cyan-950 text-neon-blue px-2 py-0.5 rounded-full border border-cyan-800">0 人</span>
+                        <span id="game-total-players-badge" class="text-sm bg-cyan-950 text-neon-blue px-2.5 py-0.5 rounded-full border border-cyan-800">0 人</span>
                     </h3>
-                    <div id="players-dashboard" class="flex flex-col space-y-1.5 overflow-y-auto no-scrollbar flex-grow pr-1"></div>
+                    <div id="players-dashboard" class="flex flex-col space-y-2 overflow-y-auto no-scrollbar flex-grow pr-1"></div>
                 </div>
                 <div class="mt-2 pt-2 border-t border-slate-800 text-right flex-shrink-0">
-                    <span id="round-status-hint" class="text-neon-green font-bold text-xs">作答進行中...</span>
+                    <span id="round-status-hint" class="text-neon-green font-bold text-sm">作答進行中...</span>
                 </div>
             </div>
 
@@ -434,21 +435,30 @@
             osc.stop(audioCtx.currentTime + duration);
         }
 
-        /* 修改：第一階段音樂改為《不可能的任務》（Mission: Impossible Theme）音型 */
+        /* 第一階段音樂：完整《不可能的任務》（Mission: Impossible Theme）樂句迴圈 */
         function playMissionImpossibleBgm() {
             initAudio();
             stopBgm();
             currentBgmType = 'stage1';
 
-            // 音高頻率：G4, Bb4, C5, Db5, D5
-            const N = { G4: 392.00, Bb4: 466.16, C5: 523.25, Db5: 554.37, D5: 587.33 };
-            const bpm = 160;
-            const beat = 60 / bpm; // 每拍時間
+            const N = { 
+                G4: 392.00, Bb4: 466.16, C5: 523.25, Db5: 554.37, D5: 587.33, 
+                F4: 349.23, FSharp4: 369.99, G3: 196.00, Bb3: 233.08, C4: 261.63
+            };
+            const bpm = 168;
+            const beat = 60 / bpm;
 
-            // 不可能的任務經典節奏律動 (5/4 拍或經典 16 分音符律動)
+            // 完整不可能的任務主題曲：包含主律動與經典過渡主題
             const sequence = [
+                // 主音型 A
                 { f: N.G4, d: 0.75 }, { f: N.G4, d: 0.75 }, { f: N.Bb4, d: 0.5 }, { f: N.C5, d: 0.5 },
-                { f: N.G4, d: 0.75 }, { f: N.G4, d: 0.75 }, { f: N.F4 || 349.23, d: 0.5 }, { f: N.FSharp4 || 369.99, d: 0.5 }
+                { f: N.G4, d: 0.75 }, { f: N.G4, d: 0.75 }, { f: N.F4, d: 0.5 }, { f: N.FSharp4, d: 0.5 },
+                { f: N.G4, d: 0.75 }, { f: N.G4, d: 0.75 }, { f: N.Bb4, d: 0.5 }, { f: N.C5, d: 0.5 },
+                { f: N.G4, d: 0.75 }, { f: N.G4, d: 0.75 }, { f: N.F4, d: 0.5 }, { f: N.FSharp4, d: 0.5 },
+                
+                // 經典旋律過渡 B
+                { f: N.G4, d: 1.5 }, { f: N.Bb4, d: 1.0 }, { f: N.C5, d: 0.5 }, { f: N.Db5, d: 0.5 }, { f: N.C5, d: 0.5 },
+                { f: N.G4, d: 1.5 }, { f: N.F4, d: 1.0 }, { f: N.FSharp4, d: 0.5 }, { f: N.G4, d: 1.0 }
             ];
 
             let step = 0;
@@ -483,13 +493,14 @@
             loop();
         }
 
+        /* 慶祝勝利音樂：設定完整發聲播放 */
         function playMarioVictoryFanfare() {
             initAudio();
             stopBgm();
             currentBgmType = 'victory';
             const notes = [
                 { f: 261.63, d: 0.15 }, { f: 329.63, d: 0.15 }, { f: 392.00, d: 0.15 },
-                { f: 523.25, d: 0.15 }, { f: 659.25, d: 0.15 }, { f: 783.99, d: 0.3 }
+                { f: 523.25, d: 0.2 }, { f: 659.25, d: 0.2 }, { f: 783.99, d: 0.5 }
             ];
             let i = 0;
             function playNext() {
@@ -896,7 +907,7 @@
             });
         }
 
-        /* 修改：排行榜全顯示 (顯示全場所有玩家，以螢幕可容納之精簡樣式呈動態滾動清單) */
+        /* 修改：排行榜文字放大為 2 倍 (字級升級至 text-base/text-lg 與 text-lg/text-xl，同時保持區域大小與滾動) */
         function renderPlayersDashboard() {
             const dashboard = document.getElementById('players-dashboard');
             dashboard.innerHTML = '';
@@ -909,24 +920,24 @@
             sortedPlayers.forEach((p, rank) => {
                 const card = document.createElement('div');
                 let borderClass = 'border-slate-800 bg-slate-900/60';
-                let statusBadge = '<span class="text-[10px] text-slate-500">思考中</span>';
+                let statusBadge = '<span class="text-xs text-slate-500">思考中</span>';
 
                 if (!p.isQualified && stage === 2) {
                     borderClass = 'border-slate-800/40 opacity-40';
-                    statusBadge = '<span class="text-[10px] text-red-500 font-bold">淘汰</span>';
+                    statusBadge = '<span class="text-xs text-red-500 font-bold">淘汰</span>';
                 } else if (p.answered) {
                     borderClass = 'border-neon-green/50 bg-slate-800';
-                    statusBadge = '<span class="text-[10px] text-neon-green font-bold">✓ 答題</span>';
+                    statusBadge = '<span class="text-xs text-neon-green font-bold">✓ 答題</span>';
                 }
 
-                card.className = `p-1.5 md:p-2 rounded-xl border ${borderClass} flex items-center justify-between text-xs transition-all duration-200`;
+                card.className = `p-2 md:p-3 rounded-xl border ${borderClass} flex items-center justify-between text-base md:text-lg transition-all duration-200`;
                 card.innerHTML = `
-                    <div class="flex items-center gap-1.5 truncate max-w-[65%]">
-                        <span class="font-bold text-slate-400 min-w-[22px] text-center">#${rank + 1}</span>
-                        <span class="font-bold text-slate-200 truncate">${p.name}</span>
+                    <div class="flex items-center gap-2 truncate max-w-[65%]">
+                        <span class="font-black text-slate-400 min-w-[30px] text-center">#${rank + 1}</span>
+                        <span class="font-black text-white truncate">${p.name}</span>
                     </div>
-                    <div class="flex items-center gap-1.5 flex-shrink-0">
-                        <span class="text-neon-yellow font-black text-xs md:text-sm">${p.score}</span>
+                    <div class="flex items-center gap-2 flex-shrink-0">
+                        <span class="text-neon-yellow font-black text-lg md:text-xl">${p.score}</span>
                         ${statusBadge}
                     </div>
                 `;
@@ -1168,7 +1179,7 @@
                 top3Container.appendChild(card);
             });
 
-            // 煙火特效
+            /* 修改：最後的音樂與煙火特效同步設定為 8 秒 */
             const duration = 8 * 1000;
             const animationEnd = Date.now() + duration;
 
@@ -1222,3 +1233,4 @@
     </script>
 </body>
 </html>
+</a_html_file>
