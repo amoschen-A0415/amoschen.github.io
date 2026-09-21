@@ -736,11 +736,11 @@
                 isAI: false,
                 aiType: null,
                 score: 0,
+                streak: 0,
                 answered: false,
                 choice: null,
                 isQualified: true,
-                votes: 0,
-                streak: 0
+                votes: 0
             };
             players.push(p);
             renderLobbyPlayers();
@@ -838,11 +838,11 @@
                         aiType: aiSpec.type,
                         aiSpec: aiSpec,
                         score: 0,
+                        streak: 0,
                         answered: false,
                         choice: null,
                         isQualified: true,
-                        votes: 0,
-                        streak: 0
+                        votes: 0
                     });
                 }
             }
@@ -995,29 +995,29 @@
             sortedPlayers.forEach((p, rank) => {
                 const card = document.createElement('div');
                 let borderClass = 'border-slate-800 bg-slate-900/70';
-                let statusBadge = '<span class="text-sm md:text-base text-slate-400 font-bold">思考中</span>';
+                let statusBadge = '<span class="text-xs md:text-sm text-slate-400 font-bold">思考中</span>';
 
                 if (!p.isQualified && stage === 2) {
                     borderClass = 'border-slate-800/40 opacity-40';
-                    statusBadge = '<span class="text-sm md:text-base text-red-500 font-extrabold">淘汰</span>';
+                    statusBadge = '<span class="text-xs md:text-sm text-red-500 font-extrabold">淘汰</span>';
                 } else if (p.answered) {
                     borderClass = 'border-neon-green/60 bg-slate-800/90 shadow-[0_0_15px_rgba(0,255,102,0.2)]';
-                    statusBadge = '<span class="text-sm md:text-base text-neon-green font-extrabold">✓ 答題</span>';
+                    statusBadge = '<span class="text-xs md:text-sm text-neon-green font-extrabold">✓ 答題</span>';
                 }
 
-                const streakBadge = (p.streak && p.streak >= 2) 
-                    ? `<span class="bg-gradient-to-r from-amber-500 to-rose-500 text-slate-950 font-black text-xs md:text-sm px-2 py-0.5 rounded-full border border-yellow-300 animate-pulse">🔥 ${p.streak}連勝 (+${p.streak + 3}%)</span>` 
-                    : '';
+                const streakText = p.streak >= 2 ? ` 🔥${p.streak}連勝(+${p.streak + 3}%)` : '';
 
-                card.className = `p-3 md:p-3.5 rounded-2xl border-2 ${borderClass} flex items-center justify-between transition-all duration-200 flex-shrink-0`;
+                card.className = `p-2.5 md:p-3 rounded-2xl border-2 ${borderClass} flex items-center justify-between transition-all duration-200 flex-shrink-0`;
                 card.innerHTML = `
-                    <div class="flex items-center gap-3 truncate max-w-[65%]">
-                        <span class="font-black text-neon-blue text-xl md:text-2xl min-w-[36px] text-center">#${rank + 1}</span>
-                        <span class="font-black text-white text-2xl md:text-3xl truncate tracking-wide">${p.name}</span>
-                        ${streakBadge}
+                    <div class="flex items-center gap-2.5 truncate max-w-[65%]">
+                        <span class="font-black text-neon-blue text-lg md:text-xl min-w-[30px] text-center">#${rank + 1}</span>
+                        <div class="flex flex-col truncate">
+                            <span class="font-black text-white text-xl md:text-2xl truncate tracking-wide leading-tight">${p.name}</span>
+                            <span class="text-xs md:text-sm font-bold text-amber-400 leading-tight">${streakText ? streakText : '&nbsp;'}</span>
+                        </div>
                     </div>
-                    <div class="flex items-center gap-3 flex-shrink-0">
-                        <span class="text-neon-yellow font-black text-2xl md:text-3xl">${p.score}</span>
+                    <div class="flex items-center gap-2.5 flex-shrink-0">
+                        <span class="text-neon-yellow font-black text-xl md:text-2xl">${p.score}</span>
                         ${statusBadge}
                     </div>
                 `;
@@ -1102,21 +1102,20 @@
             players.forEach(p => {
                 if (p.isQualified) {
                     if (p.choice === correctAns) {
-                        const baseScore = stage === 1 ? 100 : 200;
-                        const timeSec = stage === 1 ? 8 : 4;
-                        const secBonus = stage === 1 ? 10 : 20;
-
-                        const rawPoints = baseScore + (timeLeft * secBonus);
-
                         p.streak = (p.streak || 0) + 1;
+                        
+                        let baseScore = stage === 1 ? 100 : 200;
+                        let timeBonusPerSec = stage === 1 ? 10 : 20;
+                        let timeBonus = Math.max(0, timeLeft) * timeBonusPerSec;
+                        
+                        let totalPoints = baseScore + timeBonus;
 
-                        let bonusRate = 0;
                         if (p.streak >= 2) {
-                            bonusRate = (p.streak + 3) / 100;
+                            let multiplier = 1 + (p.streak + 3) / 100;
+                            totalPoints = Math.round(totalPoints * multiplier);
                         }
 
-                        const finalPoints = Math.round(rawPoints * (1 + bonusRate));
-                        p.score += finalPoints;
+                        p.score += totalPoints;
                     } else {
                         p.streak = 0;
                     }
