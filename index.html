@@ -39,10 +39,9 @@
             background-color: #0b0f19;
             color: #f3f4f6;
             user-select: none;
-            overflow: hidden; /* 防止出現全頁滾軸 */
+            overflow: hidden;
         }
 
-        /* 嚴格禁止出現任何滾軸 */
         * {
             scrollbar-width: none !important;
             -ms-overflow-style: none !important;
@@ -77,7 +76,7 @@
     <!-- 主要內容區域 -->
     <main class="flex-grow flex items-center justify-center p-2 md:p-4 relative overflow-hidden">
 
-        <!-- ==================== 1. 大螢幕 - 遊戲大廳 / 掃碼進入 ==================== -->
+        <!-- 大螢幕 - 遊戲大廳 / 掃碼進入 -->
         <div id="view-lobby" class="w-full max-w-[96vw] h-full max-h-[90vh] bg-slate-900/80 border-2 border-slate-700/80 rounded-2xl p-4 md:p-6 shadow-2xl backdrop-blur-xl relative flex flex-col justify-between overflow-hidden">
             <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-center h-full">
                 
@@ -88,7 +87,6 @@
                     </h2>
                     <p class="text-slate-300 text-base md:text-xl font-bold mb-3">請拿起手機相機掃描 QR Code 區域連線</p>
 
-                    <!-- 極限放大且具視覺光彩的 QR Code 容器 -->
                     <div class="p-3.5 bg-gradient-to-br from-cyan-400 via-purple-500 to-pink-500 rounded-3xl shadow-[0_0_60px_rgba(0,243,255,0.4)] my-auto transition-transform hover:scale-[1.02] duration-300">
                         <div id="qrcode" class="bg-white p-3 rounded-2xl border-2 border-white flex items-center justify-center shadow-inner"></div>
                     </div>
@@ -123,7 +121,7 @@
             </div>
         </div>
 
-        <!-- ==================== 2. 手機端 - 玩家控制器/觀戰投票畫面 ==================== -->
+        <!-- 手機端 - 玩家控制器/觀戰投票畫面 -->
         <div id="view-player-mobile" class="hidden fixed inset-0 z-50 bg-slate-950 p-4 flex-col justify-between overflow-hidden">
             <div id="mobile-top-bar" class="text-center space-y-1 flex-shrink-0">
                 <span class="text-3xl">🍞</span>
@@ -183,7 +181,7 @@
             </div>
         </div>
 
-        <!-- ==================== 3. 大螢幕 - 題目間隔 Splash ==================== -->
+        <!-- 大螢幕 - 題目間隔 Splash -->
         <div id="view-question-splash" class="hidden fixed inset-0 z-40 bg-slate-950/95 backdrop-blur-md flex flex-col items-center justify-center animate-fade-in">
             <span class="text-2xl text-slate-400 font-bold tracking-widest mb-2">NEXT QUESTION</span>
             <h1 id="splash-question-number" class="text-6xl md:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-r from-neon-blue via-neon-yellow to-neon-pink">
@@ -191,17 +189,16 @@
             </h1>
         </div>
 
-        <!-- ==================== 4. 大螢幕 - 遊戲主畫面 ==================== -->
+        <!-- 大螢幕 - 遊戲主畫面 -->
         <div id="view-game" class="hidden w-full h-full max-h-[96vh] grid grid-cols-1 md:grid-cols-12 gap-4 overflow-hidden">
             
-            <!-- 左側：全顯示排行榜 (文字增大、區塊大小不變、超出隱藏、禁止出現滾軸) -->
+            <!-- 左側排行榜 -->
             <div class="md:col-span-4 lg:col-span-3 bg-slate-900/80 border border-slate-800 rounded-2xl p-3 backdrop-blur-xl flex flex-col justify-between overflow-hidden h-full">
                 <div class="overflow-hidden flex flex-col h-full">
                     <h3 class="text-slate-300 text-xl md:text-2xl font-black mb-3 flex items-center justify-between flex-shrink-0 border-b border-slate-800 pb-2">
                         <span>🔥 實時全場排行榜</span>
                         <span id="game-total-players-badge" class="text-base bg-cyan-950 text-neon-blue px-3 py-1 rounded-full border border-cyan-800">0 人</span>
                     </h3>
-                    <!-- 排行榜容器：禁止任何滾動，超出數量即隱藏 -->
                     <div id="players-dashboard" class="flex flex-col space-y-2.5 overflow-hidden flex-grow"></div>
                 </div>
                 <div class="mt-2 pt-2 border-t border-slate-800 text-right flex-shrink-0">
@@ -209,7 +206,7 @@
                 </div>
             </div>
 
-            <!-- 右側：中央答題區 -->
+            <!-- 右側中央答題區 -->
             <div class="md:col-span-8 lg:col-span-9 bg-slate-900/90 border-2 border-cyan-500/30 rounded-3xl p-6 md:p-8 shadow-2xl backdrop-blur-xl flex flex-col justify-between overflow-hidden h-full">
                 <div class="w-full flex-shrink-0">
                     <div class="w-full bg-slate-800 h-4 rounded-full mb-4 overflow-hidden border border-slate-700">
@@ -221,7 +218,6 @@
                         <span id="timer-text" class="text-3xl md:text-4xl font-black text-neon-yellow">⏱️ 8s</span>
                     </div>
 
-                    <!-- 題目區 -->
                     <div class="w-full overflow-hidden py-2 mb-4">
                         <h2 id="question-text" class="text-3xl md:text-4xl lg:text-5xl font-black text-white leading-tight drop-shadow-lg tracking-wide line-clamp-2">
                             題目載入中...
@@ -229,12 +225,11 @@
                     </div>
                 </div>
 
-                <!-- 答案區 -->
                 <div id="options-container" class="grid grid-cols-1 gap-3.5 w-full my-auto flex-grow justify-center"></div>
             </div>
         </div>
 
-        <!-- ==================== 5. 第一階段晉級 / 進入決賽畫面 ==================== -->
+        <!-- 第一階段晉級 / 進入決賽畫面 -->
         <div id="view-intermission" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-xl p-6">
             <div class="w-full max-w-7xl h-full max-h-[90vh] bg-slate-900 border-2 border-neon-purple rounded-3xl p-6 flex flex-col justify-between shadow-2xl overflow-hidden">
                 
@@ -279,7 +274,7 @@
             </div>
         </div>
 
-        <!-- ==================== 6. 大螢幕 - 最後得獎頒獎畫面 ==================== -->
+        <!-- 大螢幕 - 最後得獎頒獎畫面 -->
         <div id="view-result" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-xl p-6">
             <div class="w-full max-w-7xl h-full max-h-[90vh] bg-slate-900 border-2 border-neon-yellow rounded-3xl p-6 md:p-8 flex flex-col justify-between shadow-2xl overflow-hidden relative">
                 
@@ -289,7 +284,6 @@
 
                 <div class="grid grid-cols-1 md:grid-cols-12 gap-6 flex-grow overflow-hidden my-2">
                     
-                    <!-- 左側全部玩家名單 -->
                     <div class="md:col-span-3 bg-slate-950/60 rounded-2xl p-4 border border-slate-800 flex flex-col justify-between overflow-hidden">
                         <div class="flex justify-between items-center mb-3 border-b border-slate-800 pb-2 flex-shrink-0">
                             <span class="font-black text-xl md:text-2xl text-amber-300">全場排名 (左)</span>
@@ -298,7 +292,6 @@
                         <div id="result-left-list" class="space-y-2 overflow-hidden pr-1 flex-grow"></div>
                     </div>
 
-                    <!-- 中央 Top 3 -->
                     <div class="md:col-span-6 bg-amber-950/20 border-2 border-amber-500/40 rounded-2xl p-6 flex flex-col items-center justify-center text-center overflow-hidden shadow-inner">
                         <div class="w-full flex flex-col items-center">
                             <span class="text-amber-400 font-black tracking-widest text-sm mb-3">TOP 3 WINNERS</span>
@@ -306,7 +299,6 @@
                         </div>
                     </div>
 
-                    <!-- 右側全部玩家名單 -->
                     <div class="md:col-span-3 bg-slate-950/60 rounded-2xl p-4 border border-slate-800 flex flex-col justify-between overflow-hidden">
                         <div class="flex justify-between items-center mb-3 border-b border-slate-800 pb-2 flex-shrink-0">
                             <span class="font-black text-xl md:text-2xl text-amber-300">全場排名 (右)</span>
@@ -330,7 +322,7 @@
         安得烈食物銀行 關懷弱勢・愛合格不浪費 | 互動問答大亂鬥
     </footer>
 
-    <!-- 遊戲全域 JavaScript 邏輯 -->
+    <!-- 遊戲邏輯 JS -->
     <script>
         const fullQuizDatabase = [
             { question: "1. 本協會的正確名稱為何？", options: ["社團法人中華安德烈慈善協會", "社團法人中華安得烈慈善協會", "財團法人安德烈食物銀行", "社團法人安得路慈善協會"], answer: 1 },
@@ -778,38 +770,35 @@
             }
 
             if (aiToAddCount > 0) {
-                // 候選 AI 庫
+                // 依據題目需求建構 AI 候選庫
                 const pool = [
-                    { name: '🤖 特工阿湯哥', type: 'tom', minAcc: 0.50, maxAcc: 0.80 },
-                    { name: '🍄 瑪莉歐', type: 'mario', minAcc: 0.40, maxAcc: 0.70 }
+                    { name: '🤖 特工阿湯哥 (速/確 50-80%)', type: 'tom', minAcc: 0.50, maxAcc: 0.80 },
+                    { name: '🍄 瑪莉歐 (速/確 40-70%)', type: 'mario', minAcc: 0.40, maxAcc: 0.70 }
                 ];
 
                 const randomNames = [
                     '廖太太', '雪芬3寶媽', '閃電葛葛', '晶晶阿姨', 
-                    '小光光', '巧克力阿北', '小白白', '小舔屎阿青'
+                    '小光光', '巧克力阿北', '小白白', '阿青'
                 ];
 
-                // 隨機名字 Pool (10-90%)
+                // 隨機名字 (10-90%)
                 randomNames.forEach(n => {
-                    pool.push({ name: `🤖 ${n}`, type: 'random', minAcc: 0.10, maxAcc: 0.90 });
+                    pool.push({ name: `🤖 ${n} (速/確 10-90%)`, type: 'random', minAcc: 0.10, maxAcc: 0.90 });
                 });
 
-                // 當只有 1 位玩家參賽時，「安得烈小羅」出賽機率提升到 50%，否則為 1%
+                // 安得烈小羅機率判定：只有 1 位真人玩家時 50% 機率，否則 1% 機率
                 const andrewProbability = (realPlayerCount === 1) ? 0.50 : 0.01;
                 if (Math.random() < andrewProbability) {
-                    pool.push({ name: '🌟 安得烈小羅', type: 'andrew', minAcc: 0.90, maxAcc: 1.00 });
+                    pool.push({ name: '🌟 安得烈小羅 (速/確 90-100%)', type: 'andrew', minAcc: 0.90, maxAcc: 1.00 });
                 }
 
                 // 隨機抽選指定數量的 AI
                 const selectedAIs = shuffleArray(pool).slice(0, aiToAddCount);
 
                 selectedAIs.forEach((aiSpec, i) => {
-                    // 計算平均強度百分比
-                    const avgAcc = Math.round(((aiSpec.minAcc + aiSpec.maxAcc) / 2) * 100);
-                    
                     players.push({
                         id: 'ai_' + Date.now() + '_' + i,
-                        name: `${aiSpec.name} (${avgAcc}%)`,
+                        name: aiSpec.name,
                         conn: null,
                         isAI: true,
                         aiType: aiSpec.type,
@@ -960,7 +949,6 @@
             });
         }
 
-        /* 渲染排行榜：文字增大為 2 倍、區域固定、禁止出現滾軸、超出自動隱藏 */
         function renderPlayersDashboard() {
             const dashboard = document.getElementById('players-dashboard');
             dashboard.innerHTML = '';
@@ -982,7 +970,6 @@
                     statusBadge = '<span class="text-sm md:text-base text-neon-green font-extrabold">✓ 答題</span>';
                 }
 
-                // 文字放大：名次 text-xl/2xl、暱稱 text-2xl/3xl、分數 text-2xl/3xl
                 card.className = `p-3 md:p-3.5 rounded-2xl border-2 ${borderClass} flex items-center justify-between transition-all duration-200 flex-shrink-0`;
                 card.innerHTML = `
                     <div class="flex items-center gap-3 truncate max-w-[65%]">
@@ -1006,10 +993,10 @@
                 const targetAccuracy = spec.minAcc + Math.random() * (spec.maxAcc - spec.minAcc);
                 const isCorrect = Math.random() < targetAccuracy;
 
-                // 答題速度延遲 (速度與正確率成正比)
-                const speedFactor = 1 - (targetAccuracy * 0.6); // 機率越高反應越快
+                // 答題速度延遲 (正確率越高反應越快)
+                const speedFactor = 1 - (targetAccuracy * 0.6);
                 let delay = (speedFactor * (maxTime * 800)) + (Math.random() * 500);
-                delay = Math.min(delay, maxTime * 1000 - 300); // 確保在倒數結束前回答
+                delay = Math.min(delay, maxTime * 1000 - 300);
 
                 const timerId = setTimeout(() => {
                     if (isTransitioning || ai.answered) return;
