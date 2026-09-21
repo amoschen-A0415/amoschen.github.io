@@ -165,8 +165,8 @@
             </h1>
         </div>
 
-        <!-- ==================== 4. 大螢幕 - 遊戲主畫面 (極大化題目與滿幅橫條選項) ==================== -->
-        <div id="view-game" class="hidden w-full max-w-[96vw] min-h-[85vh] grid grid-cols-1 md:grid-cols-12 gap-6">
+        <!-- ==================== 4. 大螢幕 - 遊戲主畫面 (極大化題目與滿幅橫條選項，防止滾軸) ==================== -->
+        <div id="view-game" class="hidden w-full max-w-[98vw] min-h-[90vh] grid grid-cols-1 md:grid-cols-12 gap-4">
             <div class="md:col-span-3 bg-slate-900/80 border border-slate-800 rounded-2xl p-4 md:p-6 backdrop-blur-xl flex flex-col justify-between">
                 <div>
                     <h3 class="text-slate-400 text-sm font-bold mb-3 flex items-center justify-between">
@@ -179,26 +179,28 @@
                 </div>
             </div>
 
-            <!-- 中間題目顯示區域：極大化極致滿版，確保5米遠距離可讀 -->
-            <div class="md:col-span-9 bg-slate-900/90 border-2 border-cyan-500/30 rounded-3xl p-6 md:p-10 shadow-2xl backdrop-blur-xl flex flex-col justify-between min-h-[75vh]">
-                <div>
-                    <div class="w-full bg-slate-800 h-5 rounded-full mb-6 overflow-hidden border border-slate-700">
+            <!-- 中間題目顯示區域：極大化極致滿版，防產生滾軸，題目以單行為主 -->
+            <div class="md:col-span-9 bg-slate-900/90 border-2 border-cyan-500/30 rounded-3xl p-6 md:p-8 shadow-2xl backdrop-blur-xl flex flex-col justify-between overflow-hidden">
+                <div class="w-full">
+                    <div class="w-full bg-slate-800 h-4 rounded-full mb-4 overflow-hidden border border-slate-700">
                         <div id="timer-bar" class="h-full bg-gradient-to-r from-neon-blue to-neon-pink w-full transition-all duration-100 ease-linear"></div>
                     </div>
 
-                    <div class="flex justify-between items-center mb-4">
-                        <span id="question-number" class="text-neon-blue font-black text-2xl md:text-4xl tracking-wider">QUESTION 01/10</span>
-                        <span id="timer-text" class="text-3xl md:text-5xl font-black text-neon-yellow">⏱️ 8s</span>
+                    <div class="flex justify-between items-center mb-2">
+                        <span id="question-number" class="text-neon-blue font-black text-xl md:text-3xl tracking-wider">QUESTION 01/10</span>
+                        <span id="timer-text" class="text-2xl md:text-4xl font-black text-neon-yellow">⏱️ 8s</span>
                     </div>
 
-                    <!-- 題目字體擴大至 4xl ~ 6xl，遠距離超清晰，自動隱藏編號 -->
-                    <h2 id="question-text" class="text-3xl md:text-5xl lg:text-6xl font-black text-white leading-relaxed mb-6 min-h-[140px] drop-shadow-md">
-                        題目載入中...
-                    </h2>
+                    <!-- 題目擴大顯示，以單行為主，強制溢出隱藏防產生滾軸 -->
+                    <div class="w-full overflow-hidden py-2 my-2">
+                        <h2 id="question-text" class="text-3xl md:text-5xl lg:text-6xl font-black text-white leading-tight whitespace-nowrap truncate drop-shadow-md">
+                            題目載入中...
+                        </h2>
+                    </div>
                 </div>
 
-                <!-- 答案採橫條式 (縱向單欄排列，每個選項佔據整列全寬)，字體與題目相當 -->
-                <div id="options-container" class="grid grid-cols-1 gap-4 w-full"></div>
+                <!-- 答案採橫條式 (單欄縱向排列)，未中選者刷淡顯示 -->
+                <div id="options-container" class="grid grid-cols-1 gap-3.5 w-full my-auto"></div>
             </div>
         </div>
 
@@ -358,7 +360,7 @@
         let timeLeft = 8;
         let maxTime = 8;
         let hasSubmittedCurrentAnswer = false;
-        let hasVotedStage2 = false; // 是否已加點投票
+        let hasVotedStage2 = false;
 
         let audioCtx = null;
         let currentBgmType = null;
@@ -498,11 +500,10 @@
                                 checkAllAnswered();
                             }
                         } else if (data.type === 'VOTE_PLAYER') {
-                            // 接收觀眾/未晉級者的加點投票
                             const target = players.find(p => p.id === data.targetId);
                             if (target) {
                                 target.votes = (target.votes || 0) + 1;
-                                renderQualifiedListUI(); // 刷新大屏決賽名單與得票
+                                renderQualifiedListUI();
                             }
                         }
                     });
@@ -545,12 +546,10 @@
                             document.getElementById('mobile-status-text').innerText = '👀 您目前為觀戰狀態，請在大螢幕關注決賽戰況！';
                         }
                     } else if (data.type === 'STAGE2_INTERMISSION') {
-                        // 進入決賽準備階段
                         document.getElementById('mobile-answers-grid').classList.add('hidden');
                         document.getElementById('mobile-question-banner').classList.add('hidden');
 
                         if (!data.isQualified) {
-                            // 未進入決賽者顯示投票介面
                             showMobileVoteSection(data.qualifiedPlayers);
                         } else {
                             document.getElementById('mobile-status-text').innerText = '🏆 恭喜晉級決賽！請準備進行決賽戰術挑戰！';
@@ -594,6 +593,7 @@
             });
         }
 
+        /* 手機端顯示全體玩家劃分的排名與分數 */
         function showMobileFinalResult(rank, score, totalPlayers) {
             document.getElementById('mobile-answers-grid').classList.add('hidden');
             document.getElementById('mobile-vote-section').classList.add('hidden');
@@ -604,7 +604,7 @@
             resultBox.classList.remove('hidden');
             resultBox.classList.add('flex');
 
-            document.getElementById('mobile-result-rank').innerText = `第 ${rank} 名`;
+            document.getElementById('mobile-result-rank').innerText = `第 ${rank} 名 / 共 ${totalPlayers} 人`;
             document.getElementById('mobile-result-score').innerText = score;
 
             const iconEl = document.getElementById('mobile-result-icon');
@@ -621,7 +621,7 @@
                 statusEl.innerText = '👏 恭喜榮獲 季軍佳績！';
             } else {
                 iconEl.innerText = '🏅';
-                statusEl.innerText = `精彩表現！超越了許多選手！`;
+                statusEl.innerText = `感謝您的參與！表現相當精彩！`;
             }
         }
 
@@ -815,7 +815,7 @@
 
             document.getElementById('question-number').innerText = `QUESTION ${String(index + 1).padStart(2, '0')}/${quizDatabase.length}`;
             
-            // ★ 去除題面前方的數字與點號編號 (如 1. 2.)
+            // 去除題面前方的數字與點號編號
             const cleanQuestion = qData.question.replace(/^\d+\.\s*/, '');
             document.getElementById('question-text').innerText = cleanQuestion;
 
@@ -828,7 +828,6 @@
             triggerAIAnswers(qData);
         }
 
-        /* 答案選項採滿幅橫條式，文字大小與題目相當 */
         function renderOptions(options) {
             const container = document.getElementById('options-container');
             container.innerHTML = '';
@@ -847,11 +846,12 @@
             ];
 
             options.forEach((optText, i) => {
-                const btn = document.createElement('button');
-                btn.className = `option-btn w-full p-4 md:p-5 rounded-2xl border-2 ${colorClasses[i]} flex items-center gap-5 pointer-events-none transition-all shadow-lg`;
+                const btn = document.createElement('div');
+                btn.id = `option-item-${i}`;
+                btn.className = `option-btn w-full p-3.5 md:p-4 rounded-2xl border-2 ${colorClasses[i]} flex items-center gap-4 pointer-events-none transition-all duration-500 shadow-lg`;
                 btn.innerHTML = `
-                    <span class="w-12 h-12 flex-shrink-0 flex items-center justify-center rounded-xl ${badgeColors[i]} font-black text-3xl shadow-md">${labels[i]}</span>
-                    <span class="text-white text-2xl md:text-4xl font-extrabold leading-snug text-left flex-grow">${optText}</span>
+                    <span class="w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl ${badgeColors[i]} font-black text-2xl shadow-md">${labels[i]}</span>
+                    <span class="text-white text-xl md:text-3xl font-extrabold leading-snug text-left flex-grow truncate">${optText}</span>
                 `;
                 container.appendChild(btn);
             });
@@ -930,6 +930,7 @@
             }
         }
 
+        /* 顯示答案時：正確答案突出高亮，其它非正確答案一律刷淡 */
         function evaluateQuestionAndProceed() {
             if (isTransitioning) return;
             isTransitioning = true;
@@ -937,11 +938,16 @@
             const qData = quizDatabase[currentQuestionIndex];
             const correctAns = qData.answer;
 
-            document.querySelectorAll('.option-btn').forEach((btn, idx) => {
-                if (idx === correctAns) {
-                    btn.classList.add('bg-emerald-600', 'border-neon-green', 'scale-[1.02]', 'shadow-2xl');
+            for (let idx = 0; idx < 4; idx++) {
+                const btn = document.getElementById(`option-item-${idx}`);
+                if (btn) {
+                    if (idx === correctAns) {
+                        btn.classList.add('bg-emerald-600', 'border-neon-green', 'scale-[1.02]', 'shadow-[0_0_30px_rgba(0,255,102,0.8)]', 'z-10');
+                    } else {
+                        btn.classList.add('opacity-25', 'grayscale', 'scale-95');
+                    }
                 }
-            });
+            }
 
             players.forEach(p => {
                 if (p.isQualified && p.choice === correctAns) {
@@ -971,7 +977,6 @@
 
             const qualifiedList = players.filter(p => p.isQualified).map(p => ({ id: p.id, name: p.name }));
 
-            // 廣播第二階段準備訊息至手機端
             players.forEach(p => {
                 if (p.conn) {
                     p.conn.send({
@@ -1035,25 +1040,29 @@
             startQuestionFlow(currentQuestionIndex);
         });
 
+        /* 全場人員劃分名次並同步至手機 */
         function showFinalResult() {
             document.getElementById('view-game').classList.add('hidden');
             document.getElementById('view-result').classList.remove('hidden');
 
             playMarioVictoryFanfare();
 
-            const stage2Players = players.filter(p => p.isQualified).sort((a, b) => b.score - a.score);
+            // 全體玩家依照最終分數劃分排名
+            const allSortedPlayers = [...players].sort((a, b) => b.score - a.score);
 
             players.forEach(p => {
                 if (p.conn) {
-                    const rank = stage2Players.findIndex(s => s.id === p.id) + 1;
+                    const rank = allSortedPlayers.findIndex(s => s.id === p.id) + 1;
                     p.conn.send({
                         type: 'FINAL_RESULT',
-                        rank: rank > 0 ? rank : '未晉級',
+                        rank: rank,
                         score: p.score,
-                        totalPlayers: stage2Players.length
+                        totalPlayers: allSortedPlayers.length
                     });
                 }
             });
+
+            const stage2Players = players.filter(p => p.isQualified).sort((a, b) => b.score - a.score);
 
             const halfIndex = Math.ceil(stage2Players.length / 2);
             const leftPlayers = stage2Players.slice(0, halfIndex);
