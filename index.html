@@ -1,4 +1,3 @@
-<a_html_file name="index.html">
 <!DOCTYPE html>
 <html lang="zh-TW" class="dark">
 <head>
@@ -448,15 +447,12 @@
             const bpm = 168;
             const beat = 60 / bpm;
 
-            // 完整不可能的任務主題曲：包含主律動與經典過渡主題
             const sequence = [
-                // 主音型 A
                 { f: N.G4, d: 0.75 }, { f: N.G4, d: 0.75 }, { f: N.Bb4, d: 0.5 }, { f: N.C5, d: 0.5 },
                 { f: N.G4, d: 0.75 }, { f: N.G4, d: 0.75 }, { f: N.F4, d: 0.5 }, { f: N.FSharp4, d: 0.5 },
                 { f: N.G4, d: 0.75 }, { f: N.G4, d: 0.75 }, { f: N.Bb4, d: 0.5 }, { f: N.C5, d: 0.5 },
                 { f: N.G4, d: 0.75 }, { f: N.G4, d: 0.75 }, { f: N.F4, d: 0.5 }, { f: N.FSharp4, d: 0.5 },
                 
-                // 經典旋律過渡 B
                 { f: N.G4, d: 1.5 }, { f: N.Bb4, d: 1.0 }, { f: N.C5, d: 0.5 }, { f: N.Db5, d: 0.5 }, { f: N.C5, d: 0.5 },
                 { f: N.G4, d: 1.5 }, { f: N.F4, d: 1.0 }, { f: N.FSharp4, d: 0.5 }, { f: N.G4, d: 1.0 }
             ];
@@ -493,21 +489,38 @@
             loop();
         }
 
-        /* 慶祝勝利音樂：設定完整發聲播放 */
+        /* 修改：瑪利歐第一代過關音樂 (Level Clear Fanfare)，節奏與音符延長至整整 8 秒，與煙花持續時間一致 */
         function playMarioVictoryFanfare() {
             initAudio();
             stopBgm();
             currentBgmType = 'victory';
-            const notes = [
-                { f: 261.63, d: 0.15 }, { f: 329.63, d: 0.15 }, { f: 392.00, d: 0.15 },
-                { f: 523.25, d: 0.2 }, { f: 659.25, d: 0.2 }, { f: 783.99, d: 0.5 }
+
+            // 音階定義
+            const N = {
+                G3: 196.00, C4: 261.63, E4: 329.63, G4: 392.00,
+                C5: 523.25, E5: 659.25, G5: 783.99, A5: 880.00, B5: 987.77,
+                A5b: 830.61, B5b: 932.33
+            };
+
+            // 經典 Super Mario Bros. 關卡完成過關音效 (總長度調配為 8 秒)
+            const fanfare = [
+                { f: N.G3, d: 0.2 }, { f: N.C4, d: 0.2 }, { f: N.E4, d: 0.2 },
+                { f: N.G4, d: 0.2 }, { f: N.C5, d: 0.2 }, { f: N.E5, d: 0.2 },
+                { f: N.G5, d: 0.6 }, { f: N.E5, d: 0.6 },
+                
+                { f: N.A5b, d: 0.25 }, { f: N.C5, d: 0.25 }, { f: N.E5, d: 0.25 }, { f: N.A5b, d: 0.6 },
+                { f: N.B5b, d: 0.25 }, { f: N.D5 || 587.33, d: 0.25 }, { f: N.F5 || 698.46, d: 0.25 }, { f: N.B5b, d: 0.6 },
+                
+                { f: N.C5, d: 0.25 }, { f: N.E5, d: 0.25 }, { f: N.G5, d: 0.25 }, { f: N.C6 || 1046.50, d: 2.5 }
             ];
+
             let i = 0;
             function playNext() {
-                if (i >= notes.length) return;
-                playSingleNote(notes[i].f, notes[i].d, 'triangle', 0.25);
+                if (i >= fanfare.length || currentBgmType !== 'victory') return;
+                const note = fanfare[i];
+                playSingleNote(note.f, note.d, 'square', 0.22);
                 i++;
-                setTimeout(playNext, notes[i-1].d * 1000);
+                bgmTimeoutId = setTimeout(playNext, note.d * 1000);
             }
             playNext();
         }
@@ -747,7 +760,7 @@
 
         document.getElementById('btn-start-game').addEventListener('click', () => {
             initAudio();
-            playMissionImpossibleBgm(); // 開始第一階段播放《不可能的任務》
+            playMissionImpossibleBgm();
             finalizePlayersAndStart();
         });
 
@@ -907,14 +920,12 @@
             });
         }
 
-        /* 修改：排行榜文字放大為 2 倍 (字級升級至 text-base/text-lg 與 text-lg/text-xl，同時保持區域大小與滾動) */
         function renderPlayersDashboard() {
             const dashboard = document.getElementById('players-dashboard');
             dashboard.innerHTML = '';
 
             document.getElementById('game-total-players-badge').innerText = `${players.length} 人`;
 
-            // 全顯示排序後的全部玩家
             const sortedPlayers = [...players].sort((a, b) => b.score - a.score);
             
             sortedPlayers.forEach((p, rank) => {
@@ -1106,6 +1117,7 @@
             document.getElementById('view-game').classList.add('hidden');
             document.getElementById('view-result').classList.remove('hidden');
 
+            /* 播放瑪利歐第一代過關音效，長度延長為 8 秒 */
             playMarioVictoryFanfare();
 
             const allSortedPlayers = [...players].sort((a, b) => b.score - a.score);
@@ -1179,7 +1191,7 @@
                 top3Container.appendChild(card);
             });
 
-            /* 修改：最後的音樂與煙火特效同步設定為 8 秒 */
+            /* 煙火特效持續時間：8 秒 */
             const duration = 8 * 1000;
             const animationEnd = Date.now() + duration;
 
@@ -1233,4 +1245,3 @@
     </script>
 </body>
 </html>
-</a_html_file>
