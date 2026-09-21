@@ -429,53 +429,6 @@
             osc.stop(audioCtx.currentTime + duration);
         }
 
-        /* 🐝 大黃蜂的飛行（Flight of the Bumblebee）完整背景音樂 🐝 */
-        function playFlightOfBumblebeeBgm() {
-            initAudio();
-            stopBgm();
-            currentBgmType = 'bumblebee';
-
-            // 音階對應頻率 (Hz)
-            const N = {
-                A3: 220.00, Bb3: 233.08, B3: 246.94, C4: 261.63, Db4: 277.18, D4: 293.66,
-                Eb4: 311.13, E4: 329.63, F4: 349.23, FSharp4: 369.99, G4: 392.00, Ab4: 415.30,
-                A4: 440.00, Bb4: 466.16, B4: 493.88, C5: 523.25, Db5: 554.37, D5: 587.33,
-                Eb5: 622.25, E5: 659.25, F5: 698.46, FSharp5: 739.99, G5: 783.99, Ab5: 830.61,
-                A5: 880.00
-            };
-
-            const tempo = 0.07; // 極快的十六分音符節奏
-
-            const melodySequence = [
-                // 經典主題 A（半音階快速下降與上升）
-                N.A5, N.Ab5, N.G5, N.FSharp5, N.F5, N.E5, N.Eb5, N.D5,
-                N.Db5, N.C5, N.B4, N.Bb4, N.A4, N.Bb4, N.B4, N.C5,
-                N.Db5, N.D5, N.Eb5, N.E5, N.F5, N.FSharp5, N.G5, N.Ab5,
-                N.A5, N.Ab5, N.G5, N.FSharp5, N.F5, N.E5, N.Eb5, N.D5,
-
-                // 主題 B (低八度迴旋)
-                N.A4, N.Ab4, N.G4, N.FSharp4, N.F4, N.E4, N.Eb4, N.D4,
-                N.Db4, N.C4, N.B3, N.Bb3, N.A3, N.Bb3, N.B3, N.C4,
-                N.Db4, N.D4, N.Eb4, N.E4, N.F4, N.FSharp4, N.G4, N.Ab4,
-
-                // 劇烈躍升段落
-                N.A4, N.C5, N.E5, N.A5, N.Ab5, N.G5, N.FSharp5, N.F5,
-                N.E5, N.Eb5, N.D5, N.Db5, N.C5, N.B4, N.Bb4, N.A4,
-                N.E4, N.G4, N.B4, N.E5, N.Eb5, N.D5, N.Db5, N.C5,
-                N.B4, N.Bb4, N.A4, N.Ab4, N.G4, N.FSharp4, N.F4, N.E4
-            ];
-
-            let step = 0;
-            function loop() {
-                if (currentBgmType !== 'bumblebee') return;
-                const freq = melodySequence[step];
-                playSingleNote(freq, tempo, 'sawtooth', 0.16);
-                step = (step + 1) % melodySequence.length;
-                bgmTimeoutId = setTimeout(loop, tempo * 1000);
-            }
-            loop();
-        }
-
         function playMissionImpossibleBgm() {
             initAudio();
             stopBgm();
@@ -786,7 +739,8 @@
                 answered: false,
                 choice: null,
                 isQualified: true,
-                votes: 0
+                votes: 0,
+                streak: 0
             };
             players.push(p);
             renderLobbyPlayers();
@@ -799,6 +753,7 @@
 
         document.getElementById('btn-start-game').addEventListener('click', () => {
             initAudio();
+            playMissionImpossibleBgm();
             finalizePlayersAndStart();
         });
 
@@ -886,17 +841,10 @@
                         answered: false,
                         choice: null,
                         isQualified: true,
-                        votes: 0
+                        votes: 0,
+                        streak: 0
                     });
                 }
-            }
-
-            // 檢查是否有安得烈小羅登場並播放對應音樂
-            const hasAndrew = players.some(p => p.isAI && p.aiType === 'andrew');
-            if (hasAndrew) {
-                playFlightOfBumblebeeBgm();
-            } else {
-                playMissionImpossibleBgm();
             }
 
             renderLobbyPlayers();
@@ -973,15 +921,9 @@
             isTransitioning = false;
             const qData = quizDatabase[index];
 
-            const hasAndrew = players.some(p => p.isAI && p.aiType === 'andrew');
-
             if (index < stage1Count) {
                 stage = 1; maxTime = stage1Time;
-                if (hasAndrew) {
-                    if (currentBgmType !== 'bumblebee') playFlightOfBumblebeeBgm();
-                } else {
-                    if (currentBgmType !== 'stage1') playMissionImpossibleBgm();
-                }
+                if (currentBgmType !== 'stage1') playMissionImpossibleBgm();
             } else {
                 stage = 2; maxTime = stage2Time;
                 if (currentBgmType !== 'stage2') playMarioCastleBgm();
@@ -1063,11 +1005,16 @@
                     statusBadge = '<span class="text-sm md:text-base text-neon-green font-extrabold">✓ 答題</span>';
                 }
 
+                const streakBadge = (p.streak && p.streak >= 2) 
+                    ? `<span class="bg-gradient-to-r from-amber-500 to-rose-500 text-slate-950 font-black text-xs md:text-sm px-2 py-0.5 rounded-full border border-yellow-300 animate-pulse">🔥 ${p.streak}連勝 (+${p.streak + 3}%)</span>` 
+                    : '';
+
                 card.className = `p-3 md:p-3.5 rounded-2xl border-2 ${borderClass} flex items-center justify-between transition-all duration-200 flex-shrink-0`;
                 card.innerHTML = `
                     <div class="flex items-center gap-3 truncate max-w-[65%]">
                         <span class="font-black text-neon-blue text-xl md:text-2xl min-w-[36px] text-center">#${rank + 1}</span>
                         <span class="font-black text-white text-2xl md:text-3xl truncate tracking-wide">${p.name}</span>
+                        ${streakBadge}
                     </div>
                     <div class="flex items-center gap-3 flex-shrink-0">
                         <span class="text-neon-yellow font-black text-2xl md:text-3xl">${p.score}</span>
@@ -1153,9 +1100,26 @@
             }
 
             players.forEach(p => {
-                if (p.isQualified && p.choice === correctAns) {
-                    const points = (stage === 1 ? 100 : 200) + Math.round((timeLeft / maxTime) * 50);
-                    p.score += points;
+                if (p.isQualified) {
+                    if (p.choice === correctAns) {
+                        const baseScore = stage === 1 ? 100 : 200;
+                        const timeSec = stage === 1 ? 8 : 4;
+                        const secBonus = stage === 1 ? 10 : 20;
+
+                        const rawPoints = baseScore + (timeLeft * secBonus);
+
+                        p.streak = (p.streak || 0) + 1;
+
+                        let bonusRate = 0;
+                        if (p.streak >= 2) {
+                            bonusRate = (p.streak + 3) / 100;
+                        }
+
+                        const finalPoints = Math.round(rawPoints * (1 + bonusRate));
+                        p.score += finalPoints;
+                    } else {
+                        p.streak = 0;
+                    }
                 }
             });
 
