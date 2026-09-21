@@ -794,8 +794,9 @@
                     pool.push({ name: `🤖 ${n}`, type: 'random', minAcc: 0.10, maxAcc: 0.90 });
                 });
 
-                // 1% 機率觸發「安得烈小羅」(90-100%)
-                if (Math.random() < 0.01) {
+                // 當只有 1 位玩家參賽時，「安得烈小羅」出賽機率提升到 50%，否則為 1%
+                const andrewProbability = (realPlayerCount === 1) ? 0.50 : 0.01;
+                if (Math.random() < andrewProbability) {
                     pool.push({ name: '🌟 安得烈小羅', type: 'andrew', minAcc: 0.90, maxAcc: 1.00 });
                 }
 
@@ -803,9 +804,12 @@
                 const selectedAIs = shuffleArray(pool).slice(0, aiToAddCount);
 
                 selectedAIs.forEach((aiSpec, i) => {
+                    // 計算平均強度百分比
+                    const avgAcc = Math.round(((aiSpec.minAcc + aiSpec.maxAcc) / 2) * 100);
+                    
                     players.push({
                         id: 'ai_' + Date.now() + '_' + i,
-                        name: aiSpec.name,
+                        name: `${aiSpec.name} (${avgAcc}%)`,
                         conn: null,
                         isAI: true,
                         aiType: aiSpec.type,
