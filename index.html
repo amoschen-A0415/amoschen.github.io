@@ -55,6 +55,8 @@
         #qrcode canvas, #qrcode img {
             margin: 0 auto;
             display: block;
+            max-width: 100%;
+            height: auto;
         }
     </style>
 </head>
@@ -80,15 +82,16 @@
         <div id="view-lobby" class="w-full max-w-[96vw] h-full max-h-[90vh] bg-slate-900/80 border-2 border-slate-700/80 rounded-2xl p-4 md:p-6 shadow-2xl backdrop-blur-xl relative flex flex-col justify-between overflow-hidden">
             <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-center h-full">
                 
-                <!-- 左側：QR Code -->
+                <!-- 左側：QR Code (加大區域) -->
                 <div class="md:col-span-6 lg:col-span-7 flex flex-col items-center justify-center border-b md:border-b-0 md:border-r border-slate-700/80 pr-0 md:pr-6 pb-2 md:pb-0 text-center h-full overflow-hidden">
                     <h2 class="text-3xl md:text-5xl font-black text-neon-blue mb-1 flex items-center gap-3 drop-shadow-[0_0_15px_rgba(0,243,255,0.4)]">
                         <i class="fa-solid fa-qrcode text-neon-pink"></i> 掃碼參賽 (無人數上限)
                     </h2>
                     <p class="text-slate-300 text-base md:text-xl font-bold mb-3">請拿起手機相機掃描 QR Code 區域連線</p>
 
-                    <div class="p-3.5 bg-gradient-to-br from-cyan-400 via-purple-500 to-pink-500 rounded-3xl shadow-[0_0_60px_rgba(0,243,255,0.4)] my-auto transition-transform hover:scale-[1.02] duration-300">
-                        <div id="qrcode" class="bg-white p-3 rounded-2xl border-2 border-white flex items-center justify-center shadow-inner"></div>
+                    <!-- QR外框與內距適當放大 -->
+                    <div class="p-5 bg-gradient-to-br from-cyan-400 via-purple-500 to-pink-500 rounded-3xl shadow-[0_0_70px_rgba(0,243,255,0.5)] my-auto transition-transform hover:scale-[1.02] duration-300">
+                        <div id="qrcode" class="bg-white p-4 rounded-2xl border-2 border-white flex items-center justify-center shadow-inner"></div>
                     </div>
 
                     <div id="lobby-waiting-text" class="text-neon-green text-xl md:text-2xl font-black mt-3 animate-pulse drop-shadow">
@@ -531,10 +534,11 @@
                 const joinUrl = `${window.location.href.split('?')[0]}?host=${id}`;
                 document.getElementById("qrcode").innerHTML = "";
                 
+                // QR碼尺寸放大至 480x480
                 new QRCode(document.getElementById("qrcode"), {
                     text: joinUrl,
-                    width: 360,
-                    height: 360
+                    width: 480,
+                    height: 480
                 });
             });
 
@@ -1153,7 +1157,15 @@
 
         function showIntermission() {
             const sorted = [...players].sort((a, b) => b.score - a.score);
-            const qualifiedIds = sorted.slice(0, stage2AdvancingCount).map(p => p.id);
+            
+            // 同分同額晉級邏輯：取出基準門檻分數，同分者一併晉級
+            let cutoffScore = 0;
+            if (sorted.length > 0) {
+                const cutoffIndex = Math.min(stage2AdvancingCount, sorted.length) - 1;
+                cutoffScore = sorted[cutoffIndex].score;
+            }
+
+            const qualifiedIds = sorted.filter(p => p.score >= cutoffScore).map(p => p.id);
             players.forEach(p => p.isQualified = qualifiedIds.includes(p.id));
 
             const qualifiedList = players.filter(p => p.isQualified).map(p => ({ id: p.id, name: p.name }));
