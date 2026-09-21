@@ -41,13 +41,12 @@
             user-select: none;
         }
 
-        /* 隱藏滾動條但保持可滾動功能 (禁止顯示滾軸邊) */
         .no-scrollbar::-webkit-scrollbar {
             display: none;
         }
         .no-scrollbar {
-            -ms-overflow-style: none;  /* IE and Edge */
-            scrollbar-width: none;  /* Firefox */
+            -ms-overflow-style: none;
+            scrollbar-width: none;
         }
     </style>
 </head>
@@ -67,13 +66,12 @@
     </header>
 
     <!-- 主要內容區域 -->
-    <main class="flex-grow flex items-center justify-center p-4 md:p-6 relative">
+    <main class="flex-grow flex items-center justify-center p-2 md:p-6 relative">
 
         <!-- ==================== 1. 大螢幕 - 遊戲大廳 / 掃碼進入 ==================== -->
         <div id="view-lobby" class="w-full max-w-7xl bg-slate-900/80 border-2 border-slate-700/80 rounded-2xl p-6 md:p-10 shadow-2xl backdrop-blur-xl relative">
             <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
                 
-                <!-- QR Left Column (7 cols) -->
                 <div class="md:col-span-7 flex flex-col items-center justify-center border-b md:border-b-0 md:border-r border-slate-700/80 pr-0 md:pr-8 pb-6 md:pb-0 text-center">
                     <h2 class="text-3xl md:text-4xl font-black text-neon-blue mb-2 flex items-center gap-2">
                         <i class="fa-solid fa-qrcode"></i> 掃碼參賽 (無人數上限)
@@ -90,7 +88,6 @@
                     </div>
                 </div>
 
-                <!-- Right Column (5 cols) -->
                 <div class="md:col-span-5 flex flex-col justify-start space-y-6 h-full">
                     <div>
                         <h2 class="text-2xl md:text-3xl font-bold text-neon-purple mb-4 flex items-center justify-between">
@@ -108,8 +105,8 @@
             </div>
         </div>
 
-        <!-- ==================== 2. 手機端 - 玩家控制器畫面 ==================== -->
-        <div id="view-player-mobile" class="hidden fixed inset-0 z-50 bg-slate-950 p-6 flex-col justify-between">
+        <!-- ==================== 2. 手機端 - 玩家控制器/觀戰投票畫面 ==================== -->
+        <div id="view-player-mobile" class="hidden fixed inset-0 z-50 bg-slate-950 p-6 flex-col justify-between overflow-y-auto">
             <div class="text-center space-y-2">
                 <span class="text-4xl">🍞</span>
                 <h2 class="text-2xl font-black text-neon-blue">安得烈答題控制器</h2>
@@ -127,7 +124,6 @@
                 </button>
             </div>
 
-            <!-- 按鈕顏色：A藍, B綠, C黃, D紅 -->
             <div id="mobile-answers-grid" class="hidden grid-cols-2 gap-4 my-auto">
                 <button id="mobile-btn-0" onclick="mobileSubmitAnswer(0)" class="mobile-answer-btn h-28 bg-blue-600 active:bg-blue-700 rounded-2xl text-4xl font-black text-white shadow-lg transition-all duration-300">A</button>
                 <button id="mobile-btn-1" onclick="mobileSubmitAnswer(1)" class="mobile-answer-btn h-28 bg-emerald-600 active:bg-emerald-700 rounded-2xl text-4xl font-black text-white shadow-lg transition-all duration-300">B</button>
@@ -135,7 +131,19 @@
                 <button id="mobile-btn-3" onclick="mobileSubmitAnswer(3)" class="mobile-answer-btn h-28 bg-rose-600 active:bg-rose-700 rounded-2xl text-4xl font-black text-white shadow-lg transition-all duration-300">D</button>
             </div>
 
-            <!-- 手機端最終全版面結算結果 -->
+            <!-- 手機端 - 決賽看好加點投票面板 (未進入決賽玩家顯示) -->
+            <div id="mobile-vote-section" class="hidden my-auto flex-col space-y-4 bg-slate-900 border-2 border-neon-purple p-5 rounded-2xl">
+                <div class="text-center">
+                    <span class="text-3xl">🔥</span>
+                    <h3 class="text-xl font-black text-neon-yellow">選擇您看好的決賽選手</h3>
+                    <p class="text-xs text-slate-400 mt-1">一人一票，應援票數將即時同步於大螢幕！</p>
+                </div>
+                <div id="mobile-vote-list" class="space-y-2 max-h-[50vh] overflow-y-auto pr-1"></div>
+                <div id="mobile-vote-status" class="text-center text-sm font-bold text-neon-green hidden">
+                    ✓ 您已完成投票應援！
+                </div>
+            </div>
+
             <div id="mobile-final-result" class="hidden my-auto flex-col items-center justify-center space-y-4 text-center bg-slate-900 border-2 border-neon-yellow p-8 rounded-3xl shadow-2xl">
                 <span class="text-6xl" id="mobile-result-icon">🏆</span>
                 <h2 class="text-3xl font-black text-neon-yellow">遊戲最終結算</h2>
@@ -149,7 +157,7 @@
             </div>
         </div>
 
-        <!-- ==================== 3. 大螢幕 - 題目間隔動畫 Splash (1秒) ==================== -->
+        <!-- ==================== 3. 大螢幕 - 題目間隔動畫 Splash ==================== -->
         <div id="view-question-splash" class="hidden fixed inset-0 z-40 bg-slate-950/95 backdrop-blur-md flex flex-col items-center justify-center animate-fade-in">
             <span class="text-2xl text-slate-400 font-bold tracking-widest mb-2">NEXT QUESTION</span>
             <h1 id="splash-question-number" class="text-6xl md:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-r from-neon-blue via-neon-yellow to-neon-pink">
@@ -157,9 +165,9 @@
             </h1>
         </div>
 
-        <!-- ==================== 4. 大螢幕 - 遊戲主畫面 (擴大中間題目區 & 橫向同色選項) ==================== -->
-        <div id="view-game" class="hidden w-full max-w-7xl grid grid-cols-1 md:grid-cols-4 gap-6">
-            <div class="md:col-span-1 bg-slate-900/80 border border-slate-800 rounded-2xl p-4 md:p-6 backdrop-blur-xl flex flex-col justify-between">
+        <!-- ==================== 4. 大螢幕 - 遊戲主畫面 (極大化題目與滿幅橫條選項) ==================== -->
+        <div id="view-game" class="hidden w-full max-w-[96vw] min-h-[85vh] grid grid-cols-1 md:grid-cols-12 gap-6">
+            <div class="md:col-span-3 bg-slate-900/80 border border-slate-800 rounded-2xl p-4 md:p-6 backdrop-blur-xl flex flex-col justify-between">
                 <div>
                     <h3 class="text-slate-400 text-sm font-bold mb-3 flex items-center justify-between">
                         <span>🔥 排行榜 (前 10 名)</span>
@@ -171,40 +179,39 @@
                 </div>
             </div>
 
-            <!-- 中間題目區大幅擴充內外距 (p-8 md:p-12) -->
-            <div class="md:col-span-3 bg-slate-900/90 border-2 border-cyan-500/30 rounded-2xl p-8 md:p-12 shadow-2xl backdrop-blur-xl relative overflow-hidden flex flex-col justify-between">
+            <!-- 中間題目顯示區域：極大化極致滿版，確保5米遠距離可讀 -->
+            <div class="md:col-span-9 bg-slate-900/90 border-2 border-cyan-500/30 rounded-3xl p-6 md:p-10 shadow-2xl backdrop-blur-xl flex flex-col justify-between min-h-[75vh]">
                 <div>
-                    <div class="w-full bg-slate-800 h-4 rounded-full mb-8 overflow-hidden border border-slate-700">
+                    <div class="w-full bg-slate-800 h-5 rounded-full mb-6 overflow-hidden border border-slate-700">
                         <div id="timer-bar" class="h-full bg-gradient-to-r from-neon-blue to-neon-pink w-full transition-all duration-100 ease-linear"></div>
                     </div>
 
-                    <div class="flex justify-between items-center mb-6">
-                        <span id="question-number" class="text-neon-blue font-black text-2xl md:text-3xl tracking-wider">QUESTION 01/10</span>
-                        <span id="timer-text" class="text-3xl md:text-4xl font-black text-neon-yellow">⏱️ 8s</span>
+                    <div class="flex justify-between items-center mb-4">
+                        <span id="question-number" class="text-neon-blue font-black text-2xl md:text-4xl tracking-wider">QUESTION 01/10</span>
+                        <span id="timer-text" class="text-3xl md:text-5xl font-black text-neon-yellow">⏱️ 8s</span>
                     </div>
 
-                    <!-- 題目字體放大擴大 (text-3xl md:text-5xl) -->
-                    <h2 id="question-text" class="text-3xl md:text-5xl font-black text-white leading-relaxed mb-10 min-h-[120px]">
+                    <!-- 題目字體擴大至 4xl ~ 6xl，遠距離超清晰，自動隱藏編號 -->
+                    <h2 id="question-text" class="text-3xl md:text-5xl lg:text-6xl font-black text-white leading-relaxed mb-6 min-h-[140px] drop-shadow-md">
                         題目載入中...
                     </h2>
                 </div>
 
-                <!-- 答案選項顯示為橫向 4 欄 (grid-cols-2 md:grid-cols-4) -->
-                <div id="options-container" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
+                <!-- 答案採橫條式 (縱向單欄排列，每個選項佔據整列全寬)，字體與題目相當 -->
+                <div id="options-container" class="grid grid-cols-1 gap-4 w-full"></div>
             </div>
         </div>
 
-        <!-- ==================== 5. 第一階段晉級畫面 ==================== -->
+        <!-- ==================== 5. 第一階段晉級 / 進入決賽畫面 ==================== -->
         <div id="view-intermission" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-xl p-6">
             <div class="w-full max-w-7xl h-full max-h-[90vh] bg-slate-900 border-2 border-neon-purple rounded-3xl p-6 md:p-8 flex flex-col justify-between shadow-2xl overflow-hidden">
                 
-                <h2 class="text-3xl md:text-4xl font-black text-center text-transparent bg-clip-text bg-gradient-to-r from-neon-blue via-neon-yellow to-neon-pink mb-4">
-                    🔥 STAGE 1 預賽結算與晉級名單
+                <h2 class="text-3xl md:text-5xl font-black text-center text-transparent bg-clip-text bg-gradient-to-r from-neon-blue via-neon-yellow to-neon-pink mb-4">
+                    🔥 STAGE 1 預賽結算與決賽名單
                 </h2>
 
                 <div class="grid grid-cols-1 md:grid-cols-12 gap-6 flex-grow overflow-hidden my-2">
                     
-                    <!-- 左邊參賽人員 -->
                     <div class="md:col-span-3 bg-slate-950/60 rounded-2xl p-4 border border-slate-800 flex flex-col justify-between overflow-hidden">
                         <div class="flex justify-between items-center mb-3 border-b border-slate-800 pb-2">
                             <span class="font-bold text-slate-300"><i class="fa-solid fa-list-ol"></i> 參賽者得分 (左)</span>
@@ -213,22 +220,20 @@
                         <div id="intermission-left-list" class="space-y-2 overflow-y-auto no-scrollbar pr-1 flex-grow"></div>
                     </div>
 
-                    <!-- 中央進入第二階段人員名單 -->
                     <div class="md:col-span-6 bg-purple-950/30 border-2 border-neon-purple/50 rounded-2xl p-6 flex flex-col items-center justify-between text-center overflow-y-auto no-scrollbar shadow-inner">
-                        <div>
+                        <div class="w-full">
                             <span class="text-neon-yellow text-sm font-black tracking-widest">STAGE 2 QUALIFIERS</span>
-                            <h3 class="text-2xl md:text-3xl font-black text-white mt-1 mb-6">🏆 晉級第二階段選手 🏆</h3>
+                            <h3 class="text-2xl md:text-3xl font-black text-white mt-1 mb-6">🏆 進入決賽選手 🏆</h3>
                             <div id="qualified-players-list" class="flex flex-wrap justify-center gap-6"></div>
                         </div>
 
                         <div class="w-full max-w-md mt-6">
                             <button id="btn-start-stage2" class="w-full py-5 text-2xl md:text-3xl font-black text-slate-950 bg-gradient-to-r from-neon-green to-neon-yellow rounded-2xl shadow-[0_0_30px_rgba(0,255,102,0.5)] hover:brightness-110 active:scale-95 transition-all border-2 border-white/40">
-                                ⚔️ 進入第二階段遊戲
+                                ⚔️ 進入決賽
                             </button>
                         </div>
                     </div>
 
-                    <!-- 右邊參賽人員 -->
                     <div class="md:col-span-3 bg-slate-950/60 rounded-2xl p-4 border border-slate-800 flex flex-col justify-between overflow-hidden">
                         <div class="flex justify-between items-center mb-3 border-b border-slate-800 pb-2">
                             <span class="font-bold text-slate-300"><i class="fa-solid fa-list-ol"></i> 參賽者得分 (右)</span>
@@ -242,7 +247,7 @@
             </div>
         </div>
 
-        <!-- ==================== 6. 最後得獎畫面 (僅顯示第二階段人員、禁止邊框滾軸) ==================== -->
+        <!-- ==================== 6. 最後得獎頒獎畫面 ==================== -->
         <div id="view-result" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-xl p-6">
             <div class="w-full max-w-7xl h-full max-h-[90vh] bg-slate-900 border-2 border-neon-yellow rounded-3xl p-6 md:p-8 flex flex-col justify-between shadow-2xl overflow-hidden relative">
                 
@@ -252,7 +257,6 @@
 
                 <div class="grid grid-cols-1 md:grid-cols-12 gap-6 flex-grow overflow-hidden my-2">
                     
-                    <!-- 左邊：參賽第二階段人員與分數 -->
                     <div class="md:col-span-3 bg-slate-950/60 rounded-2xl p-4 border border-slate-800 flex flex-col justify-between overflow-hidden">
                         <div class="flex justify-between items-center mb-3 border-b border-slate-800 pb-2">
                             <span class="font-bold text-slate-300"><i class="fa-solid fa-users"></i> 決賽選手 (左)</span>
@@ -261,7 +265,6 @@
                         <div id="result-left-list" class="space-y-2 overflow-y-auto no-scrollbar pr-1 flex-grow"></div>
                     </div>
 
-                    <!-- 中央前三名區域 (得獎三名顯示大小微調) -->
                     <div class="md:col-span-6 bg-amber-950/20 border-2 border-amber-500/40 rounded-2xl p-6 flex flex-col items-center justify-center text-center overflow-y-auto no-scrollbar shadow-inner">
                         <div class="w-full flex flex-col items-center">
                             <span class="text-amber-400 font-black tracking-widest text-sm mb-3">TOP 3 WINNERS</span>
@@ -269,7 +272,6 @@
                         </div>
                     </div>
 
-                    <!-- 右邊：參賽第二階段人員與分數 -->
                     <div class="md:col-span-3 bg-slate-950/60 rounded-2xl p-4 border border-slate-800 flex flex-col justify-between overflow-hidden">
                         <div class="flex justify-between items-center mb-3 border-b border-slate-800 pb-2">
                             <span class="font-bold text-slate-300"><i class="fa-solid fa-users"></i> 決賽選手 (右)</span>
@@ -280,7 +282,6 @@
 
                 </div>
 
-                <!-- 「重新開局」按鍵顯示在最右下角 -->
                 <button id="btn-restart-game" class="fixed bottom-8 right-8 z-50 px-8 py-3 text-lg font-black text-white bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl hover:brightness-110 active:scale-95 transition shadow-[0_0_20px_rgba(176,0,255,0.4)] border border-white/20 flex items-center gap-2">
                     <i class="fa-solid fa-rotate-right"></i> 重新開局
                 </button>
@@ -357,7 +358,8 @@
         let timeLeft = 8;
         let maxTime = 8;
         let hasSubmittedCurrentAnswer = false;
-        
+        let hasVotedStage2 = false; // 是否已加點投票
+
         let audioCtx = null;
         let currentBgmType = null;
         let bgmTimeoutId = null;
@@ -495,6 +497,13 @@
                                 renderPlayersDashboard();
                                 checkAllAnswered();
                             }
+                        } else if (data.type === 'VOTE_PLAYER') {
+                            // 接收觀眾/未晉級者的加點投票
+                            const target = players.find(p => p.id === data.targetId);
+                            if (target) {
+                                target.votes = (target.votes || 0) + 1;
+                                renderQualifiedListUI(); // 刷新大屏決賽名單與得票
+                            }
                         }
                     });
 
@@ -521,21 +530,73 @@
                         document.getElementById('mobile-status-text').innerText = '🎮 遊戲開始，請看大螢幕準備作答！';
                         resetMobileButtons();
                     } else if (data.type === 'NEXT_QUESTION') {
+                        document.getElementById('mobile-vote-section').classList.add('hidden');
                         const banner = document.getElementById('mobile-question-banner');
                         banner.innerText = `第 ${data.questionNumber} 題`;
                         banner.classList.remove('hidden');
-                        document.getElementById('mobile-status-text').innerText = '請點選答案 (A/B/C/D)';
-                        resetMobileButtons();
+
+                        if (data.isQualified) {
+                            document.getElementById('mobile-answers-grid').classList.remove('hidden');
+                            document.getElementById('mobile-answers-grid').classList.add('grid');
+                            document.getElementById('mobile-status-text').innerText = '請點選答案 (A/B/C/D)';
+                            resetMobileButtons();
+                        } else {
+                            document.getElementById('mobile-answers-grid').classList.add('hidden');
+                            document.getElementById('mobile-status-text').innerText = '👀 您目前為觀戰狀態，請在大螢幕關注決賽戰況！';
+                        }
+                    } else if (data.type === 'STAGE2_INTERMISSION') {
+                        // 進入決賽準備階段
+                        document.getElementById('mobile-answers-grid').classList.add('hidden');
+                        document.getElementById('mobile-question-banner').classList.add('hidden');
+
+                        if (!data.isQualified) {
+                            // 未進入決賽者顯示投票介面
+                            showMobileVoteSection(data.qualifiedPlayers);
+                        } else {
+                            document.getElementById('mobile-status-text').innerText = '🏆 恭喜晉級決賽！請準備進行決賽戰術挑戰！';
+                        }
                     } else if (data.type === 'FINAL_RESULT') {
-                        // 最終遊戲結束，手機端顯示全版面排名結果
                         showMobileFinalResult(data.rank, data.score, data.totalPlayers);
                     }
                 });
             });
         }
 
+        function showMobileVoteSection(qualifiedPlayers) {
+            const voteSec = document.getElementById('mobile-vote-section');
+            const voteList = document.getElementById('mobile-vote-list');
+            voteList.innerHTML = '';
+
+            voteSec.classList.remove('hidden');
+            voteSec.classList.add('flex');
+
+            qualifiedPlayers.forEach(qp => {
+                const btn = document.createElement('button');
+                btn.className = 'w-full py-3 px-4 bg-slate-800 hover:bg-purple-900/60 active:bg-purple-700 border border-purple-500/50 rounded-xl text-white font-bold flex justify-between items-center transition';
+                btn.innerHTML = `
+                    <span class="text-lg">${qp.name}</span>
+                    <span class="text-xs bg-neon-purple text-white px-2 py-1 rounded-md font-black">投一票 🔥</span>
+                `;
+                btn.onclick = () => {
+                    if (hasVotedStage2) return;
+                    hasVotedStage2 = true;
+                    if (hostConn && hostConn.open) {
+                        hostConn.send({ type: 'VOTE_PLAYER', targetId: qp.id });
+                    }
+                    document.getElementById('mobile-vote-status').classList.remove('hidden');
+                    const allBtns = voteList.querySelectorAll('button');
+                    allBtns.forEach(b => {
+                        b.disabled = true;
+                        b.classList.add('opacity-40', 'pointer-events-none');
+                    });
+                };
+                voteList.appendChild(btn);
+            });
+        }
+
         function showMobileFinalResult(rank, score, totalPlayers) {
             document.getElementById('mobile-answers-grid').classList.add('hidden');
+            document.getElementById('mobile-vote-section').classList.add('hidden');
             document.getElementById('mobile-question-banner').classList.add('hidden');
             document.getElementById('mobile-status-text').classList.add('hidden');
 
@@ -621,7 +682,8 @@
                 score: 0,
                 answered: false,
                 choice: null,
-                isQualified: true
+                isQualified: true,
+                votes: 0
             };
             players.push(p);
             renderLobbyPlayers();
@@ -652,7 +714,8 @@
                     score: 0,
                     answered: false,
                     choice: null,
-                    isQualified: true
+                    isQualified: true,
+                    votes: 0
                 });
             }
 
@@ -734,7 +797,7 @@
                 if (currentBgmType !== 'stage1') playMarioStage1Bgm();
             } else {
                 stage = 2; maxTime = stage2Time;
-                document.getElementById('game-stage-badge').innerText = `STAGE 2 - 魔王城堡決戰 (${index - stage1Count + 1}/${stage2Count})`;
+                document.getElementById('game-stage-badge').innerText = `STAGE 2 - 進入決賽 (${index - stage1Count + 1}/${stage2Count})`;
                 if (currentBgmType !== 'stage2') playMarioCastleBgm();
             }
 
@@ -743,11 +806,19 @@
             players.forEach(p => {
                 p.choice = null;
                 p.answered = (stage === 2 && !p.isQualified);
-                if (p.conn) p.conn.send({ type: 'NEXT_QUESTION', questionNumber: index + 1 });
+                if (p.conn) p.conn.send({ 
+                    type: 'NEXT_QUESTION', 
+                    questionNumber: index + 1,
+                    isQualified: p.isQualified
+                });
             });
 
             document.getElementById('question-number').innerText = `QUESTION ${String(index + 1).padStart(2, '0')}/${quizDatabase.length}`;
-            document.getElementById('question-text').innerText = qData.question;
+            
+            // ★ 去除題面前方的數字與點號編號 (如 1. 2.)
+            const cleanQuestion = qData.question.replace(/^\d+\.\s*/, '');
+            document.getElementById('question-text').innerText = cleanQuestion;
+
             document.getElementById('timer-text').innerText = `⏱️ ${timeLeft}s`;
             document.getElementById('timer-bar').style.width = '100%';
 
@@ -757,16 +828,16 @@
             triggerAIAnswers(qData);
         }
 
-        /* 渲染答案選項：顏色與手機端按鍵對應 (A藍, B綠, C黃, D紅) */
+        /* 答案選項採滿幅橫條式，文字大小與題目相當 */
         function renderOptions(options) {
             const container = document.getElementById('options-container');
             container.innerHTML = '';
             const labels = ['A', 'B', 'C', 'D'];
             const colorClasses = [
-                'bg-blue-900/60 border-blue-500/60 text-blue-300',
-                'bg-emerald-900/60 border-emerald-500/60 text-emerald-300',
-                'bg-amber-900/60 border-amber-500/60 text-amber-300',
-                'bg-rose-900/60 border-rose-500/60 text-rose-300'
+                'bg-blue-900/70 border-blue-500/80 text-blue-200',
+                'bg-emerald-900/70 border-emerald-500/80 text-emerald-200',
+                'bg-amber-900/70 border-amber-500/80 text-amber-200',
+                'bg-rose-900/70 border-rose-500/80 text-rose-200'
             ];
             const badgeColors = [
                 'bg-blue-600 text-white',
@@ -777,10 +848,10 @@
 
             options.forEach((optText, i) => {
                 const btn = document.createElement('button');
-                btn.className = `option-btn w-full p-4 rounded-2xl border-2 ${colorClasses[i]} flex flex-col justify-between space-y-3 pointer-events-none transition-all`;
+                btn.className = `option-btn w-full p-4 md:p-5 rounded-2xl border-2 ${colorClasses[i]} flex items-center gap-5 pointer-events-none transition-all shadow-lg`;
                 btn.innerHTML = `
-                    <span class="w-10 h-10 flex items-center justify-center rounded-xl ${badgeColors[i]} font-black text-2xl shadow-md">${labels[i]}</span>
-                    <span class="text-white text-xl md:text-2xl font-extrabold leading-snug text-left">${optText}</span>
+                    <span class="w-12 h-12 flex-shrink-0 flex items-center justify-center rounded-xl ${badgeColors[i]} font-black text-3xl shadow-md">${labels[i]}</span>
+                    <span class="text-white text-2xl md:text-4xl font-extrabold leading-snug text-left flex-grow">${optText}</span>
                 `;
                 container.appendChild(btn);
             });
@@ -868,7 +939,7 @@
 
             document.querySelectorAll('.option-btn').forEach((btn, idx) => {
                 if (idx === correctAns) {
-                    btn.classList.add('bg-emerald-600', 'border-neon-green', 'scale-105', 'shadow-2xl');
+                    btn.classList.add('bg-emerald-600', 'border-neon-green', 'scale-[1.02]', 'shadow-2xl');
                 }
             });
 
@@ -898,6 +969,19 @@
             const qualifiedIds = sorted.slice(0, stage2AdvancingCount).map(p => p.id);
             players.forEach(p => p.isQualified = qualifiedIds.includes(p.id));
 
+            const qualifiedList = players.filter(p => p.isQualified).map(p => ({ id: p.id, name: p.name }));
+
+            // 廣播第二階段準備訊息至手機端
+            players.forEach(p => {
+                if (p.conn) {
+                    p.conn.send({
+                        type: 'STAGE2_INTERMISSION',
+                        isQualified: p.isQualified,
+                        qualifiedPlayers: qualifiedList
+                    });
+                }
+            });
+
             const halfIndex = Math.ceil(sorted.length / 2);
             const leftPlayers = sorted.slice(0, halfIndex);
             const rightPlayers = sorted.slice(halfIndex);
@@ -908,19 +992,26 @@
             renderParticipantList('intermission-left-list', leftPlayers);
             renderParticipantList('intermission-right-list', rightPlayers);
 
+            renderQualifiedListUI();
+
+            document.getElementById('view-intermission').classList.remove('hidden');
+        }
+
+        function renderQualifiedListUI() {
             const qualifiedList = document.getElementById('qualified-players-list');
             qualifiedList.innerHTML = '';
             players.filter(p => p.isQualified).forEach(p => {
                 qualifiedList.innerHTML += `
-                    <div class="bg-slate-800/90 border-2 border-neon-yellow p-5 rounded-2xl text-center min-w-[160px] shadow-[0_0_20px_rgba(255,204,0,0.2)] transform hover:scale-105 transition">
+                    <div class="bg-slate-800/90 border-2 border-neon-yellow p-5 rounded-2xl text-center min-w-[160px] shadow-[0_0_20px_rgba(255,204,0,0.2)] transform hover:scale-105 transition relative">
                         <div class="text-5xl mb-2">${p.isAI ? '🤖' : '👑'}</div>
                         <div class="font-black text-white text-2xl truncate max-w-[180px]">${p.name}</div>
                         <div class="text-neon-yellow font-black text-xl mt-1">${p.score} 分</div>
+                        <div class="mt-2 text-xs bg-purple-900/80 border border-purple-400 text-purple-200 px-3 py-1 rounded-full font-bold">
+                            🔥 應援票數: <span class="text-neon-green text-sm font-black">${p.votes || 0}</span> 票
+                        </div>
                     </div>
                 `;
             });
-
-            document.getElementById('view-intermission').classList.remove('hidden');
         }
 
         function renderParticipantList(elementId, playerGroup) {
@@ -944,17 +1035,14 @@
             startQuestionFlow(currentQuestionIndex);
         });
 
-        /* 6. 最後得獎畫面 (僅顯示參賽第二階段人員、隱藏滾軸邊) */
         function showFinalResult() {
             document.getElementById('view-game').classList.add('hidden');
             document.getElementById('view-result').classList.remove('hidden');
 
             playMarioVictoryFanfare();
 
-            // ★ 僅過濾並顯示「進入並參賽第二階段的選手」
             const stage2Players = players.filter(p => p.isQualified).sort((a, b) => b.score - a.score);
 
-            // 發送廣播給所有手機客戶端顯示全版名次
             players.forEach(p => {
                 if (p.conn) {
                     const rank = stage2Players.findIndex(s => s.id === p.id) + 1;
@@ -967,7 +1055,6 @@
                 }
             });
 
-            // 拆分左右兩側列表
             const halfIndex = Math.ceil(stage2Players.length / 2);
             const leftPlayers = stage2Players.slice(0, halfIndex);
             const rightPlayers = stage2Players.slice(halfIndex);
@@ -978,7 +1065,6 @@
             renderParticipantList('result-left-list', leftPlayers);
             renderParticipantList('result-right-list', rightPlayers);
 
-            // 中央顯示得獎前三名（微調比例顯示）
             const top3Container = document.getElementById('top3-container');
             top3Container.innerHTML = '';
 
@@ -990,7 +1076,6 @@
                 const card = document.createElement('div');
                 
                 if (idx === 0) {
-                    // 冠軍顯眼加大
                     card.className = `w-full max-w-md p-5 rounded-3xl border-4 ${colors[idx]} flex flex-col items-center justify-center my-1`;
                     card.innerHTML = `
                         <span class="text-xs font-black text-amber-300 bg-amber-950/80 px-3 py-1 rounded-full border border-amber-400 mb-1">👑 冠軍王座 👑</span>
@@ -999,7 +1084,6 @@
                         <div class="text-2xl font-black text-neon-yellow mt-1">${p.score} 分</div>
                     `;
                 } else {
-                    // 亞軍、季軍
                     card.className = `w-full max-w-sm p-3.5 rounded-2xl border-2 ${colors[idx]} flex justify-between items-center px-5`;
                     card.innerHTML = `
                         <div class="flex items-center gap-3">
