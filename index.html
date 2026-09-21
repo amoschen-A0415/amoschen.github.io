@@ -139,16 +139,16 @@
                 <button id="mobile-btn-3" onclick="mobileSubmitAnswer(3)" class="mobile-answer-btn h-28 bg-rose-600 active:bg-rose-700 rounded-2xl text-4xl font-black text-white shadow-lg transition-all duration-300">D</button>
             </div>
 
-            <!-- 手機端 - 決賽看好加點投票面板 (未進入決賽玩家顯示) -->
+            <!-- 手機端 - 決賽看好加點投票面板 (顯示皇冠應援按鍵) -->
             <div id="mobile-vote-section" class="hidden my-auto flex-col space-y-4 bg-slate-900 border-2 border-neon-purple p-5 rounded-2xl">
                 <div class="text-center">
-                    <span class="text-3xl">🌸</span>
+                    <span class="text-4xl">👑</span>
                     <h3 class="text-xl font-black text-neon-yellow">選擇您看好的決賽選手</h3>
-                    <p class="text-xs text-slate-400 mt-1">一人一朵花，花朵將即時同步顯示於選手下方！</p>
+                    <p class="text-xs text-slate-400 mt-1">點擊皇冠為選手應援，將即時同步顯示於大螢幕！</p>
                 </div>
                 <div id="mobile-vote-list" class="space-y-2 max-h-[50vh] overflow-y-auto pr-1"></div>
                 <div id="mobile-vote-status" class="text-center text-sm font-bold text-neon-green hidden">
-                    ✓ 您已成功獻花應援！
+                    ✓ 您已成功為選手獻上皇冠應援！
                 </div>
             </div>
 
@@ -173,7 +173,7 @@
             </h1>
         </div>
 
-        <!-- ==================== 4. 大螢幕 - 遊戲主畫面 (擴大中央題目區、答案同大、禁止滾軸) ==================== -->
+        <!-- ==================== 4. 大螢幕 - 遊戲主畫面 (擴大中央題目區、保留間隔、禁止滾軸) ==================== -->
         <div id="view-game" class="hidden w-full h-full max-h-[88vh] grid grid-cols-1 md:grid-cols-12 gap-4 overflow-hidden">
             <div class="md:col-span-3 bg-slate-900/80 border border-slate-800 rounded-2xl p-4 backdrop-blur-xl flex flex-col justify-between overflow-hidden">
                 <div class="overflow-hidden flex flex-col h-full">
@@ -187,7 +187,7 @@
                 </div>
             </div>
 
-            <!-- 中間題目顯示區域：再往上跟左右擴大，讓題目完整顯示，答案字體與題目同大，禁止出現滾軸 -->
+            <!-- 中間題目顯示區域：題目與答案保留適當距離，完全禁止滾軸 -->
             <div class="md:col-span-9 bg-slate-900/90 border-2 border-cyan-500/30 rounded-3xl p-6 md:p-8 shadow-2xl backdrop-blur-xl flex flex-col justify-between overflow-hidden">
                 <div class="w-full flex-shrink-0">
                     <div class="w-full bg-slate-800 h-3.5 rounded-full mb-3 overflow-hidden border border-slate-700">
@@ -199,15 +199,15 @@
                         <span id="timer-text" class="text-2xl md:text-3xl font-black text-neon-yellow">⏱️ 8s</span>
                     </div>
 
-                    <!-- 題目區：往上擴大，支援換行完整顯示 -->
-                    <div class="w-full overflow-hidden py-1">
-                        <h2 id="question-text" class="text-2xl md:text-4xl lg:text-5xl font-black text-white leading-tight drop-shadow-md">
+                    <!-- 題目區：微調字體與行高，底部留有 margin 保持距離 -->
+                    <div class="w-full overflow-hidden py-1 mb-4">
+                        <h2 id="question-text" class="text-2xl md:text-3xl lg:text-4xl font-black text-white leading-tight drop-shadow-md">
                             題目載入中...
                         </h2>
                     </div>
                 </div>
 
-                <!-- 答案區：答案字體跟題目一樣大 (2xl~4xl)，自動適應極致滿版，禁止滾軸 -->
+                <!-- 答案區：與題目保留良好間距，自動填滿剩餘空間，禁止滾軸 -->
                 <div id="options-container" class="grid grid-cols-1 gap-2.5 w-full my-auto flex-grow justify-center"></div>
             </div>
         </div>
@@ -222,10 +222,10 @@
 
                 <div class="grid grid-cols-1 md:grid-cols-12 gap-6 flex-grow overflow-hidden my-2">
                     
-                    <!-- 左右參賽選手分數標題加大 -->
+                    <!-- 左右參賽選手分數標題加大，僅顯示「參賽者/分數」 -->
                     <div class="md:col-span-3 bg-slate-950/60 rounded-2xl p-4 border border-slate-800 flex flex-col justify-between overflow-hidden">
                         <div class="flex justify-between items-center mb-3 border-b border-slate-800 pb-2 flex-shrink-0">
-                            <span class="font-black text-lg md:text-xl text-cyan-300"><i class="fa-solid fa-list-ol"></i> 參賽選手分數 (左)</span>
+                            <span class="font-black text-2xl md:text-3xl text-cyan-300">參賽者/分數</span>
                             <span id="intermission-left-count" class="text-xs bg-slate-800 text-neon-blue px-2.5 py-1 rounded-full font-bold">0 人</span>
                         </div>
                         <div id="intermission-left-list" class="space-y-2 overflow-y-auto no-scrollbar pr-1 flex-grow"></div>
@@ -245,10 +245,10 @@
                         </div>
                     </div>
 
-                    <!-- 左右參賽選手分數標題加大 -->
+                    <!-- 左右參賽選手分數標題加大，僅顯示「參賽者/分數」 -->
                     <div class="md:col-span-3 bg-slate-950/60 rounded-2xl p-4 border border-slate-800 flex flex-col justify-between overflow-hidden">
                         <div class="flex justify-between items-center mb-3 border-b border-slate-800 pb-2 flex-shrink-0">
-                            <span class="font-black text-lg md:text-xl text-cyan-300"><i class="fa-solid fa-list-ol"></i> 參賽選手分數 (右)</span>
+                            <span class="font-black text-2xl md:text-3xl text-cyan-300">參賽者/分數</span>
                             <span id="intermission-right-count" class="text-xs bg-slate-800 text-neon-blue px-2.5 py-1 rounded-full font-bold">0 人</span>
                         </div>
                         <div id="intermission-right-list" class="space-y-2 overflow-y-auto no-scrollbar pr-1 flex-grow"></div>
@@ -269,10 +269,10 @@
 
                 <div class="grid grid-cols-1 md:grid-cols-12 gap-6 flex-grow overflow-hidden my-2">
                     
-                    <!-- 左右參賽選手分數標題加大 -->
+                    <!-- 左右參賽選手分數標題加大，僅顯示「參賽者/分數」 -->
                     <div class="md:col-span-3 bg-slate-950/60 rounded-2xl p-4 border border-slate-800 flex flex-col justify-between overflow-hidden">
                         <div class="flex justify-between items-center mb-3 border-b border-slate-800 pb-2 flex-shrink-0">
-                            <span class="font-black text-lg md:text-xl text-amber-300"><i class="fa-solid fa-users"></i> 參賽選手分數 (左)</span>
+                            <span class="font-black text-2xl md:text-3xl text-amber-300">參賽者/分數</span>
                             <span id="result-left-count" class="text-xs bg-slate-800 text-neon-yellow px-2.5 py-1 rounded-full font-bold">0 人</span>
                         </div>
                         <div id="result-left-list" class="space-y-2 overflow-y-auto no-scrollbar pr-1 flex-grow"></div>
@@ -285,10 +285,10 @@
                         </div>
                     </div>
 
-                    <!-- 左右參賽選手分數標題加大 -->
+                    <!-- 左右參賽選手分數標題加大，僅顯示「參賽者/分數」 -->
                     <div class="md:col-span-3 bg-slate-950/60 rounded-2xl p-4 border border-slate-800 flex flex-col justify-between overflow-hidden">
                         <div class="flex justify-between items-center mb-3 border-b border-slate-800 pb-2 flex-shrink-0">
-                            <span class="font-black text-lg md:text-xl text-amber-300"><i class="fa-solid fa-users"></i> 參賽選手分數 (右)</span>
+                            <span class="font-black text-2xl md:text-3xl text-amber-300">參賽者/分數</span>
                             <span id="result-right-count" class="text-xs bg-slate-800 text-neon-yellow px-2.5 py-1 rounded-full font-bold">0 人</span>
                         </div>
                         <div id="result-right-list" class="space-y-2 overflow-y-auto no-scrollbar pr-1 flex-grow"></div>
@@ -587,7 +587,7 @@
                 btn.className = 'w-full py-3 px-4 bg-slate-800 hover:bg-purple-900/60 active:bg-purple-700 border border-purple-500/50 rounded-xl text-white font-bold flex justify-between items-center transition';
                 btn.innerHTML = `
                     <span class="text-lg">${qp.name}</span>
-                    <span class="text-xs bg-pink-600 text-white px-2 py-1 rounded-md font-black">獻花 🌸</span>
+                    <span class="text-xs bg-amber-500 text-black font-black px-2.5 py-1 rounded-md shadow">👑 應援</span>
                 `;
                 btn.onclick = () => {
                     if (hasVotedStage2) return;
@@ -840,7 +840,7 @@
             triggerAIAnswers(qData);
         }
 
-        /* 答案選項：字體大小設為與題目同大(2xl~4xl)，禁止滾軸，優化佈局 */
+        /* 答案選項：保留間距且禁止滾軸 */
         function renderOptions(options) {
             const container = document.getElementById('options-container');
             container.innerHTML = '';
@@ -861,10 +861,10 @@
             options.forEach((optText, i) => {
                 const btn = document.createElement('div');
                 btn.id = `option-item-${i}`;
-                btn.className = `option-btn w-full p-2.5 md:p-3 rounded-2xl border-2 ${colorClasses[i]} flex items-center gap-4 pointer-events-none transition-all duration-500 shadow-lg`;
+                btn.className = `option-btn w-full p-2.5 md:p-3.5 rounded-2xl border-2 ${colorClasses[i]} flex items-center gap-4 pointer-events-none transition-all duration-500 shadow-lg`;
                 btn.innerHTML = `
                     <span class="w-10 h-10 md:w-12 md:h-12 flex-shrink-0 flex items-center justify-center rounded-xl ${badgeColors[i]} font-black text-2xl md:text-3xl shadow-md">${labels[i]}</span>
-                    <span class="text-white text-2xl md:text-3xl lg:text-4xl font-extrabold leading-snug text-left flex-grow truncate">${optText}</span>
+                    <span class="text-white text-xl md:text-2xl lg:text-3xl font-extrabold leading-snug text-left flex-grow truncate">${optText}</span>
                 `;
                 container.appendChild(btn);
             });
@@ -1014,27 +1014,23 @@
             document.getElementById('view-intermission').classList.remove('hidden');
         }
 
-        /* 決賽頁面：應援花朵視覺化易於辨識，顯示在參賽者名字下方 */
+        /* 決賽頁面：以 👑 X 數量 格式醒目顯示於參賽者資訊旁 */
         function renderQualifiedListUI() {
             const qualifiedList = document.getElementById('qualified-players-list');
             qualifiedList.innerHTML = '';
             players.filter(p => p.isQualified).forEach(p => {
                 const flowerCount = p.votes || 0;
-                let flowerDisplay = '';
-                if (flowerCount > 0) {
-                    flowerDisplay = '🌸'.repeat(Math.min(flowerCount, 10)) + (flowerCount > 10 ? ` +${flowerCount}` : '');
-                } else {
-                    flowerDisplay = '<span class="text-slate-500 text-xs">尚無花朵</span>';
-                }
 
                 qualifiedList.innerHTML += `
-                    <div class="bg-slate-800/90 border-2 border-neon-yellow p-5 rounded-2xl text-center min-w-[180px] shadow-[0_0_20px_rgba(255,204,0,0.2)] transform hover:scale-105 transition relative flex flex-col items-center">
-                        <div class="text-5xl mb-1">${p.isAI ? '🤖' : '👑'}</div>
+                    <div class="bg-slate-800/90 border-2 border-neon-yellow p-5 rounded-2xl text-center min-w-[200px] shadow-[0_0_20px_rgba(255,204,0,0.2)] transform hover:scale-105 transition relative flex flex-col items-center">
+                        <div class="text-5xl mb-1">${p.isAI ? '🤖' : '👤'}</div>
+                        
+                        <!-- 參賽者名字與皇冠 X 數量 併排/下方顯示 -->
                         <div class="font-black text-white text-2xl truncate max-w-[180px]">${p.name}</div>
                         
-                        <!-- 花朵顯示於名字正下方 -->
-                        <div class="my-2 py-1 px-3 bg-pink-950/60 border border-pink-500/50 rounded-full text-pink-300 font-bold text-sm tracking-widest flex items-center gap-1">
-                            ${flowerDisplay}
+                        <div class="my-2 py-1 px-4 bg-amber-500/20 border border-amber-400 rounded-full text-amber-300 font-black text-base tracking-wider flex items-center gap-1.5 shadow-inner">
+                            <span>👑</span>
+                            <span>x ${flowerCount}</span>
                         </div>
 
                         <div class="text-neon-yellow font-black text-xl">${p.score} 分</div>
@@ -1064,7 +1060,7 @@
             startQuestionFlow(currentQuestionIndex);
         });
 
-        /* 最後頁面：放煙火連續 6 秒 */
+        /* 最後頁面：放煙火持續 8 秒，煙花多且有緩慢有層次 */
         function showFinalResult() {
             document.getElementById('view-game').classList.add('hidden');
             document.getElementById('view-result').classList.remove('hidden');
@@ -1132,10 +1128,9 @@
                 top3Container.appendChild(card);
             });
 
-            // 煙火施放持續 6 秒
-            const duration = 6 * 1000;
+            // 煙火施放持續 8 秒，煙花密集且具層次緩慢綻放
+            const duration = 8 * 1000;
             const animationEnd = Date.now() + duration;
-            const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 999 };
 
             function randomInRange(min, max) {
                 return Math.random() * (max - min) + min;
@@ -1146,10 +1141,41 @@
                 if (timeLeft <= 0) {
                     return clearInterval(interval);
                 }
-                const particleCount = 50 * (timeLeft / duration);
-                confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } });
-                confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } });
-            }, 250);
+
+                // 多重頻率發射，產生豐富層次感的煙花
+                confetti({
+                    particleCount: Math.floor(randomInRange(20, 40)),
+                    spread: randomInRange(50, 100),
+                    startVelocity: randomInRange(25, 45),
+                    origin: { x: randomInRange(0.1, 0.4), y: randomInRange(0.2, 0.5) },
+                    ticks: 200, // 粒子下落更長久飄逸
+                    gravity: 0.8,
+                    colors: ['#00f3ff', '#b000ff', '#ff007f', '#00ff66', '#ffcc00']
+                });
+
+                confetti({
+                    particleCount: Math.floor(randomInRange(20, 40)),
+                    spread: randomInRange(50, 100),
+                    startVelocity: randomInRange(25, 45),
+                    origin: { x: randomInRange(0.6, 0.9), y: randomInRange(0.2, 0.5) },
+                    ticks: 200,
+                    gravity: 0.8,
+                    colors: ['#00f3ff', '#b000ff', '#ff007f', '#00ff66', '#ffcc00']
+                });
+
+                // 中央大型高空禮花
+                if (Math.random() < 0.4) {
+                    confetti({
+                        particleCount: 60,
+                        spread: 360,
+                        startVelocity: 35,
+                        origin: { x: 0.5, y: 0.3 },
+                        ticks: 250,
+                        gravity: 0.6,
+                        colors: ['#ffcc00', '#ffffff', '#ff007f']
+                    });
+                }
+            }, 300);
         }
 
         document.getElementById('btn-restart-game').addEventListener('click', () => {
