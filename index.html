@@ -39,7 +39,7 @@
             background-color: #0b0f19;
             color: #f3f4f6;
             user-select: none;
-            overflow: hidden; /* 防止出現全頁滾軸 */
+            overflow: hidden;
         }
 
         .no-scrollbar::-webkit-scrollbar {
@@ -53,6 +53,8 @@
         #qrcode canvas, #qrcode img {
             margin: 0 auto;
             display: block;
+            max-width: 100%;
+            height: auto;
         }
     </style>
 </head>
@@ -85,9 +87,9 @@
                     </h2>
                     <p class="text-slate-300 text-base md:text-xl font-bold mb-3">請拿起手機相機掃描 QR Code 區域連線</p>
 
-                    <!-- 極限放大且具視覺光彩的 QR Code 容器 -->
-                    <div class="p-3.5 bg-gradient-to-br from-cyan-400 via-purple-500 to-pink-500 rounded-3xl shadow-[0_0_60px_rgba(0,243,255,0.4)] my-auto transition-transform hover:scale-[1.02] duration-300">
-                        <div id="qrcode" class="bg-white p-3 rounded-2xl border-2 border-white flex items-center justify-center shadow-inner"></div>
+                    <!-- 優化後的 QR Code 容器 -->
+                    <div class="p-3.5 bg-gradient-to-br from-cyan-400 via-purple-500 to-pink-500 rounded-3xl shadow-[0_0_60px_rgba(0,243,255,0.4)] my-auto transition-transform hover:scale-[1.02] duration-300 max-w-[320px] w-full">
+                        <div id="qrcode" class="bg-white p-3 rounded-2xl border-2 border-white flex items-center justify-center shadow-inner min-h-[260px]"></div>
                     </div>
 
                     <div id="lobby-waiting-text" class="text-neon-green text-xl md:text-2xl font-black mt-3 animate-pulse drop-shadow">
@@ -191,7 +193,7 @@
         <!-- ==================== 4. 大螢幕 - 遊戲主畫面 ==================== -->
         <div id="view-game" class="hidden w-full h-full max-h-[96vh] grid grid-cols-1 md:grid-cols-12 gap-4 overflow-hidden">
             
-            <!-- 左側：全顯示排行榜 (文字放大為2倍，維持區域大小) -->
+            <!-- 左側：全顯示排行榜 -->
             <div class="md:col-span-3 bg-slate-900/80 border border-slate-800 rounded-2xl p-3 backdrop-blur-xl flex flex-col justify-between overflow-hidden">
                 <div class="overflow-hidden flex flex-col h-full">
                     <h3 class="text-slate-300 text-lg md:text-xl font-black mb-2 flex items-center justify-between flex-shrink-0 border-b border-slate-800 pb-2">
@@ -434,7 +436,6 @@
             osc.stop(audioCtx.currentTime + duration);
         }
 
-        /* 第一階段音樂：完整《不可能的任務》（Mission: Impossible Theme）樂句迴圈 */
         function playMissionImpossibleBgm() {
             initAudio();
             stopBgm();
@@ -489,20 +490,17 @@
             loop();
         }
 
-        /* 修改：瑪利歐第一代過關音樂 (Level Clear Fanfare)，節奏與音符延長至整整 8 秒，與煙花持續時間一致 */
         function playMarioVictoryFanfare() {
             initAudio();
             stopBgm();
             currentBgmType = 'victory';
 
-            // 音階定義
             const N = {
                 G3: 196.00, C4: 261.63, E4: 329.63, G4: 392.00,
                 C5: 523.25, E5: 659.25, G5: 783.99, A5: 880.00, B5: 987.77,
                 A5b: 830.61, B5b: 932.33
             };
 
-            // 經典 Super Mario Bros. 關卡完成過關音效 (總長度調配為 8 秒)
             const fanfare = [
                 { f: N.G3, d: 0.2 }, { f: N.C4, d: 0.2 }, { f: N.E4, d: 0.2 },
                 { f: N.G4, d: 0.2 }, { f: N.C5, d: 0.2 }, { f: N.E5, d: 0.2 },
@@ -533,17 +531,31 @@
             }
         }
 
+        // 核心優化：更安全地推算可供其他裝置存取的網址
+        function getJoinUrl(hostId) {
+            let currentUrl = window.location.href.split('?')[0];
+            
+            // 警告及相容性提示：若為本機檔案，發出提示
+            if (currentUrl.startsWith('file://')) {
+                console.warn("目前以本地檔案模式開啟，其他裝置將無法掃碼。請將專案部署至伺服器或 Live Server。");
+            }
+
+            return `${currentUrl}?host=${hostId}`;
+        }
+
         function initHostPeer() {
             peer = new Peer();
             
             peer.on('open', (id) => {
-                const joinUrl = `${window.location.href.split('?')[0]}?host=${id}`;
+                const joinUrl = getJoinUrl(id);
                 document.getElementById("qrcode").innerHTML = "";
                 
+                // 優化：調降動態解析度至 260px，保證不同解析度之手機相機皆可秒掃
                 new QRCode(document.getElementById("qrcode"), {
                     text: joinUrl,
-                    width: 360,
-                    height: 360
+                    width: 260,
+                    height: 260,
+                    correctLevel: QRCode.CorrectLevel.M
                 });
             });
 
@@ -1117,7 +1129,6 @@
             document.getElementById('view-game').classList.add('hidden');
             document.getElementById('view-result').classList.remove('hidden');
 
-            /* 播放瑪利歐第一代過關音效，長度延長為 8 秒 */
             playMarioVictoryFanfare();
 
             const allSortedPlayers = [...players].sort((a, b) => b.score - a.score);
@@ -1191,7 +1202,6 @@
                 top3Container.appendChild(card);
             });
 
-            /* 煙火特效持續時間：8 秒 */
             const duration = 8 * 1000;
             const animationEnd = Date.now() + duration;
 
