@@ -60,40 +60,41 @@
     <!-- 主要內容區域 -->
     <main class="flex-grow flex items-center justify-center p-4 md:p-6 relative">
 
-        <!-- ==================== 1. 大螢幕 - 遊戲大廳 / 掃碼進入 ==================== -->
-        <div id="view-lobby" class="w-full max-w-5xl bg-slate-900/80 border-2 border-slate-700/80 rounded-2xl p-6 md:p-10 shadow-2xl backdrop-blur-xl relative">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <!-- ==================== 1. 大螢幕 - 遊戲大廳 / 掃碼進入 (新佈局) ==================== -->
+        <div id="view-lobby" class="w-full max-w-7xl bg-slate-900/80 border-2 border-slate-700/80 rounded-2xl p-6 md:p-10 shadow-2xl backdrop-blur-xl relative">
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
                 
-                <!-- 掃碼區域 -->
-                <div class="flex flex-col items-center justify-center border-b md:border-b-0 md:border-r border-slate-700/80 pr-0 md:pr-8 pb-6 md:pb-0 text-center">
-                    <h2 class="text-2xl md:text-3xl font-bold text-neon-blue mb-2 flex items-center gap-2">
+                <!-- QR Left Column (最大化, 7 cols) -->
+                <div class="md:col-span-7 flex flex-col items-center justify-center border-b md:border-b-0 md:border-r border-slate-700/80 pr-0 md:pr-8 pb-6 md:pb-0 text-center">
+                    <h2 class="text-3xl md:text-4xl font-black text-neon-blue mb-2 flex items-center gap-2">
                         <i class="fa-solid fa-qrcode"></i> 掃碼參賽 (無人數上限)
                     </h2>
-                    <p class="text-slate-400 text-sm mb-4">掃描下方 QR Code 即可加入遊戲</p>
+                    <p class="text-slate-400 text-base mb-6">請使用手機相機掃描 QR Code 加入遊戲</p>
 
-                    <div id="qrcode" class="bg-white p-3 rounded-2xl border-4 border-cyan-400 mb-4"></div>
+                    <!-- QR 畫面最大化 -->
+                    <div id="qrcode" class="bg-white p-5 rounded-3xl border-4 border-cyan-400 shadow-[0_0_50px_rgba(0,243,255,0.3)] mb-6"></div>
 
-                    <!-- 原倒數計時位置：改為直接顯示開始遊戲按鈕 -->
-                    <div id="lobby-start-box" class="w-full min-h-[80px] flex items-center justify-center">
-                        <button id="btn-start-game" class="hidden w-full py-4 text-2xl font-black text-slate-950 bg-gradient-to-r from-neon-green to-neon-yellow rounded-2xl shadow-[0_0_30px_rgba(0,255,102,0.5)] hover:brightness-110 active:scale-95 transition-all animate-bounce border-2 border-white/40">
+                    <!-- 開始遊戲按鍵放在 QR 正下方 -->
+                    <div id="lobby-start-box" class="w-full max-w-md min-h-[80px] flex items-center justify-center">
+                        <button id="btn-start-game" class="hidden w-full py-5 text-3xl font-black text-slate-950 bg-gradient-to-r from-neon-green to-neon-yellow rounded-2xl shadow-[0_0_30px_rgba(0,255,102,0.5)] hover:brightness-110 active:scale-95 transition-all animate-bounce border-2 border-white/40">
                             🎮 開始遊戲
                         </button>
-                        <span id="lobby-waiting-text" class="text-slate-400 font-bold">等待首位玩家連線...</span>
+                        <span id="lobby-waiting-text" class="text-slate-400 text-xl font-bold">等待玩家掃碼連線...</span>
                     </div>
                 </div>
 
-                <!-- 參賽者清單 -->
-                <div class="flex flex-col justify-start space-y-6">
+                <!-- Right Column (名單與人數, 5 cols) -->
+                <div class="md:col-span-5 flex flex-col justify-start space-y-6 h-full">
                     <div>
                         <h2 class="text-2xl md:text-3xl font-bold text-neon-purple mb-4 flex items-center justify-between">
-                            <span class="flex items-center gap-2"><i class="fa-solid fa-users"></i> 已連線參賽者</span>
-                            <span id="player-count-badge" class="text-lg bg-purple-900/80 text-purple-300 px-3 py-1 rounded-full font-black">0 人</span>
+                            <span class="flex items-center gap-2"><i class="fa-solid fa-users"></i> 已加入人員名單</span>
+                            <span id="player-count-badge" class="text-xl bg-purple-900/80 text-purple-300 px-4 py-1.5 rounded-full font-black border border-purple-500/50">0 人</span>
                         </h2>
 
                         <!-- 玩家清單 -->
-                        <div id="player-list-lobby" class="grid grid-cols-1 gap-3 max-h-80 overflow-y-auto pr-1">
-                            <div class="text-slate-500 text-center py-8 font-bold border border-dashed border-slate-800 rounded-xl">
-                                尚無玩家連線，請掃描 QR Code 加入...
+                        <div id="player-list-lobby" class="grid grid-cols-1 gap-3 max-h-[420px] overflow-y-auto pr-2">
+                            <div class="text-slate-500 text-center py-12 font-bold border border-dashed border-slate-800 rounded-xl text-lg">
+                                尚無玩家連線，請掃描左側 QR Code 加入...
                             </div>
                         </div>
                     </div>
@@ -107,13 +108,11 @@
                 <span class="text-4xl">🍞</span>
                 <h2 class="text-2xl font-black text-neon-blue">安得烈答題控制器</h2>
                 <p id="player-mobile-name" class="text-neon-yellow font-bold text-lg">正在連線大螢幕...</p>
-                <!-- 顯示當前題數 Banner，不顯示題目內容 -->
                 <div id="mobile-question-banner" class="hidden bg-slate-900 border border-slate-700 py-2 px-4 rounded-xl text-neon-green font-extrabold text-xl shadow-inner">
                     第 1 題
                 </div>
             </div>
 
-            <!-- 登錄名稱區 -->
             <div id="mobile-join-form" class="space-y-4 bg-slate-900 p-6 rounded-2xl border border-slate-800 my-auto">
                 <input type="text" id="mobile-name-input" maxlength="8" placeholder="請輸入您的暱稱..." 
                     class="w-full bg-slate-800 border-2 border-slate-700 p-4 rounded-xl text-center text-white text-xl font-bold focus:border-neon-purple outline-none">
@@ -122,7 +121,6 @@
                 </button>
             </div>
 
-            <!-- 答題按鈕區 -->
             <div id="mobile-answers-grid" class="hidden grid-cols-2 gap-4 my-auto">
                 <button id="mobile-btn-0" onclick="mobileSubmitAnswer(0)" class="mobile-answer-btn h-28 bg-blue-600 active:bg-blue-700 rounded-2xl text-4xl font-black text-white shadow-lg transition-all duration-300">A</button>
                 <button id="mobile-btn-1" onclick="mobileSubmitAnswer(1)" class="mobile-answer-btn h-28 bg-emerald-600 active:bg-emerald-700 rounded-2xl text-4xl font-black text-white shadow-lg transition-all duration-300">B</button>
@@ -130,7 +128,6 @@
                 <button id="mobile-btn-3" onclick="mobileSubmitAnswer(3)" class="mobile-answer-btn h-28 bg-rose-600 active:bg-rose-700 rounded-2xl text-4xl font-black text-white shadow-lg transition-all duration-300">D</button>
             </div>
 
-            <!-- 作答狀態 -->
             <div id="mobile-status-text" class="text-center text-slate-400 font-bold py-2">
                 連線成功！請輸入暱稱完成登錄
             </div>
@@ -146,7 +143,6 @@
 
         <!-- ==================== 4. 大螢幕 - 遊戲主畫面 ==================== -->
         <div id="view-game" class="hidden w-full max-w-7xl grid grid-cols-1 md:grid-cols-4 gap-6">
-            <!-- 參賽者面板 (左側顯示前10名) -->
             <div class="md:col-span-1 bg-slate-900/80 border border-slate-800 rounded-2xl p-4 md:p-6 backdrop-blur-xl flex flex-col justify-between">
                 <div>
                     <h3 class="text-slate-400 text-sm font-bold mb-3 flex items-center justify-between">
@@ -159,7 +155,6 @@
                 </div>
             </div>
 
-            <!-- 主答題區 (右側) -->
             <div class="md:col-span-3 bg-slate-900/90 border-2 border-cyan-500/30 rounded-2xl p-6 md:p-8 shadow-2xl backdrop-blur-xl relative overflow-hidden flex flex-col justify-between">
                 <div>
                     <div class="w-full bg-slate-800 h-3 rounded-full mb-6 overflow-hidden border border-slate-700">
@@ -180,32 +175,103 @@
             </div>
         </div>
 
-        <!-- ==================== 5. 中場晉級公告 modal ==================== -->
-        <div id="view-intermission" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
-            <div class="bg-slate-900 border-2 border-neon-purple rounded-2xl p-8 max-w-3xl w-full text-center">
-                <h2 class="text-3xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-neon-blue via-neon-yellow to-neon-pink mb-4">
-                    🔥 STAGE 1 預賽結束！
+        <!-- ==================== 5. 第一階段得獎畫面 / 中場晉級 (新佈局) ==================== -->
+        <div id="view-intermission" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-xl p-6">
+            <div class="w-full max-w-7xl h-full max-h-[90vh] bg-slate-900 border-2 border-neon-purple rounded-3xl p-6 md:p-8 flex flex-col justify-between shadow-2xl overflow-hidden">
+                
+                <h2 class="text-3xl md:text-4xl font-black text-center text-transparent bg-clip-text bg-gradient-to-r from-neon-blue via-neon-yellow to-neon-pink mb-4">
+                    🔥 STAGE 1 預賽結算與晉級名單
                 </h2>
-                <p id="intermission-desc" class="text-slate-300 text-xl mb-6">晉級名單確定！</p>
-                <div id="qualified-players-list" class="flex flex-wrap justify-center gap-4 mb-8"></div>
-                <button id="btn-start-stage2" class="w-full py-4 text-2xl font-bold text-black bg-neon-yellow rounded-xl shadow-lg hover:brightness-110 transition">
-                    ⚔️ 進入 STAGE 2 魔王決戰
-                </button>
+
+                <!-- 三欄佈局：左側參賽者名單 / 中央晉級名單(2倍大)與按鈕 / 右側參賽者名單 -->
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-6 flex-grow overflow-hidden my-2">
+                    
+                    <!-- 左邊參賽人員與分數 -->
+                    <div class="md:col-span-3 bg-slate-950/60 rounded-2xl p-4 border border-slate-800 flex flex-col justify-between overflow-hidden">
+                        <div class="flex justify-between items-center mb-3 border-b border-slate-800 pb-2">
+                            <span class="font-bold text-slate-300"><i class="fa-solid fa-list-ol"></i> 參賽者得分 (左)</span>
+                            <span id="intermission-left-count" class="text-xs bg-slate-800 text-neon-blue px-2.5 py-1 rounded-full font-bold">0 人</span>
+                        </div>
+                        <div id="intermission-left-list" class="space-y-2 overflow-y-auto pr-1 flex-grow"></div>
+                    </div>
+
+                    <!-- 中央進入第二階段人員名單（2倍大小）及按鈕 -->
+                    <div class="md:col-span-6 bg-purple-950/30 border-2 border-neon-purple/50 rounded-2xl p-6 flex flex-col items-center justify-between text-center overflow-y-auto shadow-inner">
+                        <div>
+                            <span class="text-neon-yellow text-sm font-black tracking-widest">STAGE 2 QUALIFIERS</span>
+                            <h3 class="text-2xl md:text-3xl font-black text-white mt-1 mb-6">🏆 晉級第二階段選手 🏆</h3>
+                            
+                            <!-- 2倍大小名單 -->
+                            <div id="qualified-players-list" class="flex flex-wrap justify-center gap-6"></div>
+                        </div>
+
+                        <!-- 下方進入第二階段按鈕 (大小與「開始遊戲」按鈕一致) -->
+                        <div class="w-full max-w-md mt-6">
+                            <button id="btn-start-stage2" class="w-full py-5 text-2xl md:text-3xl font-black text-slate-950 bg-gradient-to-r from-neon-green to-neon-yellow rounded-2xl shadow-[0_0_30px_rgba(0,255,102,0.5)] hover:brightness-110 active:scale-95 transition-all border-2 border-white/40">
+                                ⚔️ 進入第二階段遊戲
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 右邊參賽人員與分數 -->
+                    <div class="md:col-span-3 bg-slate-950/60 rounded-2xl p-4 border border-slate-800 flex flex-col justify-between overflow-hidden">
+                        <div class="flex justify-between items-center mb-3 border-b border-slate-800 pb-2">
+                            <span class="font-bold text-slate-300"><i class="fa-solid fa-list-ol"></i> 參賽者得分 (右)</span>
+                            <span id="intermission-right-count" class="text-xs bg-slate-800 text-neon-blue px-2.5 py-1 rounded-full font-bold">0 人</span>
+                        </div>
+                        <div id="intermission-right-list" class="space-y-2 overflow-y-auto pr-1 flex-grow"></div>
+                    </div>
+
+                </div>
+
             </div>
         </div>
 
-        <!-- ==================== 6. 最終頒獎典禮畫面 ==================== -->
-        <div id="view-result" class="hidden w-full max-w-4xl bg-slate-900/90 border-2 border-neon-yellow/50 rounded-2xl p-6 md:p-10 shadow-2xl backdrop-blur-xl text-center">
-            <h2 class="text-4xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-neon-yellow via-amber-300 to-yellow-500 mb-2">
-                🏆 頒獎典禮 🏆
-            </h2>
-            <p class="text-slate-400 text-lg md:text-xl mb-6">感謝大家參與「安得烈食物銀行」愛心知識大亂鬥！</p>
-            
-            <div id="leaderboard-container" class="space-y-3 mb-8 max-h-96 overflow-y-auto pr-2"></div>
-            
-            <button id="btn-restart-game" class="px-10 py-4 text-xl font-bold text-white bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl transition">
-                🔄 重新開啟新局
-            </button>
+        <!-- ==================== 6. 最後得獎前三名畫面 (新佈局) ==================== -->
+        <div id="view-result" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-xl p-6">
+            <div class="w-full max-w-7xl h-full max-h-[90vh] bg-slate-900 border-2 border-neon-yellow rounded-3xl p-6 md:p-8 flex flex-col justify-between shadow-2xl overflow-hidden">
+                
+                <h2 class="text-3xl md:text-5xl font-black text-center text-transparent bg-clip-text bg-gradient-to-r from-neon-yellow via-amber-300 to-yellow-500 mb-2">
+                    🏆 最終頒獎典禮 🏆
+                </h2>
+
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-6 flex-grow overflow-hidden my-2">
+                    
+                    <!-- 左邊參賽人員與分數 -->
+                    <div class="md:col-span-3 bg-slate-950/60 rounded-2xl p-4 border border-slate-800 flex flex-col justify-between overflow-hidden">
+                        <div class="flex justify-between items-center mb-3 border-b border-slate-800 pb-2">
+                            <span class="font-bold text-slate-300"><i class="fa-solid fa-users"></i> 全體得分 (左)</span>
+                            <span id="result-left-count" class="text-xs bg-slate-800 text-neon-yellow px-2.5 py-1 rounded-full font-bold">0 人</span>
+                        </div>
+                        <div id="result-left-list" class="space-y-2 overflow-y-auto pr-1 flex-grow"></div>
+                    </div>
+
+                    <!-- 中央前三名 (第一名3倍大小，2-3名2倍大小) -->
+                    <div class="md:col-span-6 bg-amber-950/20 border-2 border-amber-500/40 rounded-2xl p-6 flex flex-col items-center justify-between text-center overflow-y-auto shadow-inner">
+                        <div class="w-full flex flex-col items-center">
+                            <span class="text-amber-400 font-black tracking-widest text-sm mb-2">TOP 3 WINNERS</span>
+                            
+                            <!-- 中央得獎前三名展示區 -->
+                            <div id="top3-container" class="w-full flex flex-col items-center space-y-4 my-auto"></div>
+                        </div>
+
+                        <button id="btn-restart-game" class="mt-6 px-10 py-4 text-xl font-bold text-white bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl hover:brightness-110 transition shadow-lg">
+                            🔄 重新開啟新局
+                        </button>
+                    </div>
+
+                    <!-- 右邊參賽人員與分數 -->
+                    <div class="md:col-span-3 bg-slate-950/60 rounded-2xl p-4 border border-slate-800 flex flex-col justify-between overflow-hidden">
+                        <div class="flex justify-between items-center mb-3 border-b border-slate-800 pb-2">
+                            <span class="font-bold text-slate-300"><i class="fa-solid fa-users"></i> 全體得分 (右)</span>
+                            <span id="result-right-count" class="text-xs bg-slate-800 text-neon-yellow px-2.5 py-1 rounded-full font-bold">0 人</span>
+                        </div>
+                        <div id="result-right-list" class="space-y-2 overflow-y-auto pr-1 flex-grow"></div>
+                    </div>
+
+                </div>
+
+            </div>
         </div>
 
     </main>
@@ -246,27 +312,7 @@
             { question: "27. 基於受助兒童與長者的健康需求，下列哪種食品絕對不會放入安得烈的食物箱？", options: ["白米與麵條", "泡麵及高鹽、高糖、醃漬食品", "營養奶粉", "罐頭肉鬆"], answer: 1 },
             { question: "28. 安得烈食物箱完成打包後，主要透過哪些管道寄送或送達？", options: ["郵局及物流公司", "社工及專員家訪親送", "配搭合作單位轉送", "以上皆是"], answer: 3 },
             { question: "29. 一般大眾可以透過哪些方式來支持安得烈慈善協會？", options: ["捐贈發票與食物物資", "參與志工服務", "定額/小額捐款與通報身邊個案", "以上皆可"], answer: 3 },
-            { question: "30. 安得烈簡報與宣導中常傳達的座右銘理念是？", options: ["施比受更有福", "獨善其身", "錦上添花", "腳踏實地"], answer: 0 },
-            { question: "31. 下列哪一個字是安得烈慈善協會的正確用字？", options: ["安「德」烈", "安「得」烈", "安「特」烈", "安「達」烈"], answer: 1 },
-            { question: "32. 若在宣傳單看到「安德烈食物銀行」，最可能的情況是？", options: ["這是安得烈慈善協會的正式簡稱", "常見的字面誤寫，正確應為「安得烈食物銀行」", "專門給外國人參加的慈善機構", "一家連鎖超市"], answer: 1 },
-            { question: "33. 安得烈食物箱內的食物處理原則為何？", options: ["提供熟食便食", "提供客製化、可常溫保存的乾糧物資", "只提供冷凍生鮮", "只提供新鮮蔬菜水果"], answer: 1 },
-            { question: "34. 嬰兒物資箱主要提供給嬰幼兒什麼樣的必備物資？", options: ["玩具與繪本", "奶粉與尿布", "嬰兒推車", "兒童腳踏車"], answer: 1 },
-            { question: "35. 下列何者不是安得烈志工在現場整備物資時的核心工作？", options: ["食品效期檢查", "食品安全檢驗", "食物箱裝箱與封箱", "現場烹飪熱食"], answer: 3 },
-            { question: "36. 安得烈食物箱的服務範圍涵蓋哪些地區？", options: ["僅限台北市與新北市", "僅限西部直轄市", "涵蓋全台各地及澎湖、金門、馬祖、蘭嶼、綠島等離島", "僅限海外地區"], answer: 2 },
-            { question: "37. 當民眾捐贈醬瓜、豆腐乳等醃漬品給安得烈時，協會會如何處理？", options: ["放入長青食物箱", "放入膳糧食物箱", "考量高鈉健康因素，不放入食物箱發放", "煮成大鍋菜給志工吃"], answer: 2 },
-            { question: "38. 安得烈推動職場媒合或職業引介的目的為？", options: ["為企業找人才、為弱勢找出路", "收取求職仲介費", "協助企業進行海外投資", "舉辦大型聯誼"], answer: 0 },
-            { question: "39. 下列何者不是安得烈學藝競賽的常見分組？", options: ["國小 3-4 年級组", "國小 5-6 年級組", "國中 7-9 年級組 / 高中 10-12 年級組", "學齡前幼兒組"], answer: 3 },
-            { question: "40. 安得烈精神號召的口號「哪裡有需要，……」下一句接續為？", options: ["就往哪裡去", "就往哪裡捐", "就往哪裡搬", "就往哪裡送"], answer: 0 },
-            { question: "41. 想要成為安得烈的包裝志工，最需要具備什麼條件？", options: ["熱心與熱情", "必須擁有夥食證照", "必須具備堆高機駕照", "必須會講三種外語"], answer: 0 },
-            { question: "42. 關於捐贈給安得烈慈善協會的愛心捐款，下列敘述何者正確？", options: ["不能列單據", "可依法開立正式收據用於綜合所得稅抵減", "只能捐贈外幣", "必須親自送到協會總部"], answer: 1 },
-            { question: "43. 膳糧食物箱內最常見的主食類物資包含下列何者？", options: ["披薩與漢堡", "白米、麵條、燕麥片", "生鮮水餃", "冷凍牛排"], answer: 1 },
-            { question: "44. 「集食行善-幸福一日捐」主要是鼓勵大家做什麼？", options: ["捐出自己一天的所得或購買物資分享給弱勢家庭", "一整天不吃不喝體驗飢餓", "參加一日遊活動", "一整天到街上宣導"], answer: 0 },
-            { question: "45. 下列何者是安得烈食物銀行標準紙箱外觀的主要特徵？", options: ["黑色金屬箱", "牛皮紙原色搭配品牌標示與祝福語", "全粉紅色禮盒", "透明塑膠箱"], answer: 1 },
-            { question: "46. 下列何者不是安得烈慈善協會主要關懷服務的對象類型？", options: ["弱勢兒少與嬰幼兒", "孤、貧、殘、疾之弱勢長者", "急難或災害受助家庭", "身價千萬且生活無虞的富商"], answer: 3 },
-            { question: "47. 在物資檢查過程中，若發現餅乾包裝「有些微漏氣膨脹」，志工應該？", options: ["繼續放進食物箱", "判定包裝破損不合規格，予以剔除", "自己當場吃掉", "用膠帶黏住繼續用"], answer: 1 },
-            { question: "48. 安得烈食物箱每月大約發放多少箱來幫助弱勢家庭？", options: ["約 100 箱", "約 500 箱", "五千餘箱", "五十萬箱"], answer: 2 },
-            { question: "49. 關於安得烈「生命成長營」，下列何者正確？", options: ["旨在幫助學員具備正確觀念、品格, 知識與視野", "是一個要收費數萬元的商業減重營", "只在冬天舉辦", "專門培訓極限運動員"], answer: 0 },
-            { question: "50. 遇到鄰居或身邊朋友突然遭遇重大變故、斷糧求助無門時，我們最適合的做法是？", options: ["冷漠不理會", "向安得烈慈善協會等社福機構通報個案尋求資源協助", "在網路上嘲笑對方", "叫對方自己想辦法"], answer: 1 }
+            { question: "30. 安得烈簡報與宣導中常傳達的座右銘理念是？", options: ["施比受更有福", "獨善其身", "錦上添花", "腳踏實地"], answer: 0 }
         ];
 
         function shuffleArray(array) {
@@ -287,9 +333,9 @@
         let stage = 1;
         let stage1Count = 7;
         let stage2Count = 3;
-        let stage1Time = 8; // 預設值 (會依人數改變)
-        let stage2Time = 4; // 預設值 (會依人數改變)
-        let revealTime = 1; // 答案顯示固定1秒
+        let stage1Time = 8;
+        let stage2Time = 4;
+        let revealTime = 1;
         let stage2AdvancingCount = 2;
         let timerInterval = null;
         let aiTimeouts = [];
@@ -298,7 +344,6 @@
         let maxTime = 8;
         let hasSubmittedCurrentAnswer = false;
         
-        // 音訊系統
         let audioCtx = null;
         let currentBgmType = null;
         let bgmTimeoutId = null;
@@ -317,9 +362,7 @@
             }
         };
 
-        /* -----------------------------------------------------------------
-           瑪莉兄弟 Web Audio 8-bit BGM 音樂播放器
-           ----------------------------------------------------------------- */
+        /* Web Audio 音訊機制 */
         function initAudio() {
             if (!audioCtx) {
                 audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -348,33 +391,18 @@
             stopBgm();
             currentBgmType = 'stage1';
 
-            const N = {
-                E4: 329.63, F4: 349.23, G4: 392.00, A4: 440.00, Bb4: 466.16, B4: 493.88,
-                C5: 523.25, D5: 587.33, Eb5: 622.25, E5: 659.25, F5: 698.46, Fs5: 739.99,
-                G5: 783.99, Ab5: 830.61, A5: 880.00, Bb5: 932.33, B5: 987.77, C6: 1046.50
-            };
-
-            const tempo = 90; 
-            const beat = 60 / tempo;
-
+            const N = { E4: 329.63, F4: 349.23, G4: 392.00, A4: 440.00, Bb4: 466.16, B4: 493.88, C5: 523.25, D5: 587.33, E5: 659.25, F5: 698.46, G5: 783.99, A5: 880.00 };
+            const beat = 60 / 90;
             const sequence = [
                 { f: N.E5, d: 0.25 }, { f: N.E5, d: 0.25 }, { f: 0, d: 0.25 }, { f: N.E5, d: 0.25 },
-                { f: 0, d: 0.25 }, { f: N.C5, d: 0.25 }, { f: N.E5, d: 0.5 },
-                { f: N.G5, d: 0.5 }, { f: 0, d: 0.5 }, { f: N.G4, d: 0.5 }, { f: 0, d: 0.5 },
-                { f: N.C5, d: 0.375 }, { f: 0, d: 0.125 }, { f: N.G4, d: 0.375 }, { f: 0, d: 0.125 }, { f: N.E4, d: 0.5 },
-                { f: N.A4, d: 0.25 }, { f: N.B4, d: 0.25 }, { f: N.Bb4, d: 0.25 }, { f: N.A4, d: 0.25 },
-                { f: N.G4, d: 0.33 }, { f: N.E5, d: 0.33 }, { f: N.G5, d: 0.33 }, { f: N.A5, d: 0.5 },
-                { f: N.F5, d: 0.25 }, { f: N.G5, d: 0.25 }, { f: 0, d: 0.25 }, { f: N.E5, d: 0.25 },
-                { f: N.C5, d: 0.25 }, { f: N.D5, d: 0.25 }, { f: N.B4, d: 0.5 }
+                { f: 0, d: 0.25 }, { f: N.C5, d: 0.25 }, { f: N.E5, d: 0.5 }, { f: N.G5, d: 0.5 }, { f: 0, d: 0.5 }
             ];
 
             let step = 0;
             function loop() {
                 if (currentBgmType !== 'stage1') return;
                 const item = sequence[step];
-                if (item.f > 0) {
-                    playSingleNote(item.f, item.d * beat, 'square', 0.12);
-                }
+                if (item.f > 0) playSingleNote(item.f, item.d * beat, 'square', 0.12);
                 step = (step + 1) % sequence.length;
                 bgmTimeoutId = setTimeout(loop, item.d * beat * 1000);
             }
@@ -385,15 +413,10 @@
             initAudio();
             stopBgm();
             currentBgmType = 'stage2';
-
-            const tempo = 120;
-            const beat = 60 / tempo;
-
+            const beat = 60 / 120;
             const sequence = [
                 { f: 146.83, d: 0.25 }, { f: 155.56, d: 0.25 }, { f: 164.81, d: 0.25 },
-                { f: 146.83, d: 0.25 }, { f: 155.56, d: 0.25 }, { f: 164.81, d: 0.25 },
-                { f: 130.81, d: 0.25 }, { f: 138.59, d: 0.25 }, { f: 146.83, d: 0.25 },
-                { f: 116.54, d: 0.25 }, { f: 123.47, d: 0.25 }, { f: 130.81, d: 0.25 }
+                { f: 130.81, d: 0.25 }, { f: 138.59, d: 0.25 }, { f: 146.83, d: 0.25 }
             ];
 
             let step = 0;
@@ -411,26 +434,16 @@
             initAudio();
             stopBgm();
             currentBgmType = 'victory';
-
             const notes = [
                 { f: 261.63, d: 0.15 }, { f: 329.63, d: 0.15 }, { f: 392.00, d: 0.15 },
-                { f: 523.25, d: 0.15 }, { f: 659.25, d: 0.15 }, { f: 783.99, d: 0.15 },
-                { f: 1046.50, d: 0.4 }, { f: 783.99, d: 0.4 },
-                { f: 277.18, d: 0.15 }, { f: 349.23, d: 0.15 }, { f: 415.30, d: 0.15 },
-                { f: 554.37, d: 0.15 }, { f: 698.46, d: 0.15 }, { f: 830.61, d: 0.15 },
-                { f: 1108.73, d: 0.4 }, { f: 830.61, d: 0.4 },
-                { f: 293.66, d: 0.15 }, { f: 369.99, d: 0.15 }, { f: 440.00, d: 0.15 },
-                { f: 587.33, d: 0.15 }, { f: 739.99, d: 0.15 }, { f: 880.00, d: 0.15 },
-                { f: 1174.66, d: 0.6 }
+                { f: 523.25, d: 0.15 }, { f: 659.25, d: 0.15 }, { f: 783.99, d: 0.3 }
             ];
-
             let i = 0;
             function playNext() {
                 if (i >= notes.length) return;
-                const item = notes[i];
-                playSingleNote(item.f, item.d, 'triangle', 0.25);
+                playSingleNote(notes[i].f, notes[i].d, 'triangle', 0.25);
                 i++;
-                setTimeout(playNext, item.d * 1000);
+                setTimeout(playNext, notes[i-1].d * 1000);
             }
             playNext();
         }
@@ -443,19 +456,18 @@
             }
         }
 
-        /* -----------------------------------------------------------------
-           1. 大螢幕端 PeerJS 監聽與 QR Code 生成
-           ----------------------------------------------------------------- */
+        /* 1. 大螢幕端 PeerJS 監聽與 QR Code (最大化生成) */
         function initHostPeer() {
             peer = new Peer();
             
             peer.on('open', (id) => {
                 const joinUrl = `${window.location.href.split('?')[0]}?host=${id}`;
                 document.getElementById("qrcode").innerHTML = "";
+                // 最大化 QR Code 尺寸至 260px
                 new QRCode(document.getElementById("qrcode"), {
                     text: joinUrl,
-                    width: 160,
-                    height: 160
+                    width: 260,
+                    height: 260
                 });
             });
 
@@ -483,9 +495,7 @@
             });
         }
 
-        /* -----------------------------------------------------------------
-           2. 手機端 PeerJS 連線與控制
-           ----------------------------------------------------------------- */
+        /* 2. 手機端 控制機制 */
         function initMobileController(hostId) {
             peer = new Peer();
             peer.on('open', (id) => {
@@ -501,11 +511,9 @@
                         document.getElementById('mobile-status-text').innerText = '🎮 遊戲開始，請看大螢幕準備作答！';
                         resetMobileButtons();
                     } else if (data.type === 'NEXT_QUESTION') {
-                        // 更新手機端顯示當前題數，但不顯示題目
                         const banner = document.getElementById('mobile-question-banner');
                         banner.innerText = `第 ${data.questionNumber} 題`;
                         banner.classList.remove('hidden');
-
                         document.getElementById('mobile-status-text').innerText = '請點選答案 (A/B/C/D)';
                         resetMobileButtons();
                     }
@@ -519,7 +527,7 @@
                 const btn = document.getElementById(`mobile-btn-${i}`);
                 if (btn) {
                     btn.disabled = false;
-                    btn.classList.remove('opacity-20', 'bg-slate-900', 'grayscale', 'border-0');
+                    btn.classList.remove('opacity-20', 'bg-slate-900', 'grayscale');
                     btn.classList.add('shadow-lg');
                 }
             }
@@ -536,8 +544,6 @@
                 document.getElementById('mobile-answers-grid').classList.remove('hidden');
                 document.getElementById('mobile-answers-grid').classList.add('grid');
                 document.getElementById('mobile-status-text').innerText = '已成功進入大廳，等待開賽...';
-            } else {
-                alert('連線建立中，請稍候再試...');
             }
         });
 
@@ -555,16 +561,13 @@
                         btn.disabled = true;
                         if (i !== choiceIdx) {
                             btn.classList.add('opacity-20', 'bg-slate-900', 'grayscale');
-                            btn.classList.remove('shadow-lg');
                         }
                     }
                 }
             }
         }
 
-        /* -----------------------------------------------------------------
-           3. 大廳與規則邏輯
-           ----------------------------------------------------------------- */
+        /* 3. 大廳與玩家維護 */
         function addPlayer(name, conn, playerId) {
             if (players.some(p => p.id === playerId)) return;
 
@@ -581,14 +584,12 @@
             players.push(p);
             renderLobbyPlayers();
 
-            // 第一人報名後，直接顯示「開始遊戲」按鈕
             if (players.length >= 1) {
                 document.getElementById('lobby-waiting-text').classList.add('hidden');
                 document.getElementById('btn-start-game').classList.remove('hidden');
             }
         }
 
-        // 點擊「開始遊戲」按鈕事件
         document.getElementById('btn-start-game').addEventListener('click', () => {
             initAudio();
             playMarioStage1Bgm();
@@ -597,15 +598,7 @@
 
         function finalizePlayersAndStart() {
             const humanCount = players.filter(p => !p.isAI).length;
-            let robotsToAdd = 0;
-
-            if (humanCount <= 10) {
-                robotsToAdd = 2;
-            } else if (humanCount <= 20) {
-                robotsToAdd = 1;
-            } else {
-                robotsToAdd = 0;
-            }
+            let robotsToAdd = (humanCount <= 10) ? 2 : (humanCount <= 20 ? 1 : 0);
 
             const robotNames = ['🤖 魔王庫巴', '🍄 瑪利歐', '綠蕈 路易吉', '👑 碧姬公主'];
             for (let i = 0; i < robotsToAdd; i++) {
@@ -626,66 +619,46 @@
             startGame();
         }
 
-        // 規則 2：依據總人數設定答題秒數
         function setupRulesByPlayerCount(totalPlayers) {
             if (totalPlayers <= 10) {
-                stage1Count = 7;
-                stage2Count = 3;
-                stage1Time = 8; // 8秒答題
-                stage2Time = 4; // 4秒答題
-                stage2AdvancingCount = 2;
+                stage1Count = 7; stage2Count = 3; stage1Time = 8; stage2Time = 4; stage2AdvancingCount = 2;
             } else if (totalPlayers <= 20) {
-                stage1Count = 11;
-                stage2Count = 4;
-                stage1Time = 7; // 7秒答題
-                stage2Time = 3; // 3秒答題
-                stage2AdvancingCount = 5;
+                stage1Count = 11; stage2Count = 4; stage1Time = 7; stage2Time = 3; stage2AdvancingCount = 5;
             } else {
-                stage1Count = 15;
-                stage2Count = 5;
-                stage1Time = 6; // 6秒答題
-                stage2Time = 3; // 3秒答題
-                stage2AdvancingCount = 7;
+                stage1Count = 15; stage2Count = 5; stage1Time = 6; stage2Time = 3; stage2AdvancingCount = 7;
             }
-
-            const totalNeeded = stage1Count + stage2Count;
-            quizDatabase = shuffleArray(fullQuizDatabase).slice(0, totalNeeded);
+            quizDatabase = shuffleArray(fullQuizDatabase).slice(0, stage1Count + stage2Count);
         }
 
         function renderLobbyPlayers() {
             const container = document.getElementById('player-list-lobby');
             container.innerHTML = '';
-
             document.getElementById('player-count-badge').innerText = `${players.length} 人`;
 
             players.forEach(p => {
                 const item = document.createElement('div');
-                item.className = 'flex justify-between items-center bg-slate-800 p-3 rounded-xl border border-slate-700';
+                item.className = 'flex justify-between items-center bg-slate-800 p-3.5 rounded-xl border border-slate-700';
                 item.innerHTML = `
-                    <div class="flex items-center gap-2">
-                        <span class="text-xl">${p.isAI ? '🤖' : '📱'}</span>
-                        <span class="font-bold text-white">${p.name}</span>
+                    <div class="flex items-center gap-3">
+                        <span class="text-2xl">${p.isAI ? '🤖' : '📱'}</span>
+                        <span class="font-bold text-white text-lg">${p.name}</span>
                     </div>
-                    <span class="text-xs ${p.isAI ? 'bg-purple-900/80 text-purple-300' : 'bg-cyan-900/80 text-cyan-300'} px-2 py-0.5 rounded">
-                        ${p.isAI ? 'AI 機器人' : '掃碼連線'}
+                    <span class="text-xs ${p.isAI ? 'bg-purple-900/80 text-purple-300' : 'bg-cyan-900/80 text-cyan-300'} px-3 py-1 rounded-md font-bold">
+                        ${p.isAI ? 'AI 機器人' : '已連線'}
                     </span>
                 `;
                 container.appendChild(item);
             });
         }
 
-        /* -----------------------------------------------------------------
-           4. 遊戲主流程
-           ----------------------------------------------------------------- */
+        /* 4. 遊戲主流程 */
         function startGame() {
             document.getElementById('view-lobby').classList.add('hidden');
             document.getElementById('view-game').classList.remove('hidden');
             document.getElementById('view-game').classList.add('grid');
             document.getElementById('game-stage-badge').classList.remove('hidden');
 
-            players.forEach(p => {
-                if (p.conn) p.conn.send({ type: 'GAME_START' });
-            });
+            players.forEach(p => { if (p.conn) p.conn.send({ type: 'GAME_START' }); });
 
             currentQuestionIndex = 0;
             stage = 1;
@@ -698,13 +671,10 @@
             aiTimeouts = [];
         }
 
-        // 規則 4：題目與題目間隔，顯示題數 1 秒
         function startQuestionFlow(index) {
             clearAllTimers();
             isTransitioning = true;
-
-            const qNumText = `第 ${index + 1} 題`;
-            document.getElementById('splash-question-number').innerText = qNumText;
+            document.getElementById('splash-question-number').innerText = `第 ${index + 1} 題`;
             document.getElementById('view-question-splash').classList.remove('hidden');
 
             setTimeout(() => {
@@ -718,32 +688,21 @@
             const qData = quizDatabase[index];
 
             if (index < stage1Count) {
-                stage = 1;
-                maxTime = stage1Time;
+                stage = 1; maxTime = stage1Time;
                 document.getElementById('game-stage-badge').innerText = `STAGE 1 - 預賽大亂鬥 (${index + 1}/${stage1Count})`;
-                if (currentBgmType !== 'stage1') {
-                    playMarioStage1Bgm();
-                }
+                if (currentBgmType !== 'stage1') playMarioStage1Bgm();
             } else {
-                stage = 2;
-                maxTime = stage2Time;
-                const stage2Index = index - stage1Count + 1;
-                document.getElementById('game-stage-badge').innerText = `STAGE 2 - 魔王城堡決戰 (${stage2Index}/${stage2Count})`;
-                if (currentBgmType !== 'stage2') {
-                    playMarioCastleBgm();
-                }
+                stage = 2; maxTime = stage2Time;
+                document.getElementById('game-stage-badge').innerText = `STAGE 2 - 魔王城堡決戰 (${index - stage1Count + 1}/${stage2Count})`;
+                if (currentBgmType !== 'stage2') playMarioCastleBgm();
             }
 
             timeLeft = maxTime;
 
-            // 廣播給手機端（傳送題數）
             players.forEach(p => {
                 p.choice = null;
                 p.answered = (stage === 2 && !p.isQualified);
-                if (p.conn) p.conn.send({ 
-                    type: 'NEXT_QUESTION', 
-                    questionNumber: index + 1 
-                });
+                if (p.conn) p.conn.send({ type: 'NEXT_QUESTION', questionNumber: index + 1 });
             });
 
             document.getElementById('question-number').innerText = `QUESTION ${String(index + 1).padStart(2, '0')}/${quizDatabase.length}`;
@@ -753,7 +712,6 @@
 
             renderOptions(qData.options);
             renderPlayersDashboard();
-
             startTimer();
             triggerAIAnswers(qData);
         }
@@ -765,7 +723,7 @@
             
             options.forEach((optText, i) => {
                 const btn = document.createElement('button');
-                btn.className = `option-btn w-full p-4 text-left rounded-xl border-2 border-slate-700 bg-slate-800/90 flex items-center space-x-4 text-2xl md:text-4xl font-bold pointer-events-none`;
+                btn.className = `option-btn w-full p-4 text-left rounded-xl border-2 border-slate-700 bg-slate-800/90 flex items-center space-x-4 text-2xl md:text-3xl font-bold pointer-events-none`;
                 btn.innerHTML = `
                     <span class="w-12 h-12 flex-shrink-0 flex items-center justify-center rounded-lg bg-slate-900 text-neon-blue font-black">${labels[i]}</span>
                     <span class="text-white">${optText}</span>
@@ -778,11 +736,8 @@
             const dashboard = document.getElementById('players-dashboard');
             dashboard.innerHTML = '';
 
-            const top10Players = [...players]
-                .sort((a, b) => b.score - a.score)
-                .slice(0, 10);
-
-            top10Players.forEach((p, rank) => {
+            const top10 = [...players].sort((a, b) => b.score - a.score).slice(0, 10);
+            top10.forEach((p, rank) => {
                 const card = document.createElement('div');
                 let borderClass = 'border-slate-800 bg-slate-900/60';
                 let statusBadge = '<span class="text-xs text-slate-500">思考中...</span>';
@@ -850,7 +805,6 @@
             }
         }
 
-        // 規則 2：答題結束後進行 1 秒的答案揭曉顯示
         function evaluateQuestionAndProceed() {
             if (isTransitioning) return;
             isTransitioning = true;
@@ -873,7 +827,6 @@
 
             renderPlayersDashboard();
 
-            // 答案顯示 1 秒
             setTimeout(() => {
                 currentQuestionIndex++;
                 if (currentQuestionIndex === stage1Count) {
@@ -886,24 +839,36 @@
             }, revealTime * 1000);
         }
 
-        /* -----------------------------------------------------------------
-           5. 中場晉級展示
-           ----------------------------------------------------------------- */
+        /* =================================================================
+           5. 第一階段得獎/晉級畫面 (更新：中央2倍大小 + 左右兩邊參賽者及人數)
+           ================================================================= */
         function showIntermission() {
             const sorted = [...players].sort((a, b) => b.score - a.score);
             const qualifiedIds = sorted.slice(0, stage2AdvancingCount).map(p => p.id);
             players.forEach(p => p.isQualified = qualifiedIds.includes(p.id));
 
-            document.getElementById('intermission-desc').innerText = `總積分前 ${stage2AdvancingCount} 名成功晉級 STAGE 2 魔王城堡決戰！`;
+            // 分配左右兩邊清單（對半拆分）
+            const halfIndex = Math.ceil(sorted.length / 2);
+            const leftPlayers = sorted.slice(0, halfIndex);
+            const rightPlayers = sorted.slice(halfIndex);
 
-            const list = document.getElementById('qualified-players-list');
-            list.innerHTML = '';
+            // 更新兩側人數與列表
+            document.getElementById('intermission-left-count').innerText = `${leftPlayers.length} 人`;
+            document.getElementById('intermission-right-count').innerText = `${rightPlayers.length} 人`;
+
+            renderParticipantList('intermission-left-list', leftPlayers);
+            renderParticipantList('intermission-right-list', rightPlayers);
+
+            // 中央顯示晉級第二階段名單 (顯示為 2 倍大小)
+            const qualifiedList = document.getElementById('qualified-players-list');
+            qualifiedList.innerHTML = '';
             players.filter(p => p.isQualified).forEach(p => {
-                list.innerHTML += `
-                    <div class="bg-slate-800 border-2 border-neon-yellow p-4 rounded-xl text-center min-w-[110px]">
-                        <div class="text-3xl mb-1">${p.isAI ? '🤖' : '👑'}</div>
-                        <div class="font-bold text-white text-base truncate max-w-[100px]">${p.name}</div>
-                        <div class="text-neon-yellow font-black text-lg">${p.score} 分</div>
+                qualifiedList.innerHTML += `
+                    <div class="bg-slate-800/90 border-2 border-neon-yellow p-5 rounded-2xl text-center min-w-[160px] shadow-[0_0_20px_rgba(255,204,0,0.2)] transform hover:scale-105 transition">
+                        <div class="text-5xl mb-2">${p.isAI ? '🤖' : '👑'}</div>
+                        <!-- 2倍大小文字 -->
+                        <div class="font-black text-white text-2xl truncate max-w-[180px]">${p.name}</div>
+                        <div class="text-neon-yellow font-black text-xl mt-1">${p.score} 分</div>
                     </div>
                 `;
             });
@@ -911,14 +876,31 @@
             document.getElementById('view-intermission').classList.remove('hidden');
         }
 
+        // 渲染通用兩側名單工具函式
+        function renderParticipantList(elementId, playerGroup) {
+            const container = document.getElementById(elementId);
+            container.innerHTML = '';
+            playerGroup.forEach((p) => {
+                const item = document.createElement('div');
+                item.className = 'flex justify-between items-center p-2.5 bg-slate-900 rounded-xl border border-slate-800 text-sm';
+                item.innerHTML = `
+                    <div class="flex items-center gap-2 truncate max-w-[65%]">
+                        <span class="font-bold ${p.isQualified ? 'text-neon-yellow' : 'text-slate-400'}">${p.name}</span>
+                    </div>
+                    <span class="font-black text-slate-200">${p.score} 分</span>
+                `;
+                container.appendChild(item);
+            });
+        }
+
         document.getElementById('btn-start-stage2').addEventListener('click', () => {
             document.getElementById('view-intermission').classList.add('hidden');
             startQuestionFlow(currentQuestionIndex);
         });
 
-        /* -----------------------------------------------------------------
-           6. 最終頒獎典禮
-           ----------------------------------------------------------------- */
+        /* =================================================================
+           6. 最後得獎前三名畫面 (更新：第一名3倍大, 2-3名2倍大 + 左右兩邊參賽者及人數)
+           ================================================================= */
         function showFinalResult() {
             document.getElementById('view-game').classList.add('hidden');
             document.getElementById('view-result').classList.remove('hidden');
@@ -926,20 +908,58 @@
             playMarioVictoryFanfare();
 
             const sorted = [...players].sort((a, b) => b.score - a.score);
-            const container = document.getElementById('leaderboard-container');
-            container.innerHTML = '';
 
-            const medals = ['🥇 冠軍', '🥈 亞軍', '🥉 季軍'];
-            sorted.forEach((p, idx) => {
-                container.innerHTML += `
-                    <div class="p-4 rounded-xl border-2 border-slate-700 bg-slate-800/50 flex justify-between items-center text-xl font-bold">
-                        <span class="text-slate-200">${medals[idx] || `第 ${idx + 1} 名`} - ${p.name} ${p.isAI ? '(AI)' : ''}</span>
-                        <span class="text-neon-yellow font-black">${p.score} 分</span>
-                    </div>
-                `;
+            // 分配左右兩側（對半拆分）
+            const halfIndex = Math.ceil(sorted.length / 2);
+            const leftPlayers = sorted.slice(0, halfIndex);
+            const rightPlayers = sorted.slice(halfIndex);
+
+            document.getElementById('result-left-count').innerText = `${leftPlayers.length} 人`;
+            document.getElementById('result-right-count').innerText = `${rightPlayers.length} 人`;
+
+            renderParticipantList('result-left-list', leftPlayers);
+            renderParticipantList('result-right-list', rightPlayers);
+
+            // 中央顯示得獎前三名（第一名 3 倍大，第二、三名 2 倍大）
+            const top3Container = document.getElementById('top3-container');
+            top3Container.innerHTML = '';
+
+            const top3 = sorted.slice(0, 3);
+            const medals = ['🥇 第一名 冠軍', '🥈 第二名 亞軍', '🥉 第三名 季軍'];
+            const colors = ['border-amber-400 bg-amber-500/20 shadow-[0_0_40px_rgba(255,204,0,0.4)]', 'border-slate-300 bg-slate-400/20', 'border-amber-700 bg-amber-800/20'];
+
+            top3.forEach((p, idx) => {
+                const card = document.createElement('div');
+                
+                if (idx === 0) {
+                    // 第一名：3 倍大小 (3x Size)
+                    card.className = `w-full max-w-lg p-6 rounded-3xl border-4 ${colors[idx]} flex flex-col items-center justify-center transform scale-105 my-2`;
+                    card.innerHTML = `
+                        <span class="text-base font-black text-amber-300 bg-amber-950/80 px-4 py-1 rounded-full border border-amber-400 mb-2">👑 冠軍王座 👑</span>
+                        <div class="text-6xl my-1">🥇</div>
+                        <!-- 3倍大小字體 -->
+                        <div class="text-4xl font-black text-white tracking-wide">${p.name}</div>
+                        <div class="text-3xl font-black text-neon-yellow mt-1">${p.score} 分</div>
+                    `;
+                } else {
+                    // 第二、三名：2 倍大小 (2x Size)
+                    card.className = `w-full max-w-md p-4 rounded-2xl border-2 ${colors[idx]} flex justify-between items-center px-6`;
+                    card.innerHTML = `
+                        <div class="flex items-center gap-3">
+                            <span class="text-3xl">${idx === 1 ? '🥈' : '🥉'}</span>
+                            <div class="text-left">
+                                <span class="text-xs font-bold text-slate-400">${medals[idx]}</span>
+                                <!-- 2倍大小字體 -->
+                                <div class="text-2xl font-black text-white">${p.name}</div>
+                            </div>
+                        </div>
+                        <div class="text-2xl font-black text-neon-yellow">${p.score} 分</div>
+                    `;
+                }
+                top3Container.appendChild(card);
             });
 
-            confetti({ particleCount: 150, spread: 90, origin: { y: 0.6 } });
+            confetti({ particleCount: 180, spread: 100, origin: { y: 0.5 } });
         }
 
         document.getElementById('btn-restart-game').addEventListener('click', () => {
