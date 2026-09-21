@@ -732,6 +732,7 @@
             const p = {
                 id: playerId,
                 name: name,
+                displayName: name,
                 conn: conn,
                 isAI: false,
                 aiType: null,
@@ -833,6 +834,7 @@
                     players.push({
                         id: 'ai_' + Date.now() + '_' + i,
                         name: aiSpec.fullName,
+                        displayName: aiSpec.baseName,
                         conn: null,
                         isAI: true,
                         aiType: aiSpec.type,
@@ -874,7 +876,7 @@
                 item.innerHTML = `
                     <div class="flex items-center gap-2 truncate">
                         <span class="text-xl">${p.isAI ? '🤖' : '📱'}</span>
-                        <span class="font-bold text-white truncate">${p.name}</span>
+                        <span class="font-bold text-white truncate">${p.displayName || p.name}</span>
                     </div>
                     <span class="text-[10px] ${p.isAI ? 'bg-purple-900/80 text-purple-300' : 'bg-cyan-900/80 text-cyan-300'} px-2 py-0.5 rounded font-bold flex-shrink-0">
                         ${p.isAI ? 'AI' : '連線'}
@@ -919,7 +921,19 @@
 
         function loadQuestion(index) {
             isTransitioning = false;
-            const qData = quizDatabase[index];
+            const originalQData = quizDatabase[index];
+
+            // 隨機重排答案選項順序
+            const correctAnswerText = originalQData.options[originalQData.answer];
+            const shuffledOptions = shuffleArray(originalQData.options);
+            const newAnswerIndex = shuffledOptions.indexOf(correctAnswerText);
+
+            const qData = {
+                question: originalQData.question,
+                options: shuffledOptions,
+                answer: newAnswerIndex
+            };
+            quizDatabase[index] = qData;
 
             if (index < stage1Count) {
                 stage = 1; maxTime = stage1Time;
@@ -1006,13 +1020,14 @@
                 }
 
                 const streakText = p.streak >= 2 ? ` 🔥${p.streak}連勝(+${p.streak + 3}%)` : '';
+                const displayName = p.displayName || p.name;
 
                 card.className = `p-2.5 md:p-3 rounded-2xl border-2 ${borderClass} flex items-center justify-between transition-all duration-200 flex-shrink-0`;
                 card.innerHTML = `
                     <div class="flex items-center gap-2.5 truncate max-w-[65%]">
                         <span class="font-black text-neon-blue text-lg md:text-xl min-w-[30px] text-center">#${rank + 1}</span>
                         <div class="flex flex-col truncate">
-                            <span class="font-black text-white text-xl md:text-2xl truncate tracking-wide leading-tight">${p.name}</span>
+                            <span class="font-black text-white text-xl md:text-2xl truncate tracking-wide leading-tight">${displayName}</span>
                             <span class="text-xs md:text-sm font-bold text-amber-400 leading-tight">${streakText ? streakText : '&nbsp;'}</span>
                         </div>
                     </div>
@@ -1197,13 +1212,15 @@
             playerGroup.forEach((p, idx) => {
                 const rankNum = startIndex + idx;
                 const item = document.createElement('div');
-                item.className = 'flex justify-between items-center p-2.5 bg-slate-900 rounded-xl border border-slate-800 text-sm';
+                item.className = 'flex flex-col p-2.5 bg-slate-900 rounded-xl border border-slate-800 text-sm gap-1';
                 item.innerHTML = `
-                    <div class="flex items-center gap-2 truncate max-w-[65%]">
-                        <span class="font-bold text-slate-500 text-xs w-6">#${rankNum}</span>
+                    <div class="flex items-center gap-2 truncate w-full">
+                        <span class="font-bold text-slate-500 text-xs w-6 flex-shrink-0">#${rankNum}</span>
                         <span class="font-bold ${p.isQualified ? 'text-neon-yellow' : 'text-slate-300'} truncate">${p.name}</span>
                     </div>
-                    <span class="font-black text-slate-200">${p.score} 分</span>
+                    <div class="text-right w-full pl-8">
+                        <span class="font-black text-slate-200">${p.score} 分</span>
+                    </div>
                 `;
                 container.appendChild(item);
             });
@@ -1260,14 +1277,14 @@
                     card.innerHTML = `
                         <span class="text-sm font-black text-amber-300 bg-amber-950/80 px-4 py-1 rounded-full border border-amber-400 mb-1">👑 冠軍王座 👑</span>
                         <div class="text-5xl my-1">🥇</div>
-                        <div class="text-3xl font-black text-white tracking-wide">${p.name}</div>
+                        <div class="text-3xl font-black text-white tracking-wide text-center">${p.name}</div>
                         
                         <div class="my-2 py-1 px-4 bg-amber-500/30 border border-amber-400 rounded-full text-amber-300 font-black text-xl flex items-center gap-1.5 shadow">
                             <span>👑</span>
                             <span>X ${crownCount} 應援</span>
                         </div>
 
-                        <div class="text-2xl font-black text-neon-yellow">${p.score} 分</div>
+                        <div class="text-2xl font-black text-neon-yellow mt-1">${p.score} 分</div>
                     `;
                 } else {
                     card.className = `w-full max-w-md p-4 rounded-2xl border-2 ${colors[idx]} flex justify-between items-center px-6`;
@@ -1284,7 +1301,7 @@
                                 <span>👑</span>
                                 <span>X ${crownCount}</span>
                             </div>
-                            <div class="text-xl font-black text-neon-yellow">${p.score} 分</div>
+                            <div class="text-xl font-black text-neon-yellow mt-1">${p.score} 分</div>
                         </div>
                     `;
                 }
