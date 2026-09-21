@@ -766,33 +766,58 @@
         });
 
         function finalizePlayersAndStart() {
-            // 預設指定 AI 設定
-            const defaultAIs = [
-                { name: '🤖 特工阿湯哥', type: 'tom', minAcc: 0.50, maxAcc: 0.80 },
-                { name: '🍄 瑪莉歐', type: 'mario', minAcc: 0.40, maxAcc: 0.70 },
-                { name: '🦆 可達鴨', type: 'duck', minAcc: 0.30, maxAcc: 0.60 }
-            ];
+            const realPlayerCount = players.filter(p => !p.isAI).length;
+            let aiToAddCount = 0;
 
-            // 1% 機率出現 安得鹿大魔王
-            if (Math.random() < 0.01) {
-                defaultAIs.push({ name: '😈 安得鹿大魔王', type: 'boss', minAcc: 0.90, maxAcc: 1.00 });
+            if (realPlayerCount <= 10) {
+                aiToAddCount = 3;
+            } else if (realPlayerCount <= 20) {
+                aiToAddCount = 2;
+            } else {
+                aiToAddCount = 0;
             }
 
-            defaultAIs.forEach((aiSpec, i) => {
-                players.push({
-                    id: 'ai_' + Date.now() + '_' + i,
-                    name: aiSpec.name,
-                    conn: null,
-                    isAI: true,
-                    aiType: aiSpec.type,
-                    aiSpec: aiSpec,
-                    score: 0,
-                    answered: false,
-                    choice: null,
-                    isQualified: true,
-                    votes: 0
+            if (aiToAddCount > 0) {
+                // 候選 AI 庫
+                const pool = [
+                    { name: '🤖 特工阿湯哥', type: 'tom', minAcc: 0.50, maxAcc: 0.80 },
+                    { name: '🍄 瑪莉歐', type: 'mario', minAcc: 0.40, maxAcc: 0.70 }
+                ];
+
+                const randomNames = [
+                    '廖太太', '雪芬3寶媽', '閃電葛葛', '晶晶阿姨', 
+                    '小光光', '巧克力阿北', '小白白', '小舔屎阿青'
+                ];
+
+                // 隨機名字 Pool (10-90%)
+                randomNames.forEach(n => {
+                    pool.push({ name: `🤖 ${n}`, type: 'random', minAcc: 0.10, maxAcc: 0.90 });
                 });
-            });
+
+                // 1% 機率觸發「安得烈小羅」(90-100%)
+                if (Math.random() < 0.01) {
+                    pool.push({ name: '🌟 安得烈小羅', type: 'andrew', minAcc: 0.90, maxAcc: 1.00 });
+                }
+
+                // 隨機抽選指定數量的 AI
+                const selectedAIs = shuffleArray(pool).slice(0, aiToAddCount);
+
+                selectedAIs.forEach((aiSpec, i) => {
+                    players.push({
+                        id: 'ai_' + Date.now() + '_' + i,
+                        name: aiSpec.name,
+                        conn: null,
+                        isAI: true,
+                        aiType: aiSpec.type,
+                        aiSpec: aiSpec,
+                        score: 0,
+                        answered: false,
+                        choice: null,
+                        isQualified: true,
+                        votes: 0
+                    });
+                });
+            }
 
             renderLobbyPlayers();
             setupRulesByPlayerCount(players.length);
